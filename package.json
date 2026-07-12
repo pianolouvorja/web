@@ -1,0 +1,49 @@
+{
+  "name": "centralja-web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "version:major": "npm version major -m \"chore: versão %s\"",
+    "version:minor": "npm version minor -m \"chore: versão %s\"",
+    "version:patch": "npm version patch -m \"chore: versão %s\"",
+    "version:max": "npm run version:major",
+    "version:min": "npm run version:minor",
+    "version:bug": "npm run version:patch",
+    "dev": "vite",
+    "preview": "vite preview",
+    "host": "vite --host",
+    "build": "run-p type-check \"build-only {@}\" --",
+    "build-only": "vite build",
+    "type-check": "vue-tsc --build",
+    "git:tag": "git tag -a \"v$npm_package_version\" -m \"Versão $npm_package_version\" && git push origin \"v$npm_package_version\"",
+    "git:publish": "git push -u origin HEAD --follow-tags"
+  },
+  "dependencies": {
+    "@mdi/font": "^7.4.47",
+    "pinia": "^3.0.4",
+    "vue": "^3.5.38",
+    "vue-i18n": "^11.4.6",
+    "vue-router": "^4.6.4",
+    "vuetify": "^4.1.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.2",
+    "@tsconfig/node24": "^24.0.4",
+    "@types/node": "^24.13.2",
+    "@vitejs/plugin-vue": "^6.0.7",
+    "@vue/tsconfig": "^0.9.1",
+    "npm-run-all2": "^9.0.2",
+    "sass": "^1.101.0",
+    "tailwindcss": "^4.3.2",
+    "typescript": "~6.0.0",
+    "vite": "^8.0.16",
+    "vite-plugin-vue-devtools": "^8.1.2",
+    "vue-tsc": "^3.3.5"
+  },
+  "engines": {
+    "node": "^22.18.0 || >=24.12.0"
+  },
+  "description": "Louvor JA — versão web para gerenciamento de culto",
+  "author": "Kiki Solutions"
+}
