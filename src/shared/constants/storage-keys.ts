@@ -18,4 +18,5 @@ export const USER_PREFERENCE_KEYS = {
   mediaPauseOnMinimize: 'media_pause_on_minimize',
   mediaLazyLoad: 'media_lazy_load',
   mediaFadeAudio: 'media_fade_audio',
+  bibleSelectedVersion: 'bible.selectedVersionId',
 } as const
