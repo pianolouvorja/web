@@ -11,6 +11,9 @@ export const BROWSER_STORAGE_KEYS = {
 export const USER_PREFERENCE_KEYS = {
   theme: 'theme',
   blur: 'blur',
+  accent: 'accent',
+  interaction: 'interaction',
+  autoBrightness: 'autoBrightness',
   language: 'language',
   popupCount: 'popup_count',
   mediaUseInternalPlayer: 'media_use_internal_player',
