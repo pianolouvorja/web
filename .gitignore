@@ -41,3 +41,6 @@ __screenshots__/
 
 # Vite
 *.timestamp-*-*.mjs
+
+# PWA (vite-plugin-pwa em modo dev)
+/dev-dist
