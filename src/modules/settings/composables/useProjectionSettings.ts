@@ -5,6 +5,10 @@ import {
   PROJECTION_DEFAULTS,
   setPopupCount,
 } from '@shared/services/projection-preferences'
+import {
+  hasLivePopups,
+  syncPopupWindows,
+} from '@shared/services/popup-windows'
 
 const popupCount = ref(getPopupCount())
 
@@ -25,6 +29,9 @@ export function useProjectionSettings() {
 
   function applyPopupCount(value: number) {
     popupCount.value = setPopupCount(value)
+    if (hasLivePopups()) {
+      syncPopupWindows()
+    }
   }
 
   function decrementPopupCount() {

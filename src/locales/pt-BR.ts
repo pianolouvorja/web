@@ -18,4 +18,13 @@ export default {
     title: 'O que vamos cantar?',
     searchPlaceholder: 'Procure aqui...',
   },
+  popupCount: {
+    label: 'Telas',
+    tooltip: 'Número de telas de projeção',
+  },
+  popupControls: {
+    closeAll: 'Fechar todas as telas',
+    openScreens: 'Abrir telas de projeção',
+    clearScreen: 'Limpar tela de projeção',
+  },
 }

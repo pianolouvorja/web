@@ -6,10 +6,19 @@ import { utilitiesRoutes } from '@modules/clock/routes'
 import { homeRoutes } from '@modules/home/routes'
 import { liturgyRoutes } from '@modules/liturgy/routes'
 import { settingsRoutes } from '@modules/settings/routes'
+import PopupHost from '@shared/views/PopupHost.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
+    {
+      path: '/popup',
+      name: 'popup',
+      component: PopupHost,
+      meta: {
+        bare: true,
+      },
+    },
     {
       path: '/',
       component: AppShell,
