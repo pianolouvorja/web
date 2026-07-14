@@ -38,7 +38,7 @@ const {
 } = useTimerFeature()
 
 function goBack() {
-  void router.push({ name: 'utilities' })
+  void router.push({ name: 'utilities-temporizador' })
 }
 
 function onToggleProjection() {
