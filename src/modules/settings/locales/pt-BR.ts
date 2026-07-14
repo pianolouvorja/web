@@ -38,10 +38,18 @@ export default {
       tipLight:
         'O Modo Claro oferece melhor legibilidade em ambientes muito iluminados durante cultos diurnos.',
     },
+    projection: {
+      popupScreens: 'Telas de Projeção',
+      popupScreensDesc: 'Quantidade de janelas popup abertas ao projetar',
+      popupCountLabel: 'Número de telas',
+      decreaseScreens: 'Diminuir número de telas',
+      increaseScreens: 'Aumentar número de telas',
+      hardwareAccel: 'Aceleração de Hardware',
+      fullscreenMode: 'Iniciar em Tela Cheia',
+    },
     placeholder: {
       general: 'Preferências gerais do aplicativo em breve.',
       media: 'Configurações de áudio, vídeo e player em breve.',
-      projection: 'Configurações de projeção e telas em breve.',
     },
   },
 }
