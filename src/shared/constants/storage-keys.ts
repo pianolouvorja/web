@@ -26,4 +26,6 @@ export const USER_PREFERENCE_KEYS = {
   mediaFadeAudio: 'media_fade_audio',
   bibleSelectedVersion: 'bible.selectedVersionId',
   clockConfig: 'clock.config',
+  timerConfig: 'timer.config',
+  countdownConfig: 'countdown.config',
 } as const

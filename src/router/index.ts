@@ -3,9 +3,11 @@ import { createRouter, createWebHistory } from 'vue-router'
 import AppShell from '@layouts/AppShell.vue'
 import { bibleRoutes } from '@modules/bible/routes'
 import { utilitiesRoutes } from '@modules/clock/routes'
+import { countdownRoutes } from '@modules/countdown/routes'
 import { homeRoutes } from '@modules/home/routes'
 import { liturgyRoutes } from '@modules/liturgy/routes'
 import { settingsRoutes } from '@modules/settings/routes'
+import { timerRoutes } from '@modules/timer/routes'
 import PopupHost from '@shared/views/PopupHost.vue'
 
 const router = createRouter({
@@ -27,6 +29,8 @@ const router = createRouter({
         ...liturgyRoutes,
         ...bibleRoutes,
         ...utilitiesRoutes,
+        ...timerRoutes,
+        ...countdownRoutes,
         ...settingsRoutes,
       ],
     },

@@ -39,6 +39,12 @@ const moduleViews: Record<string, ReturnType<typeof defineAsyncComponent>> = {
   clock: defineAsyncComponent(
     () => import('@modules/clock/views/ClockProjectionView.vue'),
   ),
+  timer: defineAsyncComponent(
+    () => import('@modules/timer/views/TimerProjectionView.vue'),
+  ),
+  countdown: defineAsyncComponent(
+    () => import('@modules/countdown/views/CountdownProjectionView.vue'),
+  ),
 }
 
 const activeView = computed(() => {
@@ -51,7 +57,20 @@ function applyModule(value: unknown) {
 }
 
 function refreshModule() {
-  applyModule(getBrowserItem(BROWSER_STORAGE_KEYS.popupModule, '') ?? '')
+  // Storage é a fonte de verdade (inclui limpar com ''). Query só no boot.
+  const stored = getBrowserItem<string>(BROWSER_STORAGE_KEYS.popupModule, null)
+  if (typeof stored === 'string') {
+    applyModule(stored)
+    return
+  }
+
+  const fromQuery = route.query.module
+  if (typeof fromQuery === 'string' && fromQuery.length > 0) {
+    applyModule(fromQuery)
+    return
+  }
+
+  applyModule('')
 }
 
 async function restoreLayout() {

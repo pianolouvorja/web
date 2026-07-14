@@ -32,15 +32,18 @@ export type PopupActionPayload = {
   action: 'report-bounds' | 'restore-bounds'
 }
 
-function buildPopupUrl(slot: number): string {
+function buildPopupUrl(slot: number, moduleId?: string): string {
   const base = import.meta.env.BASE_URL ?? '/'
   const normalizedBase = base.endsWith('/') ? base : `${base}/`
-  return `${normalizedBase}popup?slot=${slot}`
+  const params = new URLSearchParams({ slot: String(slot) })
+  const module = moduleId || getActiveModule()
+  if (module) params.set('module', module)
+  return `${normalizedBase}popup?${params.toString()}`
 }
 
-function openPopupWindow(slot: number): PopupWindowRef | null {
+function openPopupWindow(slot: number, moduleId?: string): PopupWindowRef | null {
   const win = window.open(
-    buildPopupUrl(slot),
+    buildPopupUrl(slot, moduleId),
     getPopupSlotId(slot),
     getOpenFeatures(slot),
   ) as PopupWindowRef | null
@@ -104,6 +107,8 @@ function scheduleSync(popups: PopupWindowRef[] = getPopupRefs()): void {
   run()
   window.setTimeout(run, 50)
   window.setTimeout(run, 250)
+  window.setTimeout(run, 800)
+  window.setTimeout(run, 1500)
 }
 
 function tagPopupSlot(popup: PopupWindowRef, fallbackIndex: number): number {
@@ -134,7 +139,7 @@ function saveOpenPopupLayouts(): void {
   })
 }
 
-function ensurePopups(): PopupWindowRef[] {
+function ensurePopups(moduleId?: string): PopupWindowRef[] {
   const desiredCount = getPopupCount()
   let popups = getPopupRefs()
 
@@ -154,7 +159,7 @@ function ensurePopups(): PopupWindowRef[] {
   }
 
   for (let i = popups.length + 1; i <= desiredCount; i++) {
-    const win = openPopupWindow(i)
+    const win = openPopupWindow(i, moduleId)
     if (win) {
       popups.push(win)
     }
@@ -189,7 +194,10 @@ export function hasLivePopups(): boolean {
 export async function openPopupModule(moduleId: string): Promise<boolean> {
   await requestWindowManagementPermission()
 
-  const popups = ensurePopups()
+  // Define o módulo antes de abrir, para a popup ler no boot (URL + storage).
+  setActiveModule(moduleId)
+
+  const popups = ensurePopups(moduleId)
   if (popups.length === 0) return false
 
   popups.forEach((popup) => {
@@ -200,7 +208,6 @@ export async function openPopupModule(moduleId: string): Promise<boolean> {
     }
   })
 
-  setActiveModule(moduleId)
   scheduleSync(popups)
   return true
 }
