@@ -4,6 +4,7 @@ import ptBR from '@locales/pt-BR'
 import biblePtBR from '@modules/bible/locales/pt-BR'
 import clockPtBR from '@modules/clock/locales/pt-BR'
 import countdownPtBR from '@modules/countdown/locales/pt-BR'
+import randomPtBR from '@modules/random/locales/pt-BR'
 import settingsPtBR from '@modules/settings/locales/pt-BR'
 import timerPtBR from '@modules/timer/locales/pt-BR'
 
@@ -18,6 +19,7 @@ export default createI18n({
       ...clockPtBR,
       ...timerPtBR,
       ...countdownPtBR,
+      ...randomPtBR,
       ...settingsPtBR,
     },
   },

@@ -45,6 +45,9 @@ const moduleViews: Record<string, ReturnType<typeof defineAsyncComponent>> = {
   countdown: defineAsyncComponent(
     () => import('@modules/countdown/views/CountdownProjectionView.vue'),
   ),
+  random: defineAsyncComponent(
+    () => import('@modules/random/views/RandomProjectionView.vue'),
+  ),
 }
 
 const activeView = computed(() => {
