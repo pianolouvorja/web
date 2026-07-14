@@ -17,6 +17,8 @@ export const USER_PREFERENCE_KEYS = {
   autoBrightness: 'autoBrightness',
   language: 'language',
   popupCount: 'popup_count',
+  /** Preferências de projeção (letra + monitores); alinhado ao Electron. */
+  projectionSettings: 'projection.settings',
   mediaUseInternalPlayer: 'media_use_internal_player',
   mediaAutoProjectVideo: 'media_auto_project_video',
   mediaPauseOnMinimize: 'media_pause_on_minimize',
