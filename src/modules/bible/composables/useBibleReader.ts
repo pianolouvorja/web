@@ -22,6 +22,7 @@ export function useBibleReader() {
     isLoadingMeta,
     isLoadingVerses,
     lastErrorKey,
+    isProjecting,
     projection,
     selectedBook,
     selectedVersion,
@@ -86,6 +87,7 @@ export function useBibleReader() {
     isLoadingMeta,
     isLoadingVerses,
     lastErrorKey,
+    isProjecting,
     projection,
     selectedBook,
     selectedVersion,
@@ -107,6 +109,9 @@ export function useBibleReader() {
     toggleNavPanel: store.toggleNavPanel,
     goToAdjacentVerse: store.goToAdjacentVerse,
     syncProjection: store.syncProjection,
+    toggleProjection: store.toggleProjection,
+    clearProjectionWindow: store.clearProjectionWindow,
+    refreshProjectionState: store.refreshProjectionState,
     refresh: store.bootstrap,
   }
 }

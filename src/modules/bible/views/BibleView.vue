@@ -24,6 +24,7 @@ const {
   isLoadingMeta,
   isLoadingVerses,
   lastErrorKey,
+  isProjecting,
   projection,
   filteredBooks,
   chapterNumbers,
@@ -41,12 +42,22 @@ const {
   goToAdjacentVerse,
   setTestamentFilter,
   toggleNavPanel,
-  syncProjection,
+  toggleProjection,
+  clearProjectionWindow,
+  refreshProjectionState,
   refresh,
 } = useBibleReader()
 
 function onProject() {
-  syncProjection()
+  void toggleProjection()
+}
+
+function onClearProjection() {
+  void clearProjectionWindow()
+}
+
+function onScreenControlsChanged() {
+  refreshProjectionState()
 }
 
 function onPreviousVerse() {
@@ -147,12 +158,15 @@ function onNextVerse() {
         @previous-verse="onPreviousVerse"
         @next-verse="onNextVerse"
         @clear-projection="clearSelection"
+        @screen-controls-changed="onScreenControlsChanged"
       />
     </div>
 
     <BibleProjectFab
       :disabled="!hasProjection"
+      :projecting="isProjecting"
       @project="onProject"
+      @clear="onClearProjection"
     />
   </section>
 </template>
@@ -197,7 +211,6 @@ function onNextVerse() {
 .bible-view :deep(.bible-toolbar) {
   flex-shrink: 0;
 }
-
 
 .bible-view__state,
 .bible-view__alert {

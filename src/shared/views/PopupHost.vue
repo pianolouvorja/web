@@ -36,6 +36,9 @@ const slotId = computed(() => {
 })
 
 const moduleViews: Record<string, ReturnType<typeof defineAsyncComponent>> = {
+  bible: defineAsyncComponent(
+    () => import('@modules/bible/views/BibleProjectionView.vue'),
+  ),
   clock: defineAsyncComponent(
     () => import('@modules/clock/views/ClockProjectionView.vue'),
   ),
