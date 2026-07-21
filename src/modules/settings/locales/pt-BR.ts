@@ -40,7 +40,8 @@ export default {
     },
     projection: {
       popupScreens: 'Telas de Projeção',
-      popupScreensDesc: 'Quantidade de janelas popup abertas ao projetar',
+      popupScreensDesc:
+        'Quantidade de telas disponíveis para projeção (como monitores estendidos). Nos módulos, escolha quais delas recebem o conteúdo.',
       popupCountLabel: 'Número de telas',
       decreaseScreens: 'Diminuir número de telas',
       increaseScreens: 'Aumentar número de telas',

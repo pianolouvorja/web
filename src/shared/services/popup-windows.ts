@@ -9,7 +9,7 @@ import {
   saveSlotBounds,
   scheduleRestoreOnWindow,
 } from '@shared/services/popup-layout'
-import { getPopupCount } from '@shared/services/projection-preferences'
+import { getPopupCount, getTargetPopupSlots } from '@shared/services/projection-preferences'
 import {
   getBrowserItem,
   setBrowserItem,
@@ -140,35 +140,61 @@ function saveOpenPopupLayouts(): void {
 }
 
 function ensurePopups(moduleId?: string): PopupWindowRef[] {
-  const desiredCount = getPopupCount()
+  const availableCount = getPopupCount()
+  const targetSlots = getTargetPopupSlots().filter(
+    (slot) => slot >= 1 && slot <= availableCount,
+  )
   let popups = getPopupRefs()
 
-  popups.forEach((popup, index) => {
-    tagPopupSlot(popup, index + 1)
+  // Preserva o slot real (não reindexa pelo índice do array).
+  popups.forEach((popup) => {
+    if (popup.__popupSlot) return
+    const fromName = parseSlotIndex(popup.name)
+    if (fromName) popup.__popupSlot = fromName
   })
 
-  if (popups.length > desiredCount) {
-    saveOpenPopupLayouts()
-    for (let i = desiredCount; i < popups.length; i++) {
-      if (popups[i] && !popups[i].closed) {
-        requestBoundsReport(popups[i])
-        popups[i].close()
-      }
+  const targetSet = new Set(targetSlots)
+  const kept: PopupWindowRef[] = []
+
+  for (const popup of popups) {
+    const slot = popup.__popupSlot ?? 0
+    if (targetSet.has(slot)) {
+      kept.push(popup)
+      continue
     }
-    popups = popups.slice(0, desiredCount)
+
+    const slotId = getPopupSlotId(slot || 1)
+    const bounds = captureCurrentBounds(popup)
+    if (bounds) saveSlotBounds(slotId, bounds)
+    requestBoundsReport(popup)
+    if (popup && !popup.closed) {
+      popup.close()
+    }
   }
 
-  for (let i = popups.length + 1; i <= desiredCount; i++) {
-    const win = openPopupWindow(i, moduleId)
+  popups = kept
+  const openSlots = new Set(
+    popups
+      .map((popup) => popup.__popupSlot)
+      .filter((slot): slot is number => typeof slot === 'number' && slot > 0),
+  )
+
+  for (const slot of targetSlots) {
+    if (openSlots.has(slot)) continue
+    const win = openPopupWindow(slot, moduleId)
     if (win) {
       popups.push(win)
+      openSlots.add(slot)
     }
   }
 
-  popups = persistPopups(popups)
+  popups = persistPopups(
+    [...popups].sort((a, b) => (a.__popupSlot ?? 0) - (b.__popupSlot ?? 0)),
+  )
 
-  popups.forEach((popup, arrayIndex) => {
-    const slot = tagPopupSlot(popup, arrayIndex + 1)
+  popups.forEach((popup) => {
+    const slot = popup.__popupSlot
+    if (!slot) return
     const entry = resolveBoundsForSlot(getPopupSlotId(slot))
     if (entry) {
       scheduleRestoreOnWindow(popup, entry)
@@ -198,7 +224,10 @@ export async function openPopupModule(moduleId: string): Promise<boolean> {
   setActiveModule(moduleId)
 
   const popups = ensurePopups(moduleId)
-  if (popups.length === 0) return false
+  if (popups.length === 0) {
+    setActiveModule('')
+    return false
+  }
 
   popups.forEach((popup) => {
     try {

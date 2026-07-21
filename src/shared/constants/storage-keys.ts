@@ -17,6 +17,8 @@ export const USER_PREFERENCE_KEYS = {
   autoBrightness: 'autoBrightness',
   language: 'language',
   popupCount: 'popup_count',
+  /** Slots de popup selecionados para receber projeção (1..popupCount). */
+  targetPopupSlots: 'projection.targetPopupSlots',
   /** Preferências de projeção (letra + popups); alinhado ao Electron. */
   projectionSettings: 'projection.settings',
   homeLocation: 'home.location',

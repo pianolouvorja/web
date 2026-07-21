@@ -17,7 +17,13 @@ export default {
   },
   popupCount: {
     label: 'Telas',
-    tooltip: 'Número de telas de projeção',
+    tooltip: 'Selecionar telas de projeção',
+  },
+  monitors: {
+    selectScreens: 'Selecionar telas',
+    hint: 'Marque as telas onde o recurso deve ser projetado. A quantidade disponível vem de Configurações → Projeção & Telas.',
+    screenLabel: 'Tela {index}',
+    selectedCount: '{count} selecionada(s)',
   },
   popupControls: {
     closeAll: 'Fechar todas as telas',

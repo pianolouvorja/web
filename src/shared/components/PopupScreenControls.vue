@@ -54,7 +54,7 @@ onUnmounted(() => {
       />
     </button>
 
-    <PopupCountSelector />
+    <PopupCountSelector @change="emit('changed')" />
   </div>
 </template>
 

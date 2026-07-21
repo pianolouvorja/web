@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { nextTick, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import {
   getPopupCount,
-  PROJECTION_DEFAULTS,
-  setPopupCount,
+  getTargetPopupSlots,
+  toggleTargetPopupSlot,
 } from '@shared/services/projection-preferences'
 import {
   hasLivePopups,
@@ -21,23 +21,45 @@ withDefaults(
   },
 )
 
+const emit = defineEmits<{
+  change: [slots: number[]]
+}>()
+
 const { t } = useI18n()
 
 const rootRef = useTemplateRef<HTMLElement>('root')
 const btnRef = useTemplateRef<HTMLElement>('btn')
 const menuRef = useTemplateRef<HTMLElement>('menu')
 const menuOpen = ref(false)
-const popupCount = ref(getPopupCount())
+const availableCount = ref(getPopupCount())
+const selectedSlots = ref<number[]>(getTargetPopupSlots())
 const menuStyle = ref<Record<string, string>>({})
-const countOptions = Array.from(
-  { length: PROJECTION_DEFAULTS.popupCountMax },
-  (_, index) => index + 1,
-)
 
 let syncTimer: ReturnType<typeof setInterval> | null = null
 
-function refreshCount() {
-  popupCount.value = getPopupCount()
+const optionsList = computed(() =>
+  Array.from({ length: availableCount.value }, (_, index) => {
+    const id = index + 1
+    return {
+      id,
+      label: t('monitors.screenLabel', { index: id }),
+      isSelected: selectedSlots.value.includes(id),
+    }
+  }),
+)
+
+const selectedCount = computed(() => selectedSlots.value.length)
+
+const triggerLabel = computed(() => {
+  if (selectedCount.value > 0) {
+    return t('monitors.selectedCount', { count: selectedCount.value })
+  }
+  return t('monitors.selectScreens')
+})
+
+function refresh() {
+  availableCount.value = getPopupCount()
+  selectedSlots.value = getTargetPopupSlots()
 }
 
 function updateMenuPosition() {
@@ -45,13 +67,13 @@ function updateMenuPosition() {
   if (!trigger) return
 
   const rect = trigger.getBoundingClientRect()
-  const menuWidth = Math.max(48, rect.width)
+  const menuWidth = Math.min(296, Math.max(220, window.innerWidth - 16))
   const left = Math.min(
     Math.max(8, rect.right - menuWidth),
     window.innerWidth - menuWidth - 8,
   )
   const spaceBelow = window.innerHeight - rect.bottom
-  const openUp = spaceBelow < 220 && rect.top > spaceBelow
+  const openUp = spaceBelow < 280 && rect.top > spaceBelow
 
   menuStyle.value = {
     position: 'fixed',
@@ -68,9 +90,9 @@ function toggleMenu() {
   menuOpen.value = !menuOpen.value
 }
 
-function selectCount(value: number) {
-  popupCount.value = setPopupCount(value)
-  menuOpen.value = false
+function onToggle(slot: number) {
+  selectedSlots.value = toggleTargetPopupSlot(slot)
+  emit('change', selectedSlots.value)
   if (hasLivePopups()) {
     syncPopupWindows()
   }
@@ -91,16 +113,17 @@ function onWindowChange() {
 
 watch(menuOpen, async (open) => {
   if (!open) return
+  refresh()
   await nextTick()
   updateMenuPosition()
 })
 
 onMounted(() => {
-  refreshCount()
+  refresh()
   document.addEventListener('click', onDocumentClick)
   window.addEventListener('resize', onWindowChange)
   window.addEventListener('scroll', onWindowChange, true)
-  syncTimer = setInterval(refreshCount, 800)
+  syncTimer = setInterval(refresh, 800)
 })
 
 onUnmounted(() => {
@@ -116,7 +139,10 @@ onUnmounted(() => {
     ref="root"
     class="popup-count-selector"
   >
-    <span class="popup-count-selector__label">
+    <span
+      v-if="!compact"
+      class="popup-count-selector__label"
+    >
       {{ t('popupCount.label') }}
     </span>
     <button
@@ -124,13 +150,22 @@ onUnmounted(() => {
       type="button"
       class="popup-count-selector__btn"
       :class="{ 'popup-count-selector__btn--compact': compact }"
-      :aria-label="t('popupCount.tooltip')"
-      :title="t('popupCount.tooltip')"
+      :aria-label="triggerLabel"
+      :title="triggerLabel"
       :aria-expanded="menuOpen"
-      aria-haspopup="listbox"
+      aria-haspopup="dialog"
       @click.stop="toggleMenu"
     >
-      {{ popupCount }}
+      <i
+        class="ti ti-devices"
+        aria-hidden="true"
+      />
+      <span
+        v-if="selectedCount > 0"
+        class="popup-count-selector__badge"
+      >
+        {{ selectedCount }}
+      </span>
     </button>
 
     <Teleport to="body">
@@ -138,22 +173,43 @@ onUnmounted(() => {
         v-if="menuOpen"
         ref="menu"
         class="popup-count-selector__menu"
-        role="listbox"
-        :aria-label="t('popupCount.tooltip')"
+        role="dialog"
+        :aria-label="t('monitors.selectScreens')"
         :style="menuStyle"
+        @click.stop
       >
-        <button
-          v-for="n in countOptions"
-          :key="n"
-          type="button"
-          class="popup-count-selector__option"
-          :class="{ 'popup-count-selector__option--active': popupCount === n }"
-          role="option"
-          :aria-selected="popupCount === n"
-          @click.stop="selectCount(n)"
+        <p class="popup-count-selector__title">
+          {{ t('monitors.selectScreens') }}
+        </p>
+        <p class="popup-count-selector__hint">
+          {{ t('monitors.hint') }}
+        </p>
+
+        <ul
+          class="popup-count-selector__list"
+          role="group"
+          :aria-label="t('monitors.selectScreens')"
         >
-          {{ n }}
-        </button>
+          <li
+            v-for="screen in optionsList"
+            :key="screen.id"
+          >
+            <label
+              class="popup-count-selector__option"
+              :class="{ 'popup-count-selector__option--active': screen.isSelected }"
+            >
+              <input
+                type="checkbox"
+                class="popup-count-selector__checkbox"
+                :checked="screen.isSelected"
+                @change="onToggle(screen.id)"
+              >
+              <span class="popup-count-selector__option-name">
+                {{ screen.label }}
+              </span>
+            </label>
+          </li>
+        </ul>
       </div>
     </Teleport>
   </div>
@@ -188,20 +244,17 @@ onUnmounted(() => {
 .popup-count-selector__btn {
   display: inline-flex;
   box-sizing: border-box;
-  width: 2.25rem;
   min-width: 2.25rem;
   min-height: 2.25rem;
-  padding: 0;
+  padding: 0 0.45rem;
   align-items: center;
   justify-content: center;
+  gap: 0.3rem;
   border: 0;
   border-radius: var(--ds-radius-md, 0.75rem);
   background: color-mix(in srgb, var(--ds-color-primary) 18%, transparent);
   color: var(--ds-color-primary);
   cursor: pointer;
-  font-size: 0.875rem;
-  font-weight: 700;
-  line-height: 1;
   overflow: visible;
   transition:
     transform 160ms ease,
@@ -212,47 +265,101 @@ onUnmounted(() => {
     background: color-mix(in srgb, var(--ds-color-primary) 28%, transparent);
   }
 
+  .ti {
+    font-size: 1.05rem;
+    line-height: 1;
+  }
+
   &--compact {
-    width: 2rem;
     min-width: 2rem;
     min-height: 2rem;
-    font-size: 0.8125rem;
+    padding: 0 0.35rem;
+
+    .ti {
+      font-size: 0.95rem;
+    }
   }
+}
+
+.popup-count-selector__badge {
+  display: inline-flex;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: var(--ds-color-primary);
+  color: var(--ds-color-on-primary);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .popup-count-selector__menu {
   display: flex;
-  min-width: 3rem;
   flex-direction: column;
-  gap: 0.15rem;
-  padding: 0.35rem;
+  gap: 0.55rem;
+  padding: 0.75rem;
   border: 1px solid color-mix(in srgb, var(--ds-color-on-surface) 10%, transparent);
   border-radius: var(--ds-radius-md, 0.75rem);
-  background: color-mix(in srgb, var(--ds-color-surface, #1c1b1f) 92%, transparent);
+  background: color-mix(in srgb, var(--ds-color-surface, #1c1b1f) 94%, transparent);
   box-shadow: 0 12px 32px rgb(0 0 0 / 35%);
   backdrop-filter: blur(12px);
 }
 
-.popup-count-selector__option {
-  display: flex;
-  height: 2.25rem;
-  align-items: center;
-  justify-content: center;
-  border: 0;
-  border-radius: var(--ds-radius-sm, 0.5rem);
-  background: transparent;
-  color: var(--ds-color-on-surface);
-  cursor: pointer;
+.popup-count-selector__title {
+  margin: 0;
   font-size: 0.875rem;
   font-weight: 700;
+  color: var(--ds-color-on-surface);
+}
+
+.popup-count-selector__hint {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: var(--ds-color-on-surface-variant);
+}
+
+.popup-count-selector__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.popup-count-selector__option {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 2.35rem;
+  padding: 0.35rem 0.55rem;
+  border-radius: var(--ds-radius-sm, 0.5rem);
+  cursor: pointer;
+  color: var(--ds-color-on-surface);
+  transition: background-color 140ms ease;
 
   &:hover {
-    background: color-mix(in srgb, var(--ds-color-primary) 14%, transparent);
+    background: color-mix(in srgb, var(--ds-color-primary) 12%, transparent);
   }
 
   &--active {
-    background: color-mix(in srgb, var(--ds-color-primary) 22%, transparent);
-    color: var(--ds-color-primary);
+    background: color-mix(in srgb, var(--ds-color-primary) 18%, transparent);
   }
+}
+
+.popup-count-selector__checkbox {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--ds-color-primary);
+  cursor: pointer;
+}
+
+.popup-count-selector__option-name {
+  font-size: 0.875rem;
+  font-weight: 600;
 }
 </style>
