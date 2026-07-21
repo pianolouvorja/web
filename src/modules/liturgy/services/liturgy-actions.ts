@@ -44,10 +44,7 @@ function hasBrowsableMedia(paths: string[]): boolean {
   return paths.some((path) => isBrowsableMediaUrl(path))
 }
 
-/**
- * Abre a música no player padrão — exatamente o mesmo contrato dos Álbuns.
- * No web, o módulo de mídia ainda é stub até a migração de Álbuns.
- */
+/** Abre a música no player padrão — exatamente o mesmo contrato dos Álbuns. */
 export async function openLiturgyMusicPlayer(
   item: LiturgyItem,
   mode: MediaPlaybackMode,
@@ -93,7 +90,7 @@ export async function executeLiturgyItem(
     case 'music': {
       const result = await openLiturgyMusicOnScreens(item)
       if (result.ok) {
-        await router.push({ name: 'albums' })
+        await router.push({ name: 'media' })
       }
       return result
     }

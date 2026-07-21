@@ -9,7 +9,7 @@ export default {
   },
   nav: {
     home: 'Início',
-    albums: 'Álbuns',
+    albums: 'Central de Mídia',
     liturgy: 'Liturgia',
     bible: 'Bíblia',
     utilities: 'Utilitários',

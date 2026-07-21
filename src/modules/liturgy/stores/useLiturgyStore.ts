@@ -766,6 +766,7 @@ export const useLiturgyStore = defineStore('liturgy', () => {
     lastActionMessageKey.value = result.messageKey ?? null
     if (!result.ok) return false
 
+    await router.push({ name: 'media' })
     return true
   }
 

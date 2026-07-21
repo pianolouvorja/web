@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, useTemplateRef } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import {
@@ -24,8 +24,11 @@ withDefaults(
 const { t } = useI18n()
 
 const rootRef = useTemplateRef<HTMLElement>('root')
+const btnRef = useTemplateRef<HTMLElement>('btn')
+const menuRef = useTemplateRef<HTMLElement>('menu')
 const menuOpen = ref(false)
 const popupCount = ref(getPopupCount())
+const menuStyle = ref<Record<string, string>>({})
 const countOptions = Array.from(
   { length: PROJECTION_DEFAULTS.popupCountMax },
   (_, index) => index + 1,
@@ -37,6 +40,34 @@ function refreshCount() {
   popupCount.value = getPopupCount()
 }
 
+function updateMenuPosition() {
+  const trigger = btnRef.value
+  if (!trigger) return
+
+  const rect = trigger.getBoundingClientRect()
+  const menuWidth = Math.max(48, rect.width)
+  const left = Math.min(
+    Math.max(8, rect.right - menuWidth),
+    window.innerWidth - menuWidth - 8,
+  )
+  const spaceBelow = window.innerHeight - rect.bottom
+  const openUp = spaceBelow < 220 && rect.top > spaceBelow
+
+  menuStyle.value = {
+    position: 'fixed',
+    width: `${menuWidth}px`,
+    left: `${left}px`,
+    zIndex: '80',
+    ...(openUp
+      ? { bottom: `${window.innerHeight - rect.top + 8}px`, top: 'auto' }
+      : { top: `${rect.bottom + 8}px`, bottom: 'auto' }),
+  }
+}
+
+function toggleMenu() {
+  menuOpen.value = !menuOpen.value
+}
+
 function selectCount(value: number) {
   popupCount.value = setPopupCount(value)
   menuOpen.value = false
@@ -46,20 +77,36 @@ function selectCount(value: number) {
 }
 
 function onDocumentClick(event: MouseEvent) {
-  const target = event.target as Node | null
-  if (rootRef.value && target && !rootRef.value.contains(target)) {
-    menuOpen.value = false
-  }
+  const target = event.target
+  if (!(target instanceof Node)) return
+  if (rootRef.value?.contains(target)) return
+  if (menuRef.value?.contains(target)) return
+  menuOpen.value = false
 }
+
+function onWindowChange() {
+  if (!menuOpen.value) return
+  updateMenuPosition()
+}
+
+watch(menuOpen, async (open) => {
+  if (!open) return
+  await nextTick()
+  updateMenuPosition()
+})
 
 onMounted(() => {
   refreshCount()
   document.addEventListener('click', onDocumentClick)
+  window.addEventListener('resize', onWindowChange)
+  window.addEventListener('scroll', onWindowChange, true)
   syncTimer = setInterval(refreshCount, 800)
 })
 
 onUnmounted(() => {
   document.removeEventListener('click', onDocumentClick)
+  window.removeEventListener('resize', onWindowChange)
+  window.removeEventListener('scroll', onWindowChange, true)
   if (syncTimer) clearInterval(syncTimer)
 })
 </script>
@@ -73,6 +120,7 @@ onUnmounted(() => {
       {{ t('popupCount.label') }}
     </span>
     <button
+      ref="btn"
       type="button"
       class="popup-count-selector__btn"
       :class="{ 'popup-count-selector__btn--compact': compact }"
@@ -80,30 +128,34 @@ onUnmounted(() => {
       :title="t('popupCount.tooltip')"
       :aria-expanded="menuOpen"
       aria-haspopup="listbox"
-      @click.stop="menuOpen = !menuOpen"
+      @click.stop="toggleMenu"
     >
       {{ popupCount }}
     </button>
 
-    <div
-      v-if="menuOpen"
-      class="popup-count-selector__menu"
-      role="listbox"
-      :aria-label="t('popupCount.tooltip')"
-    >
-      <button
-        v-for="n in countOptions"
-        :key="n"
-        type="button"
-        class="popup-count-selector__option"
-        :class="{ 'popup-count-selector__option--active': popupCount === n }"
-        role="option"
-        :aria-selected="popupCount === n"
-        @click.stop="selectCount(n)"
+    <Teleport to="body">
+      <div
+        v-if="menuOpen"
+        ref="menu"
+        class="popup-count-selector__menu"
+        role="listbox"
+        :aria-label="t('popupCount.tooltip')"
+        :style="menuStyle"
       >
-        {{ n }}
-      </button>
-    </div>
+        <button
+          v-for="n in countOptions"
+          :key="n"
+          type="button"
+          class="popup-count-selector__option"
+          :class="{ 'popup-count-selector__option--active': popupCount === n }"
+          role="option"
+          :aria-selected="popupCount === n"
+          @click.stop="selectCount(n)"
+        >
+          {{ n }}
+        </button>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -118,8 +170,9 @@ onUnmounted(() => {
 .popup-count-selector__label {
   display: inline-flex;
   align-items: center;
-  height: 1.5rem;
-  padding: 0 0.55rem;
+  box-sizing: border-box;
+  min-height: 2rem;
+  padding: 0.25rem 0.55rem;
   border: 1px solid color-mix(in srgb, var(--ds-color-primary) 28%, transparent);
   border-radius: 9999px;
   background: color-mix(in srgb, var(--ds-color-primary) 12%, transparent);
@@ -127,15 +180,18 @@ onUnmounted(() => {
   font-size: 0.6875rem;
   font-weight: 700;
   letter-spacing: 0.04em;
-  line-height: 1;
+  line-height: 1.2;
   user-select: none;
   box-shadow: 0 4px 14px color-mix(in srgb, var(--ds-color-primary) 12%, transparent);
 }
 
 .popup-count-selector__btn {
   display: inline-flex;
+  box-sizing: border-box;
   width: 2.25rem;
-  height: 2.25rem;
+  min-width: 2.25rem;
+  min-height: 2.25rem;
+  padding: 0;
   align-items: center;
   justify-content: center;
   border: 0;
@@ -146,6 +202,7 @@ onUnmounted(() => {
   font-size: 0.875rem;
   font-weight: 700;
   line-height: 1;
+  overflow: visible;
   transition:
     transform 160ms ease,
     background-color 160ms ease;
@@ -156,17 +213,14 @@ onUnmounted(() => {
   }
 
   &--compact {
-    width: 1.75rem;
-    height: 1.75rem;
-    font-size: 0.75rem;
+    width: 2rem;
+    min-width: 2rem;
+    min-height: 2rem;
+    font-size: 0.8125rem;
   }
 }
 
 .popup-count-selector__menu {
-  position: absolute;
-  top: calc(100% + 0.35rem);
-  right: 0;
-  z-index: 20;
   display: flex;
   min-width: 3rem;
   flex-direction: column;

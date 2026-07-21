@@ -6,6 +6,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { usePageTransition } from '@design-system/composables'
 import { DockFooter, GradientBackground } from '@design-system/index'
 import type { DockNavItem } from '@design-system/types/navigation'
+import MediaChrome from '@modules/media/components/MediaChrome.vue'
 import { mainNavRoutes } from '@shared/constants/navigation'
 import logoUrl from '@assets/brand/logo-louvor-ja.svg'
 import codenamePianoUrl from '@assets/brand/codenamePIANO.svg'
@@ -97,6 +98,8 @@ function viewKey(viewRoute: typeof route) {
         </Transition>
       </RouterView>
     </main>
+
+    <MediaChrome />
 
     <DockFooter
       :items="navItems"

@@ -1,6 +1,7 @@
 import { createI18n } from 'vue-i18n'
 
 import ptBR from '@locales/pt-BR'
+import albumsPtBR from '@modules/albums/locales/pt-BR'
 import biblePtBR from '@modules/bible/locales/pt-BR'
 import clockPtBR from '@modules/clock/locales/pt-BR'
 import countdownPtBR from '@modules/countdown/locales/pt-BR'
@@ -18,6 +19,7 @@ export default createI18n({
   messages: {
     'pt-BR': {
       ...ptBR,
+      ...albumsPtBR,
       ...biblePtBR,
       ...clockPtBR,
       ...countdownPtBR,
