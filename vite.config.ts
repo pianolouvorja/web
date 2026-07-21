@@ -35,9 +35,9 @@ export default defineConfig(({ mode }) => {
           globPatterns: ['**/*.{html,js,css,svg,png}'],
         },
         manifest: {
-          name: 'LouvorJA',
+          name: 'LouvorJA - PIANO',
           short_name: 'LouvorJA',
-          description: 'Software de músicas para Louvor e Adoração',
+          description: 'LouvorJA - PIANO — versão web para gerenciamento de culto',
           start_url: base,
           display: 'standalone',
           background_color: '#000000',

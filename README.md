@@ -1,18 +1,18 @@
-# Central - Louvor JA
+# LouvorJA - PIANO (Web)
 
 Aplicação web para gerenciamento de culto — músicas, bíblia, utilitários e projeção.
 
 Este projeto é um fork de recursos em relação ao app Louvor JA ([app.louvorja.com.br](https://app.louvorja.com.br/), [github.com/louvorja/app](https://github.com/louvorja/app)), onde as principais ferramentas são migradas e adaptadas para as tecnologias usadas neste projeto.
 
-O **Central Adoração**, além de incluir os recursos do App Louvor JA, vai incorporar ao longo do desenvolvimento outras funcionalidades voltadas ao contexto ministerial e educacional.
+O **LouvorJA - PIANO**, além de incluir os recursos do App Louvor JA, vai incorporar ao longo do desenvolvimento outras funcionalidades voltadas ao contexto ministerial e educacional.
 
-Pacote: `centralja-web` · Plataforma: navegador.
+Pacote: `louvorja-piano-web` · Plataforma: navegador.
 
 ---
 
 ## Versões do produto
 
-O Central Adoração / Louvor JA existe em **duas linhas de entrega**:
+O LouvorJA - PIANO existe em **duas linhas de entrega**:
 
 | Versão | Escopo | Este repositório |
 |--------|--------|------------------|
@@ -138,4 +138,4 @@ Aliases: `version:bug` → patch · `version:min` → minor · `version:max` →
 
 ## Licença
 
-Projeto privado — Louvor JA.
+Projeto privado — LouvorJA - PIANO.

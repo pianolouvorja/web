@@ -1,5 +1,5 @@
 {
-  "name": "centralja-web",
+  "name": "louvorja-piano-web",
   "version": "1.14.1",
   "private": true,
   "type": "module",
@@ -46,7 +46,7 @@
   "engines": {
     "node": "^22.18.0 || >=24.12.0"
   },
-  "description": "Louvor JA — versão web para gerenciamento de culto",
+  "description": "LouvorJA - PIANO — versão web para gerenciamento de culto",
   "author": "Kiki Solutions",
   "overrides": {
     "@tabler/icons-webfont": {
