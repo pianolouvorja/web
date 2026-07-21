@@ -51,6 +51,9 @@ const moduleViews: Record<string, ReturnType<typeof defineAsyncComponent>> = {
   random: defineAsyncComponent(
     () => import('@modules/random/views/RandomProjectionView.vue'),
   ),
+  'liturgy-web': defineAsyncComponent(
+    () => import('@modules/liturgy/views/LiturgyWebProjectionView.vue'),
+  ),
 }
 
 const activeView = computed(() => {

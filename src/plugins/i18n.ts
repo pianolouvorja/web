@@ -5,6 +5,8 @@ import biblePtBR from '@modules/bible/locales/pt-BR'
 import clockPtBR from '@modules/clock/locales/pt-BR'
 import countdownPtBR from '@modules/countdown/locales/pt-BR'
 import homePtBR from '@modules/home/locales/pt-BR'
+import liturgyPtBR from '@modules/liturgy/locales/pt-BR'
+import mediaPtBR from '@modules/media/locales/pt-BR'
 import randomPtBR from '@modules/random/locales/pt-BR'
 import settingsPtBR from '@modules/settings/locales/pt-BR'
 import timerPtBR from '@modules/timer/locales/pt-BR'
@@ -20,6 +22,8 @@ export default createI18n({
       ...clockPtBR,
       ...countdownPtBR,
       ...homePtBR,
+      ...liturgyPtBR,
+      ...mediaPtBR,
       ...randomPtBR,
       ...settingsPtBR,
       ...timerPtBR,

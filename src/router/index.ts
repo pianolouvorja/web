@@ -5,6 +5,7 @@ import { bibleRoutes } from '@modules/bible/routes'
 import { utilitiesRoutes } from '@modules/clock/routes'
 import { countdownRoutes } from '@modules/countdown/routes'
 import { homeRoutes } from '@modules/home/routes'
+import { albumsRoutes } from '@modules/albums/routes'
 import { liturgyRoutes } from '@modules/liturgy/routes'
 import { randomRoutes } from '@modules/random/routes'
 import { settingsRoutes } from '@modules/settings/routes'
@@ -27,6 +28,7 @@ const router = createRouter({
       component: AppShell,
       children: [
         ...homeRoutes,
+        ...albumsRoutes,
         ...liturgyRoutes,
         ...bibleRoutes,
         ...utilitiesRoutes,
