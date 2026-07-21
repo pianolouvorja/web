@@ -14,10 +14,6 @@ export default {
     utilities: 'Utilitários',
     settings: 'Configurações',
   },
-  home: {
-    title: 'O que vamos cantar?',
-    searchPlaceholder: 'Procure aqui...',
-  },
   popupCount: {
     label: 'Telas',
     tooltip: 'Número de telas de projeção',
