@@ -12,9 +12,8 @@
 
 <style scoped lang="scss">
 .ds-projection-bg {
-  width: 100%;
-  height: 100%;
   min-height: 100%;
+  width: 100%;
   background-color: #000000;
   color: #ffffff;
 }

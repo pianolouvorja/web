@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { GlassCard } from '@design-system/index'
@@ -31,24 +31,10 @@ const {
 
 const fileInput = ref<HTMLInputElement | null>(null)
 
-const fontSizeMin = 50
-const fontSizeMax = 200
-
-const fontSizeFill = computed(() => {
-  const span = fontSizeMax - fontSizeMin
-  const ratio = span <= 0 ? 0 : (settings.value.fontSizePercent - fontSizeMin) / span
-  return `${Math.round(ratio * 100)}%`
-})
-
-function onFontSizeInput(event: Event) {
-  const target = event.target as HTMLInputElement
-  setFontSizePercent(Number(target.value))
-}
-
 const alignIcon: Record<LyricVerticalAlign, string> = {
-  top: 'mdi-align-vertical-top',
-  center: 'mdi-align-vertical-center',
-  bottom: 'mdi-align-vertical-bottom',
+  top: 'ti-layout-align-top',
+  center: 'ti-layout-align-middle',
+  bottom: 'ti-layout-align-bottom',
 }
 
 const alignLabelKey: Record<LyricVerticalAlign, string> = {
@@ -90,7 +76,7 @@ async function onFileSelected(event: Event) {
 <template>
   <GlassCard class="lyric-custom">
     <div class="lyric-custom__header">
-      <i class="mdi mdi-palette-outline lyric-custom__icon" aria-hidden="true" />
+      <i class="ti ti-palette lyric-custom__icon" aria-hidden="true" />
       <h3 class="lyric-custom__title">
         {{ t('settings.projection.lyrics.title') }}
       </h3>
@@ -116,7 +102,7 @@ async function onFileSelected(event: Event) {
           @click="setLyricAlign(align)"
         >
           <i
-            class="mdi"
+            class="ti"
             :class="alignIcon[align]"
             aria-hidden="true"
           />
@@ -155,19 +141,15 @@ async function onFileSelected(event: Event) {
           <span>{{ t('settings.projection.lyrics.fontSize') }}</span>
           <span class="lyric-custom__chip">{{ settings.fontSizePercent }}%</span>
         </div>
-        <label class="lyric-custom__range-wrap">
-          <span class="sr-only">{{ t('settings.projection.lyrics.fontSize') }}</span>
-          <input
-            class="lyric-custom__range"
-            type="range"
-            :min="fontSizeMin"
-            :max="fontSizeMax"
-            step="5"
-            :value="settings.fontSizePercent"
-            :style="{ '--slider-fill': fontSizeFill }"
-            @input="onFontSizeInput"
-          >
-        </label>
+        <v-slider
+          :model-value="settings.fontSizePercent"
+          :min="50"
+          :max="200"
+          :step="5"
+          color="primary"
+          hide-details
+          @update:model-value="setFontSizePercent(Number($event))"
+        />
       </div>
 
       <div class="lyric-custom__field">
@@ -186,7 +168,7 @@ async function onFileSelected(event: Event) {
             @click="setFontColor(color)"
           />
           <label class="lyric-custom__picker">
-            <i class="mdi mdi-eyedropper" aria-hidden="true" />
+            <i class="ti ti-color-picker" aria-hidden="true" />
             <input
               type="color"
               :value="settings.fontColor"
@@ -229,7 +211,7 @@ async function onFileSelected(event: Event) {
     >
       <div class="lyric-custom__field">
         <p class="lyric-custom__field-label lyric-custom__field-label--row">
-          <i class="mdi mdi-format-color-fill" aria-hidden="true" />
+          <i class="ti ti-paint" aria-hidden="true" />
           {{ t('settings.projection.lyrics.backgroundColor') }}
         </p>
         <div class="lyric-custom__swatches">
@@ -244,7 +226,7 @@ async function onFileSelected(event: Event) {
             @click="setBackgroundColor(color)"
           />
           <label class="lyric-custom__picker">
-            <i class="mdi mdi-eyedropper" aria-hidden="true" />
+            <i class="ti ti-color-picker" aria-hidden="true" />
             <input
               type="color"
               :value="settings.backgroundColor"
@@ -257,7 +239,7 @@ async function onFileSelected(event: Event) {
 
       <div class="lyric-custom__field">
         <p class="lyric-custom__field-label lyric-custom__field-label--row">
-          <i class="mdi mdi-image-outline" aria-hidden="true" />
+          <i class="ti ti-photo" aria-hidden="true" />
           {{ t('settings.projection.lyrics.backgroundImage') }}
         </p>
 
@@ -277,7 +259,7 @@ async function onFileSelected(event: Event) {
               :aria-label="t('settings.projection.lyrics.removeImage')"
               @click="clearBackgroundImage"
             >
-              <i class="mdi mdi-delete" aria-hidden="true" />
+              <i class="ti ti-trash" aria-hidden="true" />
             </button>
             <button
               type="button"
@@ -285,7 +267,7 @@ async function onFileSelected(event: Event) {
               :aria-label="t('settings.projection.lyrics.changeImage')"
               @click="openFilePicker"
             >
-              <i class="mdi mdi-pencil" aria-hidden="true" />
+              <i class="ti ti-pencil" aria-hidden="true" />
             </button>
           </div>
         </div>
@@ -296,7 +278,7 @@ async function onFileSelected(event: Event) {
           class="lyric-custom__dropzone"
           @click="openFilePicker"
         >
-          <i class="mdi mdi-cloud-upload-outline" aria-hidden="true" />
+          <i class="ti ti-cloud-upload" aria-hidden="true" />
           <span>{{ t('settings.projection.lyrics.selectImage') }}</span>
         </button>
 
@@ -380,7 +362,7 @@ async function onFileSelected(event: Event) {
     color 180ms ease,
     box-shadow 180ms ease;
 
-  .mdi {
+  .ti {
     font-size: 18px;
     line-height: 1;
   }
@@ -480,76 +462,6 @@ async function onFileSelected(event: Event) {
   font-weight: 700;
 }
 
-.lyric-custom__range-wrap {
-  display: block;
-  width: 100%;
-}
-
-.lyric-custom__range {
-  display: block;
-  width: 100%;
-  height: 1.5rem;
-  margin: 0;
-  appearance: none;
-  background: transparent;
-  cursor: pointer;
-
-  &::-webkit-slider-runnable-track {
-    height: 0.375rem;
-    border-radius: var(--ds-radius-full);
-    background: linear-gradient(
-      to right,
-      var(--ds-color-primary) var(--slider-fill, 0%),
-      color-mix(in srgb, var(--ds-color-on-surface) 14%, transparent)
-        var(--slider-fill, 0%)
-    );
-  }
-
-  &::-webkit-slider-thumb {
-    appearance: none;
-    width: 1.125rem;
-    height: 1.125rem;
-    margin-top: -0.375rem;
-    border: 0;
-    border-radius: var(--ds-radius-full);
-    background: var(--ds-color-primary);
-    box-shadow: 0 2px 8px color-mix(in srgb, var(--ds-color-primary) 40%, transparent);
-  }
-
-  &::-moz-range-track {
-    height: 0.375rem;
-    border-radius: var(--ds-radius-full);
-    background: color-mix(in srgb, var(--ds-color-on-surface) 14%, transparent);
-  }
-
-  &::-moz-range-progress {
-    height: 0.375rem;
-    border-radius: var(--ds-radius-full);
-    background: var(--ds-color-primary);
-  }
-
-  &::-moz-range-thumb {
-    width: 1.125rem;
-    height: 1.125rem;
-    border: 0;
-    border-radius: var(--ds-radius-full);
-    background: var(--ds-color-primary);
-    box-shadow: 0 2px 8px color-mix(in srgb, var(--ds-color-primary) 40%, transparent);
-  }
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
 .lyric-custom__field {
   margin-bottom: 1.25rem;
 
@@ -574,7 +486,7 @@ async function onFileSelected(event: Event) {
     letter-spacing: 0.06em;
     text-transform: uppercase;
 
-    .mdi {
+    .ti {
       color: var(--ds-color-primary);
       font-size: 16px;
     }
@@ -629,7 +541,7 @@ async function onFileSelected(event: Event) {
     cursor: pointer;
   }
 
-  .mdi {
+  .ti {
     font-size: 18px;
     pointer-events: none;
   }
@@ -680,7 +592,7 @@ async function onFileSelected(event: Event) {
   cursor: pointer;
   transition: background-color 180ms ease;
 
-  .mdi {
+  .ti {
     color: var(--ds-color-primary);
     font-size: 32px;
     line-height: 1;
@@ -732,7 +644,7 @@ async function onFileSelected(event: Event) {
     color: #1a0a08;
   }
 
-  .mdi {
+  .ti {
     font-size: 18px;
   }
 }

@@ -49,7 +49,7 @@ onUnmounted(() => {
       @click="onCloseAll"
     >
       <i
-        class="mdi mdi-close-box-multiple-outline"
+        class="ti ti-square-x"
         aria-hidden="true"
       />
     </button>
@@ -85,7 +85,7 @@ onUnmounted(() => {
     background: color-mix(in srgb, var(--ds-color-primary) 28%, transparent);
   }
 
-  .mdi {
+  .ti {
     font-size: 1.1rem;
     line-height: 1;
   }

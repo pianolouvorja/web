@@ -53,7 +53,7 @@ function onScreenControlsChanged() {
         @click="goBack"
       >
         <i
-          class="mdi mdi-arrow-left"
+          class="ti ti-arrow-left"
           aria-hidden="true"
         />
       </button>
@@ -61,7 +61,7 @@ function onScreenControlsChanged() {
       <div class="clock-view__brand">
         <div class="clock-view__brand-icon">
           <i
-            class="mdi mdi-clock-outline"
+            class="ti ti-clock"
             aria-hidden="true"
           />
         </div>
@@ -86,7 +86,7 @@ function onScreenControlsChanged() {
               @click="openConfig"
             >
               <i
-                class="mdi mdi-palette"
+                class="ti ti-palette"
                 aria-hidden="true"
               />
             </button>
@@ -109,7 +109,7 @@ function onScreenControlsChanged() {
           class="clock-view__projecting"
         >
           <i
-            class="mdi mdi-monitor"
+            class="ti ti-device-desktop"
             aria-hidden="true"
           />
           {{ t('clock.projecting') }}
@@ -171,7 +171,7 @@ function onScreenControlsChanged() {
     background: color-mix(in srgb, var(--ds-color-on-surface) 14%, transparent);
   }
 
-  .mdi {
+  .ti {
     font-size: 1.25rem;
   }
 }
@@ -192,7 +192,7 @@ function onScreenControlsChanged() {
   background: color-mix(in srgb, var(--ds-color-primary) 16%, transparent);
   color: var(--ds-color-primary);
 
-  .mdi {
+  .ti {
     font-size: 1.35rem;
   }
 }
@@ -266,7 +266,7 @@ function onScreenControlsChanged() {
     background: color-mix(in srgb, var(--ds-color-primary) 28%, transparent);
   }
 
-  .mdi {
+  .ti {
     font-size: 1.1rem;
   }
 }
@@ -293,7 +293,7 @@ function onScreenControlsChanged() {
   font-weight: 600;
   transform: translateX(-50%);
 
-  .mdi {
+  .ti {
     font-size: 0.95rem;
   }
 }

@@ -1,7 +1,7 @@
 export const mainNavRoutes = [
-  { key: 'home', labelKey: 'nav.home', icon: 'mdi-home', to: '/' },
-  { key: 'albums', labelKey: 'nav.albums', icon: 'mdi-music-box-multiple', to: '/albums' },
-  { key: 'bible', labelKey: 'nav.bible', icon: 'mdi-book-open-page-variant', to: '/bible' },
-  { key: 'utilities', labelKey: 'nav.utilities', icon: 'mdi-hammer-wrench', to: '/utilities' },
-  { key: 'settings', labelKey: 'nav.settings', icon: 'mdi-cog', to: '/settings/appearance' },
+  { key: 'home', labelKey: 'nav.home', icon: 'ti-home', to: '/' },
+  { key: 'albums', labelKey: 'nav.albums', icon: 'ti-playlist', to: '/albums' },
+  { key: 'bible', labelKey: 'nav.bible', icon: 'ti-book-2', to: '/bible' },
+  { key: 'utilities', labelKey: 'nav.utilities', icon: 'ti-tool', to: '/utilities' },
+  { key: 'settings', labelKey: 'nav.settings', icon: 'ti-settings', to: '/settings/appearance' },
 ] as const

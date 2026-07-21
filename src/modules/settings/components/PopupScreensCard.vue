@@ -20,7 +20,7 @@ const {
 <template>
   <GlassCard class="popup-screens" :padding="false">
     <div class="popup-screens__header">
-      <i class="mdi mdi-monitor-multiple popup-screens__icon" aria-hidden="true" />
+      <i class="ti ti-devices popup-screens__icon" aria-hidden="true" />
       <div class="popup-screens__heading">
         <h3 class="popup-screens__title">
           {{ t('settings.projection.popupScreens') }}
@@ -48,7 +48,7 @@ const {
         :aria-label="t('settings.projection.decreaseScreens')"
         @click="decrementPopupCount"
       >
-        <i class="mdi mdi-minus" aria-hidden="true" />
+        <i class="ti ti-minus" aria-hidden="true" />
       </button>
 
       <label class="popup-screens__slider-wrap">
@@ -72,7 +72,7 @@ const {
         :aria-label="t('settings.projection.increaseScreens')"
         @click="incrementPopupCount"
       >
-        <i class="mdi mdi-plus" aria-hidden="true" />
+        <i class="ti ti-plus" aria-hidden="true" />
       </button>
     </div>
   </GlassCard>
@@ -170,7 +170,7 @@ const {
     opacity var(--ds-motion-duration, 200ms) ease,
     transform 150ms ease;
 
-  .mdi {
+  .ti {
     font-size: 18px;
     line-height: 1;
   }

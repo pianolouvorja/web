@@ -107,7 +107,7 @@ function onKeydown(event: KeyboardEvent) {
           @click="startEdit"
         >
           <i
-            class="mdi mdi-pencil"
+            class="ti ti-pencil"
             aria-hidden="true"
           />
         </button>
@@ -237,7 +237,7 @@ function onKeydown(event: KeyboardEvent) {
     color 150ms ease,
     background-color 150ms ease;
 
-  .mdi {
+  .ti {
     font-size: 1rem;
     line-height: 1;
   }

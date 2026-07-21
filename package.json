@@ -20,7 +20,8 @@
     "git:publish": "git push -u origin HEAD --follow-tags"
   },
   "dependencies": {
-    "@mdi/font": "^7.4.47",
+    "@fontsource-variable/plus-jakarta-sans": "^5.3.0",
+    "@tabler/icons-webfont": "^3.45.0",
     "pinia": "^3.0.4",
     "vue": "^3.5.38",
     "vue-i18n": "^11.4.6",
@@ -46,5 +47,12 @@
     "node": "^22.18.0 || >=24.12.0"
   },
   "description": "Louvor JA — versão web para gerenciamento de culto",
-  "author": "Kiki Solutions"
+  "author": "Kiki Solutions",
+  "overrides": {
+    "@tabler/icons-webfont": {
+      "svgtofont": "npm:noop2@2.0.0",
+      "svg-path-commander": "npm:noop2@2.0.0",
+      "@tabler/icons": "npm:noop2@2.0.0"
+    }
+  }
 }

@@ -34,7 +34,7 @@ function onSelect(key: string) {
       :class="{ 'ds-dock__item--active': isActive(item.key) }"
       @click="onSelect(item.key)"
     >
-      <i class="mdi ds-dock__icon" :class="item.icon" aria-hidden="true" />
+      <i class="ti ds-dock__icon" :class="item.icon" aria-hidden="true" />
       <span class="ds-dock__label">{{ item.label }}</span>
       <span v-if="isActive(item.key)" class="ds-dock__dot" aria-hidden="true" />
     </button>
@@ -92,10 +92,13 @@ function onSelect(key: string) {
 }
 
 .ds-dock__label {
+  max-width: 7.5rem;
   font-size: 12px;
   font-weight: 500;
-  line-height: 16px;
+  line-height: 1.15;
   letter-spacing: 0.02em;
+  text-align: center;
+  white-space: normal;
 }
 
 .ds-dock__dot {
