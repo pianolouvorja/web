@@ -47,7 +47,7 @@
     "node": "^22.18.0 || >=24.12.0"
   },
   "description": "LouvorJA - PIANO — versão web para gerenciamento de culto",
-  "author": "Kiki Solutions",
+  "author": "Ezequias Fonseca",
   "overrides": {
     "@tabler/icons-webfont": {
       "svgtofont": "npm:noop2@2.0.0",
