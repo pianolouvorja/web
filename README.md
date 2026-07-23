@@ -138,4 +138,4 @@ Aliases: `version:bug` → patch · `version:min` → minor · `version:max` →
 
 ## Licença
 
-Projeto privado — LouvorJA - PIANO.
+Licença [MIT](LICENSE.md) — LouvorJA - PIANO.
