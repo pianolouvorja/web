@@ -8,18 +8,18 @@ const props = defineProps<{
   collection: AlbumCollection
 }>()
 
-const _emit = defineEmits<{
+const emit = defineEmits<{
   open: []
 }>()
 
 const { t } = useI18n()
 
-const _displayName = computed(() => {
+const displayName = computed(() => {
   if (props.collection.id === 'hymnal_1996') return t('albums.hymnal.edition1996Name')
   return props.collection.name
 })
 
-const _subtitle = computed(() => {
+const subtitle = computed(() => {
   const songCount = props.collection.trackCount
   if (songCount != null) {
     const key =
@@ -32,7 +32,7 @@ const _subtitle = computed(() => {
   return props.collection.subtitle || null
 })
 
-const _coverIcon = computed(() =>
+const coverIcon = computed(() =>
   props.collection.id === 'hymnal_1996' ? 'ti-history' : 'ti-book-2',
 )
 </script>

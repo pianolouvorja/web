@@ -50,14 +50,14 @@ const {
   syncProjectionFlag,
 } = useMediaPlayer()
 
-const _stageLyric = computed(() => currentSlide.value?.lyric ?? '')
-const _stageTitle = computed(() => session.value?.title ?? '')
-const _stageImage = computed(
+const stageLyric = computed(() => currentSlide.value?.lyric ?? '')
+const stageTitle = computed(() => session.value?.title ?? '')
+const stageImage = computed(
   () => resolvedSlideImageUrl.value ?? currentSlide.value?.imageUrl ?? null,
 )
-const _isCover = computed(() => Boolean(currentSlide.value?.isCover))
+const isCover = computed(() => Boolean(currentSlide.value?.isCover))
 
-const _playlist = computed(() =>
+const playlist = computed(() =>
   (session.value?.slides ?? []).map((slide, index) => ({
     index,
     label: slide.isCover
@@ -94,20 +94,20 @@ watch(hasSession, (active) => {
   }
 })
 
-async function _onMinimize() {
+async function onMinimize() {
   minimize()
   leaveMediaRoute()
 }
 
-function _onConfirmClose() {
+function onConfirmClose() {
   close()
 }
 
-async function _onMode(mode: MediaPlaybackMode) {
+async function onMode(mode: MediaPlaybackMode) {
   await switchMode(mode)
 }
 
-async function _onToggleFullscreen() {
+async function onToggleFullscreen() {
   const el = stageRoot.value
   if (!el) return
   if (document.fullscreenElement) {

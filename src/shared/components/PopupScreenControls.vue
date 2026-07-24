@@ -17,7 +17,7 @@ function refresh() {
   hasPopups.value = hasLivePopups()
 }
 
-async function _onCloseAll() {
+async function onCloseAll() {
   await closeAllPopups()
   refresh()
   emit('changed')

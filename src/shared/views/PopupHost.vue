@@ -48,7 +48,7 @@ const moduleViews: Record<string, ReturnType<typeof defineAsyncComponent>> = {
   ),
 }
 
-const _activeView = computed(() => {
+const activeView = computed(() => {
   if (!moduleId.value) return null
   return moduleViews[moduleId.value] ?? null
 })
