@@ -64,9 +64,9 @@ const categoryRequiredMissing = computed(
   () => hasTypeSelection.value && !isCategory.value && !props.draft.categoryId,
 )
 
-const _durationLabel = computed(() => formatMomentDuration(props.draft.durationMs))
+const durationLabel = computed(() => formatMomentDuration(props.draft.durationMs))
 
-const _showFilePath = computed(
+const showFilePath = computed(
   () => props.draft.type != null && INTERNAL_FILE_TYPES.includes(props.draft.type),
 )
 
@@ -78,7 +78,7 @@ const selectedFilePaths = computed(() => {
   return [] as string[]
 })
 
-const _fileButtonLabel = computed(() => {
+const fileButtonLabel = computed(() => {
   const hasFile = selectedFilePaths.value.length > 0
   const type = props.draft.type
 
@@ -103,28 +103,28 @@ const showUrl = computed(() => props.draft.type === 'site' || props.draft.type =
 
 const urlRequiredMissing = computed(() => showUrl.value && !isValidLiturgyUrl(props.draft.url))
 
-const _nameFieldError = computed(() => showValidation.value && nameRequiredMissing.value)
-const _startTimeFieldError = computed(() => showValidation.value && startTimeRequiredMissing.value)
-const _endTimeFieldError = computed(() => showValidation.value && endTimeRequiredMissing.value)
-const _musicFieldError = computed(() => showValidation.value && musicRequiredMissing.value)
-const _categoryFieldError = computed(() => showValidation.value && categoryRequiredMissing.value)
-const _urlFieldError = computed(() => showValidation.value && urlRequiredMissing.value)
+const nameFieldError = computed(() => showValidation.value && nameRequiredMissing.value)
+const startTimeFieldError = computed(() => showValidation.value && startTimeRequiredMissing.value)
+const endTimeFieldError = computed(() => showValidation.value && endTimeRequiredMissing.value)
+const musicFieldError = computed(() => showValidation.value && musicRequiredMissing.value)
+const categoryFieldError = computed(() => showValidation.value && categoryRequiredMissing.value)
+const urlFieldError = computed(() => showValidation.value && urlRequiredMissing.value)
 
-const _showMusicResults = computed(() => isMusic.value && props.musicQuery.trim().length > 0)
+const showMusicResults = computed(() => isMusic.value && props.musicQuery.trim().length > 0)
 
-const _momentNameLabel = computed(() => {
+const momentNameLabel = computed(() => {
   if (isCategory.value) return t('liturgy.dialog.categoryMomentName')
   if (isMusic.value) return t('liturgy.dialog.complementaryTitle')
   return t('liturgy.dialog.momentName')
 })
 
-const _momentNamePlaceholder = computed(() => {
+const momentNamePlaceholder = computed(() => {
   if (isCategory.value) return t('liturgy.namePlaceholders.category')
   if (isMusic.value) return t('liturgy.dialog.complementaryTitlePlaceholder')
   return t('liturgy.dialog.momentNamePlaceholder')
 })
 
-const _dialogTitle = computed(() => {
+const dialogTitle = computed(() => {
   if (props.isEditing && isCategory.value) {
     return t('liturgy.dialog.editCategoryTitle')
   }
@@ -134,7 +134,7 @@ const _dialogTitle = computed(() => {
   return t('liturgy.dialog.title')
 })
 
-const _typeGroups = computed(() => {
+const typeGroups = computed(() => {
   const groups = LITURGY_TYPE_GROUPS.map((group) => ({
     ...group,
     types: props.lockCategory
@@ -156,11 +156,11 @@ const _typeGroups = computed(() => {
   return groups
 })
 
-const _showCategoryField = computed(
+const showCategoryField = computed(
   () => hasTypeSelection.value && !isCategory.value && !props.lockCategory,
 )
 
-const _showDurationTitleRow = computed(() => hasTypeSelection.value && !isCategory.value)
+const showDurationTitleRow = computed(() => hasTypeSelection.value && !isCategory.value)
 
 watch(
   () => props.open,
@@ -183,7 +183,7 @@ function patch(partial: Partial<LiturgyItemDraft>) {
   emit('update:draft', { ...props.draft, ...partial })
 }
 
-function _selectType(type: LiturgyItemType) {
+function selectType(type: LiturgyItemType) {
   if (props.lockCategory && type === 'category') return
 
   const previousType = props.draft.type
@@ -214,33 +214,33 @@ function _selectType(type: LiturgyItemType) {
   }
 }
 
-function _bumpDuration(deltaSteps: number) {
+function bumpDuration(deltaSteps: number) {
   const next = props.draft.durationMs + deltaSteps * MOMENT_DURATION_STEP_MS
   const clamped = Math.min(MOMENT_DURATION_MAX_MS, Math.max(MOMENT_DURATION_MIN_MS, next))
   patch({ durationMs: clamped })
 }
 
-function _onNameInput(event: Event) {
+function onNameInput(event: Event) {
   patch({ name: (event.target as HTMLInputElement).value })
 }
 
-function _onStartTimeInput(event: Event) {
+function onStartTimeInput(event: Event) {
   patch({ startTime: (event.target as HTMLInputElement).value })
 }
 
-function _onEndTimeInput(event: Event) {
+function onEndTimeInput(event: Event) {
   patch({ endTime: (event.target as HTMLInputElement).value })
 }
 
-function _onDetailsInput(event: Event) {
+function onDetailsInput(event: Event) {
   patch({ subtitle: (event.target as HTMLTextAreaElement).value })
 }
 
-function _onUrlInput(event: Event) {
+function onUrlInput(event: Event) {
   patch({ url: (event.target as HTMLInputElement).value })
 }
 
-function _acceptForType(type: LiturgyItemType | null): string {
+function acceptForType(type: LiturgyItemType | null): string {
   switch (type) {
     case 'video':
       return 'video/*,.mp4,.mkv,.avi,.mov,.wmv,.webm'
@@ -267,19 +267,19 @@ function revokeBlobUrls(paths: string[]) {
   }
 }
 
-function _displayFileLabel(path: string, index: number): string {
+function displayFileLabel(path: string, index: number): string {
   if (!path.startsWith('blob:')) {
     return path.split(/[\\/]/).pop() || path
   }
   return t('liturgy.fields.fileSelectedLabel', { index: index + 1 })
 }
 
-function _selectLocalFile() {
+function selectLocalFile() {
   filePickerError.value = null
   fileInputEl.value?.click()
 }
 
-function _onLocalFilesSelected(event: Event) {
+function onLocalFilesSelected(event: Event) {
   const input = event.target as HTMLInputElement
   const files = Array.from(input.files ?? [])
   input.value = ''
@@ -311,26 +311,26 @@ function _onLocalFilesSelected(event: Event) {
   }
 }
 
-function _onCategoryChange(event: Event) {
+function onCategoryChange(event: Event) {
   const value = (event.target as HTMLSelectElement).value
   patch({ categoryId: value || null })
 }
 
-function _onMusicQueryInput(event: Event) {
+function onMusicQueryInput(event: Event) {
   emit('update:musicQuery', (event.target as HTMLInputElement).value)
 }
 
-function _pickMusic(musicId: number) {
+function pickMusic(musicId: number) {
   emit('pick-music', musicId)
   emit('update:musicQuery', '')
 }
 
-function _clearMusic() {
+function clearMusic() {
   emit('clear-music')
   emit('update:musicQuery', '')
 }
 
-function _onSubmit(event: Event) {
+function onSubmit(event: Event) {
   event.preventDefault()
   if (!props.isValid) {
     showValidation.value = true
@@ -345,7 +345,7 @@ function _onSubmit(event: Event) {
 }
 
 /** Pontos claros (ex.: branco) precisam de contorno no tema escuro. */
-function _isLightDot(hex: string): boolean {
+function isLightDot(hex: string): boolean {
   const value = hex.replace('#', '')
   if (value.length !== 6) return false
   const r = Number.parseInt(value.slice(0, 2), 16)

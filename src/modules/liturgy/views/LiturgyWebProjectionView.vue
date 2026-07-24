@@ -28,9 +28,9 @@ const imageUrls = computed(() => {
       : []
 })
 
-const _currentImage = computed(() => imageUrls.value[imageIndex.value] ?? imageUrls.value[0] ?? '')
+const currentImage = computed(() => imageUrls.value[imageIndex.value] ?? imageUrls.value[0] ?? '')
 
-const _frameSrc = computed(() => {
+const frameSrc = computed(() => {
   if (!showContent.value) return ''
   const url = runtime.value.url
   if (runtime.value.kind === 'video' || runtime.value.kind === 'image') {

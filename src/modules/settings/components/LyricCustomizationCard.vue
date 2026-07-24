@@ -5,6 +5,12 @@ import { useI18n } from 'vue-i18n'
 import { useLyricCustomization } from '../composables/useLyricCustomization'
 import type { LyricVerticalAlign } from '../types/lyric-customization'
 
+import {
+  LYRIC_ALIGN_OPTIONS,
+  LYRIC_WEIGHT_OPTIONS,
+  PROJECTION_BACKGROUND_PRESETS,
+} from '../types/lyric-customization'
+
 const { t } = useI18n()
 const {
   settings,
@@ -22,19 +28,19 @@ const {
 
 const fileInput = ref<HTMLInputElement | null>(null)
 
-const _alignIcon: Record<LyricVerticalAlign, string> = {
+const alignIcon: Record<LyricVerticalAlign, string> = {
   top: 'ti-layout-align-top',
   center: 'ti-layout-align-middle',
   bottom: 'ti-layout-align-bottom',
 }
 
-const _alignLabelKey: Record<LyricVerticalAlign, string> = {
+const alignLabelKey: Record<LyricVerticalAlign, string> = {
   top: 'settings.projection.lyrics.alignTop',
   center: 'settings.projection.lyrics.alignCenter',
   bottom: 'settings.projection.lyrics.alignBottom',
 }
 
-const _featureToggles = [
+const featureToggles = [
   {
     key: 'showSongTitle' as const,
     labelKey: 'settings.projection.lyrics.showTitle',
@@ -52,11 +58,11 @@ const _featureToggles = [
   },
 ]
 
-function _openFilePicker() {
+function openFilePicker() {
   fileInput.value?.click()
 }
 
-async function _onFileSelected(event: Event) {
+async function onFileSelected(event: Event) {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0] ?? null
   await setBackgroundImageFromFile(file)

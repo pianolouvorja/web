@@ -44,29 +44,29 @@ const {
   refreshProjectionState,
 } = useRandomFeature()
 
-function _goBack() {
+function goBack() {
   void router.push({ name: 'utilities' })
 }
 
-function _onToggleProjection() {
+function onToggleProjection() {
   void toggleProjection()
 }
 
-function _onScreenControlsChanged() {
+function onScreenControlsChanged() {
   refreshProjectionState()
 }
 
-function _onResetAll() {
+function onResetAll() {
   if (window.confirm(t('random.resetConfirm'))) {
     resetAll()
   }
 }
 
-function _onModeChange(mode: RandomDrawMode) {
+function onModeChange(mode: RandomDrawMode) {
   setMode(mode)
 }
 
-async function _onImportFile(file: File) {
+async function onImportFile(file: File) {
   try {
     const text = await file.text()
     importNamesFromText(text)
