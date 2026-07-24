@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
+import AlbumLyricDialog from '@modules/albums/components/AlbumLyricDialog.vue'
 import PopupScreenControls from '@shared/components/PopupScreenControls.vue'
 
 import LiturgyCloneDialog from '../components/LiturgyCloneDialog.vue'
@@ -40,6 +41,9 @@ const {
   musicCatalogEmpty,
   musicInstrumentalById,
   busyMusicId,
+  lyricOpen,
+  lyricDoc,
+  isLoadingLyric,
   startLabels,
   durationLabels,
   videoProjectionItemId,
@@ -92,6 +96,7 @@ const {
   onMusicInstrumental,
   onMusicSlides,
   onMusicLyric,
+  closeLyric,
   setItemDraft,
   setMusicSearchQuery,
   refreshProjectionState,
@@ -301,6 +306,13 @@ function onScreenControlsChanged() {
       @close="closeCloneDialog"
       @confirm="cloneLiturgyFromSelected"
       @update:source-key="cloneSourceKey = $event"
+    />
+
+    <AlbumLyricDialog
+      :open="lyricOpen"
+      :loading="isLoadingLyric"
+      :document="lyricDoc"
+      @close="closeLyric"
     />
   </section>
 </template>

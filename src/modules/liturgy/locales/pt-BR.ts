@@ -235,8 +235,6 @@ export default {
       liturgySaved: 'Liturgia salva com sucesso.',
       mediaDesktopOnly: 'Selecione um arquivo de mídia neste item.',
       catalogEmpty: 'Nenhuma música encontrada no catálogo local.',
-      musicModuleUnavailable:
-        'Reprodução de músicas estará disponível após a migração de Álbuns.',
       customRequired:
         'Crie ou selecione uma liturgia personalizada antes de adicionar itens.',
       booksEmpty: 'Nenhum livro bíblico disponível. Conclua a inicialização.',
@@ -248,8 +246,6 @@ export default {
         'Para projetar PPT/PPTX, instale o LibreOffice (ou defina LIBREOFFICE_PATH).',
       presentationWebUnsupported:
         'Apresentações PPT/PPTX não são suportadas no navegador.',
-      lyricUnavailable:
-        'Visualização de letra estará disponível após a migração de Álbuns.',
     },
     custom: {
       title: 'Liturgias avulsas',
