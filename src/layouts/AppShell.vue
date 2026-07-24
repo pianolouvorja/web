@@ -25,6 +25,9 @@ const activeKey = computed(() => {
   return typeof navKey === 'string' ? navKey : 'home'
 })
 
+/** Na liturgia o FAB de mídia fica na própria view (padrão Bíblia). */
+const showMediaChrome = computed(() => activeKey.value !== 'liturgy')
+
 const showHeaderLogo = computed(() => activeKey.value !== 'home')
 
 const navItems = computed<DockNavItem[]>(() =>
@@ -99,7 +102,7 @@ function viewKey(viewRoute: typeof route) {
       </RouterView>
     </main>
 
-    <MediaChrome />
+    <MediaChrome v-if="showMediaChrome" />
 
     <DockFooter
       :items="navItems"
