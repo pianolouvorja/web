@@ -23,7 +23,7 @@ withDefaults(
   },
 )
 
-const emit = defineEmits<{
+const _emit = defineEmits<{
   sung: []
   instrumental: []
   slides: []
@@ -34,7 +34,7 @@ const emit = defineEmits<{
 const { t } = useI18n()
 
 /** Oculto por enquanto — reative para voltar o botão de letra nas listagens. */
-const SHOW_LYRIC_ACTION = false
+const _SHOW_LYRIC_ACTION = false
 </script>
 
 <template>

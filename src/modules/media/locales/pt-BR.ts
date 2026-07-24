@@ -36,8 +36,7 @@ export default {
     messages: {
       trackMissing: 'Não foi possível carregar esta música no catálogo.',
       audioMissing: 'Esta faixa não possui áudio disponível para o modo selecionado.',
-      slidesOnlyNoAudio:
-        'Áudio indisponível para esta faixa. Projetando apenas os slides.',
+      slidesOnlyNoAudio: 'Áudio indisponível para esta faixa. Projetando apenas os slides.',
       playbackFailed: 'Não foi possível iniciar a reprodução do áudio.',
     },
   },

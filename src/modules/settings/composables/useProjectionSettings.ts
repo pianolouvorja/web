@@ -1,14 +1,11 @@
-import { computed, ref } from 'vue'
+import { hasLivePopups, syncPopupWindows } from '@shared/services/popup-windows'
 
 import {
   getPopupCount,
   PROJECTION_DEFAULTS,
   setPopupCount,
 } from '@shared/services/projection-preferences'
-import {
-  hasLivePopups,
-  syncPopupWindows,
-} from '@shared/services/popup-windows'
+import { computed, ref } from 'vue'
 
 const popupCount = ref(getPopupCount())
 

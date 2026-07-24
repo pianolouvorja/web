@@ -2,13 +2,7 @@ export const LITURGY_WEB_RUNTIME_CHANNEL = 'louvorja-liturgy-web-runtime'
 export const LITURGY_WEB_RUNTIME_STORAGE_KEY = 'louvorja-liturgy-web-runtime-state'
 export const LITURGY_YT_SYNC_CHANNEL = 'louvorja-liturgy-yt-sync'
 
-export type LiturgyWebKind =
-  | 'youtube'
-  | 'vimeo'
-  | 'site'
-  | 'video'
-  | 'image'
-  | 'pdf'
+export type LiturgyWebKind = 'youtube' | 'vimeo' | 'site' | 'video' | 'image' | 'pdf'
 
 export type LiturgyWebProjectionRuntime = {
   active: boolean
@@ -142,9 +136,7 @@ export function toProjectionEmbedUrl(raw: string): string | null {
   return parseLiturgyWebTarget(raw)?.url ?? null
 }
 
-export function normalizeLiturgyWebRuntime(
-  raw: unknown,
-): LiturgyWebProjectionRuntime {
+export function normalizeLiturgyWebRuntime(raw: unknown): LiturgyWebProjectionRuntime {
   if (!raw || typeof raw !== 'object') {
     return { ...DEFAULT_LITURGY_WEB_RUNTIME }
   }
@@ -186,9 +178,7 @@ export function readLiturgyWebRuntimeFromStorage(): LiturgyWebProjectionRuntime 
   }
 }
 
-export function publishLiturgyWebRuntime(
-  runtime: LiturgyWebProjectionRuntime,
-): void {
+export function publishLiturgyWebRuntime(runtime: LiturgyWebProjectionRuntime): void {
   try {
     localStorage.removeItem('louvorja-liturgy-yt-leader')
   } catch {

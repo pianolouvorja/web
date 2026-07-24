@@ -3,9 +3,6 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
-import MediaCloseDialog from '../components/MediaCloseDialog.vue'
-import MediaPlayerPill from '../components/MediaPlayerPill.vue'
-import MediaSlideStage from '../components/MediaSlideStage.vue'
 import { useMediaPlayer } from '../composables/useMediaPlayer'
 import { stripHtmlBreaks } from '../services/media-slides'
 import type { MediaPlaybackMode } from '../types/media'
@@ -53,14 +50,14 @@ const {
   syncProjectionFlag,
 } = useMediaPlayer()
 
-const stageLyric = computed(() => currentSlide.value?.lyric ?? '')
-const stageTitle = computed(() => session.value?.title ?? '')
-const stageImage = computed(
+const _stageLyric = computed(() => currentSlide.value?.lyric ?? '')
+const _stageTitle = computed(() => session.value?.title ?? '')
+const _stageImage = computed(
   () => resolvedSlideImageUrl.value ?? currentSlide.value?.imageUrl ?? null,
 )
-const isCover = computed(() => Boolean(currentSlide.value?.isCover))
+const _isCover = computed(() => Boolean(currentSlide.value?.isCover))
 
-const playlist = computed(() =>
+const _playlist = computed(() =>
   (session.value?.slides ?? []).map((slide, index) => ({
     index,
     label: slide.isCover
@@ -97,20 +94,20 @@ watch(hasSession, (active) => {
   }
 })
 
-async function onMinimize() {
+async function _onMinimize() {
   minimize()
   leaveMediaRoute()
 }
 
-function onConfirmClose() {
+function _onConfirmClose() {
   close()
 }
 
-async function onMode(mode: MediaPlaybackMode) {
+async function _onMode(mode: MediaPlaybackMode) {
   await switchMode(mode)
 }
 
-async function onToggleFullscreen() {
+async function _onToggleFullscreen() {
   const el = stageRoot.value
   if (!el) return
   if (document.fullscreenElement) {
