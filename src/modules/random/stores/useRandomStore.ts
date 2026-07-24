@@ -1,11 +1,6 @@
+import { exitPopupModule, isPopupModuleOpen, openPopupModule } from '@shared/services/popup-windows'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-
-import {
-  exitPopupModule,
-  isPopupModuleOpen,
-  openPopupModule,
-} from '@shared/services/popup-windows'
 
 import {
   buildNumberRange,
@@ -20,16 +15,14 @@ import {
   saveRandomDisplayConfig,
   saveRandomSession,
 } from '../services/random-preferences'
+import { publishRandomRuntime } from '../services/random-runtime'
 import {
-  publishRandomRuntime,
-} from '../services/random-runtime'
-import {
+  activeModePool,
   DEFAULT_RANDOM_DISPLAY_CONFIG,
   DEFAULT_RANDOM_RUNTIME,
+  emptyModePool,
   RANDOM_FONT_SIZE_MAX,
   RANDOM_FONT_SIZE_MIN,
-  activeModePool,
-  emptyModePool,
   type RandomAnimationSpeed,
   type RandomDisplayConfig,
   type RandomDrawMode,
@@ -84,13 +77,9 @@ export const useRandomStore = defineStore('random', () => {
   const available = computed(() => activePool.value.available)
   const drawn = computed(() => activePool.value.drawn)
 
-  const undrawn = computed(() =>
-    remainingCandidates(available.value, drawn.value),
-  )
+  const undrawn = computed(() => remainingCandidates(available.value, drawn.value))
 
-  const canDraw = computed(
-    () => undrawn.value.length > 0 && !runtime.value.isDrawing,
-  )
+  const canDraw = computed(() => undrawn.value.length > 0 && !runtime.value.isDrawing)
 
   const drawnReversed = computed(() => [...drawn.value].reverse())
 

@@ -1,13 +1,6 @@
 <script setup lang="ts">
-import {
-  computed,
-  onMounted,
-  onUnmounted,
-  useTemplateRef,
-} from 'vue'
+import { computed, onMounted, onUnmounted, useTemplateRef } from 'vue'
 import { useI18n } from 'vue-i18n'
-
-import PopupScreenControls from '@shared/components/PopupScreenControls.vue'
 
 import type { RandomDisplayConfig, RandomRuntimeState } from '../types/random'
 
@@ -43,7 +36,7 @@ const props = withDefaults(
   },
 )
 
-const emit = defineEmits<{
+const _emit = defineEmits<{
   draw: []
   openConfig: []
   screenControlsChanged: []
@@ -51,27 +44,27 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 const particlesLayerRef = useTemplateRef<HTMLElement>('particlesLayer')
-const particles = createParticles()
+const _particles = createParticles()
 
 const animations: Animation[] = []
 let cancelled = false
 
-const hasResult = computed(
+const _hasResult = computed(
   () => props.runtime.currentDisplay.length > 0 && !props.runtime.isDrawing,
 )
 
-const statusLabel = computed(() => {
+const _statusLabel = computed(() => {
   if (props.runtime.isDrawing) return t('random.drawing')
   if (props.canDraw) return t('random.readyToDraw')
   return t('random.emptyList')
 })
 
-const displayText = computed(() => {
+const _displayText = computed(() => {
   if (props.runtime.currentDisplay) return props.runtime.currentDisplay
   return t('random.placeholderDisplay')
 })
 
-const displayStyle = computed(() => ({
+const _displayStyle = computed(() => ({
   color: props.runtime.isDrawing
     ? 'var(--ds-color-on-surface-variant)'
     : props.preview
@@ -79,9 +72,7 @@ const displayStyle = computed(() => ({
       : props.config.textColor,
   textTransform: props.config.textTransform,
   textShadow:
-    props.runtime.isDrawing || props.preview
-      ? 'none'
-      : `0 10px 40px ${props.config.textColor}60`,
+    props.runtime.isDrawing || props.preview ? 'none' : `0 10px 40px ${props.config.textColor}60`,
   opacity: props.runtime.currentDisplay || props.preview ? 1 : 0.55,
 }))
 

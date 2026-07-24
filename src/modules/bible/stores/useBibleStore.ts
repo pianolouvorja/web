@@ -1,16 +1,8 @@
+import { USER_PREFERENCE_KEYS } from '@shared/constants/storage-keys'
+import { exitPopupModule, isPopupModuleOpen, openPopupModule } from '@shared/services/popup-windows'
+import { getUserPreference, setUserPreference } from '@shared/services/user-preferences'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-
-import { USER_PREFERENCE_KEYS } from '@shared/constants/storage-keys'
-import {
-  exitPopupModule,
-  isPopupModuleOpen,
-  openPopupModule,
-} from '@shared/services/popup-windows'
-import {
-  getUserPreference,
-  setUserPreference,
-} from '@shared/services/user-preferences'
 
 import {
   loadBibleBooks,
@@ -81,13 +73,12 @@ export const useBibleStore = defineStore('bible', () => {
     publishBibleSelection(selection)
   }
 
-  const selectedBook = computed(() =>
-    books.value.find((book) => book.id === selectedBookId.value) ?? null,
+  const selectedBook = computed(
+    () => books.value.find((book) => book.id === selectedBookId.value) ?? null,
   )
 
-  const selectedVersion = computed(() =>
-    versions.value.find((version) => version.id === selectedVersionId.value) ??
-    null,
+  const selectedVersion = computed(
+    () => versions.value.find((version) => version.id === selectedVersionId.value) ?? null,
   )
 
   const filteredBooks = computed(() => {
@@ -96,8 +87,7 @@ export const useBibleStore = defineStore('bible', () => {
       if (resolveTestament(book.bookNumber) !== testamentFilter.value) return false
       if (!query) return true
       return (
-        book.name.toLowerCase().includes(query) ||
-        book.abbreviation.toLowerCase().includes(query)
+        book.name.toLowerCase().includes(query) || book.abbreviation.toLowerCase().includes(query)
       )
     })
   })
@@ -128,15 +118,9 @@ export const useBibleStore = defineStore('bible', () => {
     const globalQuery = globalSearchQuery.value.trim().toLowerCase()
     const verseQuery = verseSearchQuery.value.trim().toLowerCase()
 
-    function matchesQuery(
-      entry: { number: number; text: string },
-      query: string,
-    ): boolean {
+    function matchesQuery(entry: { number: number; text: string }, query: string): boolean {
       if (!query) return true
-      return (
-        String(entry.number).includes(query) ||
-        entry.text.toLowerCase().includes(query)
-      )
+      return String(entry.number).includes(query) || entry.text.toLowerCase().includes(query)
     }
 
     return Object.keys(verses.value)
@@ -147,9 +131,7 @@ export const useBibleStore = defineStore('bible', () => {
         number,
         text: verses.value[String(number)] ?? '',
       }))
-      .filter(
-        (entry) => matchesQuery(entry, globalQuery) && matchesQuery(entry, verseQuery),
-      )
+      .filter((entry) => matchesQuery(entry, globalQuery) && matchesQuery(entry, verseQuery))
   })
 
   function clearError() {
@@ -268,10 +250,7 @@ export const useBibleStore = defineStore('bible', () => {
         return
       }
 
-      const saved = getUserPreference<number>(
-        USER_PREFERENCE_KEYS.bibleSelectedVersion,
-        null,
-      )
+      const saved = getUserPreference<number>(USER_PREFERENCE_KEYS.bibleSelectedVersion, null)
       const versionId = pickDefaultVersionId(loadedVersions, saved)
       selectedVersionId.value = versionId
 
@@ -344,13 +323,9 @@ export const useBibleStore = defineStore('bible', () => {
     if (event?.ctrlKey || event?.metaKey) {
       const index = selectedVerses.value.indexOf(verseNumber)
       if (index === -1) {
-        selectedVerses.value = [...selectedVerses.value, verseNumber].sort(
-          (a, b) => a - b,
-        )
+        selectedVerses.value = [...selectedVerses.value, verseNumber].sort((a, b) => a - b)
       } else {
-        selectedVerses.value = selectedVerses.value.filter(
-          (verse) => verse !== verseNumber,
-        )
+        selectedVerses.value = selectedVerses.value.filter((verse) => verse !== verseNumber)
       }
     } else if (event?.shiftKey) {
       const start = Math.min(verseNumber, lastVerseAnchor.value)
@@ -395,9 +370,7 @@ export const useBibleStore = defineStore('bible', () => {
     if (selectedVerses.value.length === 0) return
 
     const current =
-      direction < 0
-        ? Math.min(...selectedVerses.value)
-        : Math.max(...selectedVerses.value)
+      direction < 0 ? Math.min(...selectedVerses.value) : Math.max(...selectedVerses.value)
     const next = current + direction
 
     if (verses.value[String(next)]) {
@@ -412,7 +385,9 @@ export const useBibleStore = defineStore('bible', () => {
       if (selectedChapter.value < book.chapters) {
         await selectChapter(selectedChapter.value + 1)
         const first = Math.min(
-          ...Object.keys(verses.value).map(Number).filter((n) => !Number.isNaN(n)),
+          ...Object.keys(verses.value)
+            .map(Number)
+            .filter((n) => !Number.isNaN(n)),
         )
         if (Number.isFinite(first)) selectVerse(first)
         return
@@ -424,7 +399,9 @@ export const useBibleStore = defineStore('bible', () => {
       await selectBook(nextBook.id)
       await selectChapter(1)
       const first = Math.min(
-        ...Object.keys(verses.value).map(Number).filter((n) => !Number.isNaN(n)),
+        ...Object.keys(verses.value)
+          .map(Number)
+          .filter((n) => !Number.isNaN(n)),
       )
       if (Number.isFinite(first)) selectVerse(first)
       return
@@ -433,20 +410,23 @@ export const useBibleStore = defineStore('bible', () => {
     if (selectedChapter.value > 1) {
       await selectChapter(selectedChapter.value - 1)
       const last = Math.max(
-        ...Object.keys(verses.value).map(Number).filter((n) => !Number.isNaN(n)),
+        ...Object.keys(verses.value)
+          .map(Number)
+          .filter((n) => !Number.isNaN(n)),
       )
       if (Number.isFinite(last)) selectVerse(last)
       return
     }
 
     const index = books.value.findIndex((item) => item.id === book.id)
-    const prevBook =
-      index > 0 ? books.value[index - 1] : books.value[books.value.length - 1]
+    const prevBook = index > 0 ? books.value[index - 1] : books.value[books.value.length - 1]
     if (!prevBook) return
     await selectBook(prevBook.id)
     await selectChapter(prevBook.chapters)
     const last = Math.max(
-      ...Object.keys(verses.value).map(Number).filter((n) => !Number.isNaN(n)),
+      ...Object.keys(verses.value)
+        .map(Number)
+        .filter((n) => !Number.isNaN(n)),
     )
     if (Number.isFinite(last)) selectVerse(last)
   }

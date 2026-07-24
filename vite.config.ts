@@ -1,16 +1,15 @@
-import path from 'node:path'
 import { readFileSync } from 'node:fs'
+import path from 'node:path'
 import { fileURLToPath, URL } from 'node:url'
-
-import { defineConfig, loadEnv } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import vueDevTools from 'vite-plugin-vue-devtools'
 import tailwindcss from '@tailwindcss/vite'
+import vue from '@vitejs/plugin-vue'
+import { defineConfig, loadEnv } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import vueDevTools from 'vite-plugin-vue-devtools'
 
-const pkg = JSON.parse(
-  readFileSync(new URL('./package.json', import.meta.url), 'utf-8'),
-) as { version: string }
+const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf-8')) as {
+  version: string
+}
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {

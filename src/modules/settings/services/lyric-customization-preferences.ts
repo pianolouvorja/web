@@ -1,8 +1,5 @@
 import { USER_PREFERENCE_KEYS } from '@shared/constants/storage-keys'
-import {
-  getUserPreference,
-  setUserPreference,
-} from '@shared/services/user-preferences'
+import { getUserPreference, setUserPreference } from '@shared/services/user-preferences'
 
 import {
   DEFAULT_LYRIC_CUSTOMIZATION,
@@ -33,26 +30,16 @@ function asAlign(value: unknown): LyricVerticalAlign {
 }
 
 function asFontWeight(value: unknown): LyricFontWeight {
-  if (
-    value === '400' ||
-    value === '600' ||
-    value === '700' ||
-    value === '900'
-  ) {
+  if (value === '400' || value === '600' || value === '700' || value === '900') {
     return value
   }
   return DEFAULT_LYRIC_CUSTOMIZATION.fontWeight
 }
 
-function pickLyricFields(
-  source: Record<string, unknown>,
-): LyricCustomizationSettings {
+function pickLyricFields(source: Record<string, unknown>): LyricCustomizationSettings {
   return {
     lyricAlign: asAlign(source.lyricAlign),
-    showSongTitle: asBoolean(
-      source.showSongTitle,
-      DEFAULT_LYRIC_CUSTOMIZATION.showSongTitle,
-    ),
+    showSongTitle: asBoolean(source.showSongTitle, DEFAULT_LYRIC_CUSTOMIZATION.showSongTitle),
     customTextFormat: asBoolean(
       source.customTextFormat,
       DEFAULT_LYRIC_CUSTOMIZATION.customTextFormat,
@@ -63,40 +50,24 @@ function pickLyricFields(
     ),
     fontSizePercent: Math.min(
       200,
-      Math.max(
-        50,
-        asNumber(
-          source.fontSizePercent,
-          DEFAULT_LYRIC_CUSTOMIZATION.fontSizePercent,
-        ),
-      ),
+      Math.max(50, asNumber(source.fontSizePercent, DEFAULT_LYRIC_CUSTOMIZATION.fontSizePercent)),
     ),
     fontColor: asString(source.fontColor, DEFAULT_LYRIC_CUSTOMIZATION.fontColor),
     fontWeight: asFontWeight(source.fontWeight),
-    backgroundColor: asString(
-      source.backgroundColor,
-      DEFAULT_LYRIC_CUSTOMIZATION.backgroundColor,
-    ),
-    backgroundImage:
-      typeof source.backgroundImage === 'string' ? source.backgroundImage : null,
+    backgroundColor: asString(source.backgroundColor, DEFAULT_LYRIC_CUSTOMIZATION.backgroundColor),
+    backgroundImage: typeof source.backgroundImage === 'string' ? source.backgroundImage : null,
     backgroundOpacity: Math.min(
       100,
       Math.max(
         0,
-        asNumber(
-          source.backgroundOpacity,
-          DEFAULT_LYRIC_CUSTOMIZATION.backgroundOpacity,
-        ),
+        asNumber(source.backgroundOpacity, DEFAULT_LYRIC_CUSTOMIZATION.backgroundOpacity),
       ),
     ),
   }
 }
 
 export function loadLyricCustomizationSettings(): LyricCustomizationSettings {
-  const stored = getUserPreference<unknown>(
-    USER_PREFERENCE_KEYS.projectionSettings,
-    null,
-  )
+  const stored = getUserPreference<unknown>(USER_PREFERENCE_KEYS.projectionSettings, null)
   if (!stored || typeof stored !== 'object') {
     return { ...DEFAULT_LYRIC_CUSTOMIZATION }
   }
@@ -107,17 +78,9 @@ export function loadLyricCustomizationSettings(): LyricCustomizationSettings {
  * Persiste os campos de letra em `projection.settings`, mesclando com
  * qualquer chave já existente (ex.: monitores do Electron).
  */
-export function saveLyricCustomizationSettings(
-  settings: LyricCustomizationSettings,
-): void {
-  const stored = getUserPreference<unknown>(
-    USER_PREFERENCE_KEYS.projectionSettings,
-    null,
-  )
-  const base =
-    stored && typeof stored === 'object'
-      ? (stored as Record<string, unknown>)
-      : {}
+export function saveLyricCustomizationSettings(settings: LyricCustomizationSettings): void {
+  const stored = getUserPreference<unknown>(USER_PREFERENCE_KEYS.projectionSettings, null)
+  const base = stored && typeof stored === 'object' ? (stored as Record<string, unknown>) : {}
 
   setUserPreference(USER_PREFERENCE_KEYS.projectionSettings, {
     ...base,
