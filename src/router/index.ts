@@ -1,17 +1,16 @@
-import { createRouter, createWebHistory } from 'vue-router'
-
 import AppShell from '@layouts/AppShell.vue'
+import { albumsRoutes } from '@modules/albums/routes'
 import { bibleRoutes } from '@modules/bible/routes'
 import { utilitiesRoutes } from '@modules/clock/routes'
 import { countdownRoutes } from '@modules/countdown/routes'
 import { homeRoutes } from '@modules/home/routes'
-import { albumsRoutes } from '@modules/albums/routes'
 import { liturgyRoutes } from '@modules/liturgy/routes'
 import { mediaRoutes } from '@modules/media/routes'
 import { randomRoutes } from '@modules/random/routes'
 import { settingsRoutes } from '@modules/settings/routes'
 import { timerRoutes } from '@modules/timer/routes'
 import PopupHost from '@shared/views/PopupHost.vue'
+import { createRouter, createWebHistory } from 'vue-router'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),

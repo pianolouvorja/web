@@ -2,9 +2,6 @@
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import { GlassCard } from '@design-system/index'
-import PopupScreenControls from '@shared/components/PopupScreenControls.vue'
-
 import type { BibleSelection } from '../types/bible'
 
 const props = defineProps<{
@@ -31,9 +28,9 @@ const emit = defineEmits<{
 const { t } = useI18n()
 const copyFeedbackKey = ref<string | null>(null)
 
-const canNavigate = computed(() => props.selectedVerses.length > 0)
+const _canNavigate = computed(() => props.selectedVerses.length > 0)
 
-async function handleCopy() {
+async function _handleCopy() {
   const text = props.hasProjection
     ? `${props.projection.text}\n${props.projection.scripturalReference}`
     : props.verses.map((verse) => `${verse.number}. ${verse.text}`).join('\n')
@@ -52,7 +49,7 @@ async function handleCopy() {
   emit('copy')
 }
 
-function isSelected(verseNumber: number): boolean {
+function _isSelected(verseNumber: number): boolean {
   return props.selectedVerses.includes(verseNumber)
 }
 </script>

@@ -1,14 +1,11 @@
-import {
-  exitPopupModule,
-  openPopupModule,
-} from '@shared/services/popup-windows'
+import { exitPopupModule, openPopupModule } from '@shared/services/popup-windows'
 
 import {
   clearLiturgyWebRuntime,
   isBrowsableMediaUrl,
+  type LiturgyWebKind,
   parseLiturgyWebTarget,
   publishLiturgyWebRuntime,
-  type LiturgyWebKind,
 } from './liturgy-web-runtime'
 
 const LITURGY_WEB_MODULE_ID = 'liturgy-web'
@@ -62,10 +59,7 @@ export async function openLiturgyWebOnConfiguredScreens(
 }
 
 /** Popup de controle do site (mesma stack de popups na web). */
-export async function openLiturgySiteControl(
-  rawUrl: string,
-  title = '',
-): Promise<boolean> {
+export async function openLiturgySiteControl(rawUrl: string, title = ''): Promise<boolean> {
   return openLiturgyWebOnConfiguredScreens(rawUrl, title, {
     mode: 'site',
     withScreens: false,
@@ -73,10 +67,7 @@ export async function openLiturgySiteControl(
 }
 
 /** Popup de controle do vídeo online. */
-export async function openLiturgyVideoControl(
-  rawUrl: string,
-  title = '',
-): Promise<boolean> {
+export async function openLiturgyVideoControl(rawUrl: string, title = ''): Promise<boolean> {
   return openLiturgyWebOnConfiguredScreens(rawUrl, title, {
     mode: 'video',
     withScreens: false,
@@ -84,10 +75,7 @@ export async function openLiturgyVideoControl(
 }
 
 /** Site + projeção nas telas (popups). */
-export async function openLiturgySiteOnScreens(
-  rawUrl: string,
-  title = '',
-): Promise<boolean> {
+export async function openLiturgySiteOnScreens(rawUrl: string, title = ''): Promise<boolean> {
   return openLiturgyWebOnConfiguredScreens(rawUrl, title, {
     mode: 'site',
     withScreens: true,
@@ -124,10 +112,7 @@ async function openLiturgyLocalVideo(
   return openLiturgyPopup('video', path, label)
 }
 
-export async function openLiturgyLocalVideoControl(
-  filePath: string,
-  title = '',
-): Promise<boolean> {
+export async function openLiturgyLocalVideoControl(filePath: string, title = ''): Promise<boolean> {
   return openLiturgyLocalVideo(filePath, title, false)
 }
 
@@ -143,9 +128,7 @@ async function openLiturgyLocalImages(
   title = '',
   _withScreens: boolean,
 ): Promise<boolean> {
-  const paths = filePaths
-    .map((entry) => entry.trim())
-    .filter((entry) => isBrowsableMediaUrl(entry))
+  const paths = filePaths.map((entry) => entry.trim()).filter((entry) => isBrowsableMediaUrl(entry))
   if (paths.length === 0) return false
 
   const label = title.trim() || paths[0]?.split(/[\\/]/).pop() || 'Imagens'
@@ -178,17 +161,11 @@ async function openLiturgyLocalPdf(
   return openLiturgyPopup('pdf', path, label)
 }
 
-export async function openLiturgyLocalPdfControl(
-  filePath: string,
-  title = '',
-): Promise<boolean> {
+export async function openLiturgyLocalPdfControl(filePath: string, title = ''): Promise<boolean> {
   return openLiturgyLocalPdf(filePath, title, false)
 }
 
-export async function playLiturgyLocalPdfOnScreens(
-  filePath: string,
-  title = '',
-): Promise<boolean> {
+export async function playLiturgyLocalPdfOnScreens(filePath: string, title = ''): Promise<boolean> {
   return openLiturgyLocalPdf(filePath, title, true)
 }
 

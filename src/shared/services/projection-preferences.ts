@@ -1,8 +1,5 @@
 import { USER_PREFERENCE_KEYS } from '@shared/constants/storage-keys'
-import {
-  getUserPreference,
-  setUserPreference,
-} from '@shared/services/user-preferences'
+import { getUserPreference, setUserPreference } from '@shared/services/user-preferences'
 
 const POPUP_COUNT_MIN = 1
 const POPUP_COUNT_MAX = 6

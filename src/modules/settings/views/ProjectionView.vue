@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import PopupScreensCard from '../components/PopupScreensCard.vue'
-import ProjectionOptionsCard from '../components/ProjectionOptionsCard.vue'
 </script>
 
 <template>

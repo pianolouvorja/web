@@ -1,9 +1,9 @@
+import { useAlbumsStore } from '@modules/albums/stores/useAlbumsStore'
+import type { MediaPlaybackMode } from '@modules/media/types/media'
 import { storeToRefs } from 'pinia'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
-
-import type { MediaPlaybackMode } from '@modules/media/types/media'
 
 import { formatMomentDuration } from '../services/liturgy-item-helpers'
 import { useLiturgyStore } from '../stores/useLiturgyStore'
@@ -13,6 +13,7 @@ import { useLiturgyClock } from './useLiturgyClock'
 /** Orquestra a feature de liturgia na view. */
 export function useLiturgy() {
   const store = useLiturgyStore()
+  const albumsStore = useAlbumsStore()
   const router = useRouter()
   const { t } = useI18n()
 
@@ -54,6 +55,8 @@ export function useLiturgy() {
     musicCatalogEmpty,
     musicList,
   } = storeToRefs(store)
+
+  const { lyricOpen, lyricDoc, isLoadingLyric } = storeToRefs(albumsStore)
 
   const busyMusicId = ref<number | null>(null)
 
@@ -125,9 +128,7 @@ export function useLiturgy() {
 
   function confirmRemoveCustom(index: number) {
     const name = customLiturgies.value[index]?.name ?? ''
-    if (
-      !window.confirm(t('liturgy.messages.confirmDeleteCustom', { name }))
-    ) {
+    if (!window.confirm(t('liturgy.messages.confirmDeleteCustom', { name }))) {
       return
     }
     store.removeCustomLiturgy(index)
@@ -149,13 +150,9 @@ export function useLiturgy() {
     window.alert(t('liturgy.team.comingSoon'))
   }
 
-  async function runMusicAction(
-    index: number,
-    action: () => Promise<boolean | void>,
-  ) {
+  async function runMusicAction(index: number, action: () => Promise<boolean | undefined>) {
     const item = currentItems.value[index]
-    const musicId =
-      item?.type === 'music' && item.musicId != null ? item.musicId : null
+    const musicId = item?.type === 'music' && item.musicId != null ? item.musicId : null
     busyMusicId.value = musicId
     try {
       await action()
@@ -165,39 +162,41 @@ export function useLiturgy() {
   }
 
   function onMusicSung(index: number) {
-    void runMusicAction(index, () =>
-      store.playMusicMode(index, 'audio', router),
-    )
+    albumsStore.closeLyric()
+    void runMusicAction(index, () => store.playMusicMode(index, 'audio', router))
   }
 
   function onMusicInstrumental(index: number) {
-    void runMusicAction(index, () =>
-      store.playMusicMode(index, 'instrumental', router),
-    )
+    albumsStore.closeLyric()
+    void runMusicAction(index, () => store.playMusicMode(index, 'instrumental', router))
   }
 
   function onMusicSlides(index: number) {
+    albumsStore.closeLyric()
     void runMusicAction(index, () =>
       store.playMusicMode(index, 'no_audio' satisfies MediaPlaybackMode, router),
     )
   }
 
   function onOpenAddDialog() {
+    albumsStore.closeLyric()
     store.openAddDialog()
   }
 
   function onOpenAddSubItemDialog(categoryId: string) {
+    albumsStore.closeLyric()
     store.openAddSubItemDialog(categoryId)
   }
 
   function onOpenEditDialog(index: number) {
+    albumsStore.closeLyric()
     store.openEditDialog(index)
   }
 
   function onMusicLyric(index: number) {
     const item = currentItems.value[index]
     if (item?.type !== 'music' || item.musicId == null) return
-    store.setActionMessage('liturgy.messages.lyricUnavailable')
+    void runMusicAction(index, () => albumsStore.openLyric(item.musicId!))
   }
 
   function refreshProjectionState() {
@@ -229,6 +228,9 @@ export function useLiturgy() {
     musicCatalogEmpty,
     musicInstrumentalById,
     busyMusicId,
+    lyricOpen,
+    lyricDoc,
+    isLoadingLyric,
     startLabels,
     durationLabels,
     worshipLabel,
@@ -284,6 +286,7 @@ export function useLiturgy() {
     onMusicInstrumental,
     onMusicSlides,
     onMusicLyric,
+    closeLyric: albumsStore.closeLyric,
     refreshProjectionState,
   }
 }

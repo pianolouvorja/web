@@ -2,26 +2,24 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import { GlassCard } from '@design-system/index'
-
 import type { AlbumCollection } from '../types/albums'
 
 const props = defineProps<{
   collection: AlbumCollection
 }>()
 
-const emit = defineEmits<{
+const _emit = defineEmits<{
   open: []
 }>()
 
 const { t } = useI18n()
 
-const displayName = computed(() => {
+const _displayName = computed(() => {
   if (props.collection.id === 'hymnal_1996') return t('albums.hymnal.edition1996Name')
   return props.collection.name
 })
 
-const subtitle = computed(() => {
+const _subtitle = computed(() => {
   const songCount = props.collection.trackCount
   if (songCount != null) {
     const key =
@@ -34,7 +32,7 @@ const subtitle = computed(() => {
   return props.collection.subtitle || null
 })
 
-const coverIcon = computed(() =>
+const _coverIcon = computed(() =>
   props.collection.id === 'hymnal_1996' ? 'ti-history' : 'ti-book-2',
 )
 </script>
