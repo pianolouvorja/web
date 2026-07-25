@@ -8,7 +8,7 @@ defineProps<{
   busy?: boolean
 }>()
 
-const emit = defineEmits<{
+const _emit = defineEmits<{
   sung: []
   instrumental: []
   slides: []
@@ -16,7 +16,7 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
-const rowHovered = ref(false)
+const _rowHovered = ref(false)
 </script>
 
 <template>

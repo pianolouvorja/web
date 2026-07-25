@@ -93,9 +93,9 @@ const {
 } = useLiturgy()
 
 /** Exibe avisos da liturgia e do player (ex.: áudio indisponível). */
-const liturgyAlertKey = computed(() => lastActionMessageKey.value || null)
+const _liturgyAlertKey = computed(() => lastActionMessageKey.value || null)
 
-function onScreenControlsChanged() {
+function _onScreenControlsChanged() {
   refreshProjectionState()
 }
 </script>

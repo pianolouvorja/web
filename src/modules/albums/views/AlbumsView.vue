@@ -37,7 +37,7 @@ function isHymnalsCategory(category: AlbumCategory) {
   return String(category.id) === 'hymnals'
 }
 
-function categoryTitle(category: AlbumCategory) {
+function _categoryTitle(category: AlbumCategory) {
   if (isHymnalsCategory(category)) return t('albums.categories.hymnals')
   if (category.name === 'CDs Oficiais/Ano' || /cds?\s*oficiais/i.test(category.name)) {
     return t('albums.categories.youthAlbums')
@@ -45,7 +45,7 @@ function categoryTitle(category: AlbumCategory) {
   return category.name
 }
 
-function categorySubtitle(category: AlbumCategory) {
+function _categorySubtitle(category: AlbumCategory) {
   if (isHymnalsCategory(category)) return t('albums.categories.hymnalsSubtitle')
   if (category.name === 'CDs Oficiais/Ano' || /cds?\s*oficiais/i.test(category.name)) {
     return t('albums.categories.albumsSubtitle')
@@ -53,23 +53,23 @@ function categorySubtitle(category: AlbumCategory) {
   return t('albums.categories.defaultSubtitle')
 }
 
-function openCollection(collectionId: string | number) {
+function _openCollection(collectionId: string | number) {
   void router.push({
     name: 'albums-collection',
     params: { collectionId: String(collectionId) },
   })
 }
 
-function retry() {
+function _retry() {
   clearError()
   void hydrateCatalog()
 }
 
-function clearHubSearch() {
+function _clearHubSearch() {
   hubSearchQuery.value = ''
 }
 
-async function runAction(musicId: number, action: () => Promise<boolean | undefined | void>) {
+async function _runAction(musicId: number, action: () => Promise<boolean | undefined>) {
   busyMusicId.value = musicId
   try {
     await action()

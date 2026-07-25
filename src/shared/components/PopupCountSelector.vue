@@ -33,7 +33,7 @@ const menuStyle = ref<Record<string, string>>({})
 
 let syncTimer: ReturnType<typeof setInterval> | null = null
 
-const optionsList = computed(() =>
+const _optionsList = computed(() =>
   Array.from({ length: availableCount.value }, (_, index) => {
     const id = index + 1
     return {
@@ -46,7 +46,7 @@ const optionsList = computed(() =>
 
 const selectedCount = computed(() => selectedSlots.value.length)
 
-const triggerLabel = computed(() => {
+const _triggerLabel = computed(() => {
   if (selectedCount.value > 0) {
     return t('monitors.selectedCount', { count: selectedCount.value })
   }
@@ -79,11 +79,11 @@ function updateMenuPosition() {
   }
 }
 
-function toggleMenu() {
+function _toggleMenu() {
   menuOpen.value = !menuOpen.value
 }
 
-function onToggle(slot: number) {
+function _onToggle(slot: number) {
   selectedSlots.value = toggleTargetPopupSlot(slot)
   emit('change', selectedSlots.value)
   if (hasLivePopups()) {

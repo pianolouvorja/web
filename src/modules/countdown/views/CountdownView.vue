@@ -32,15 +32,15 @@ const {
   refreshProjectionState,
 } = useCountdownFeature()
 
-function goBack() {
+function _goBack() {
   void router.push({ name: 'utilities-temporizador' })
 }
 
-function onToggleProjection() {
+function _onToggleProjection() {
   void toggleProjection()
 }
 
-function onScreenControlsChanged() {
+function _onScreenControlsChanged() {
   refreshProjectionState()
 }
 </script>
