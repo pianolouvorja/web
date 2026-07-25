@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+
+import PopupCountSelector from '@shared/components/PopupCountSelector.vue'
+import MusicTrackActions from '@shared/components/MusicTrackActions.vue'
 import type { AlbumTrack } from '../types/albums'
 
 defineProps<{
@@ -10,14 +13,14 @@ defineProps<{
   busy?: boolean
 }>()
 
-const _emit = defineEmits<{
+const emit = defineEmits<{
   sung: []
   instrumental: []
   slides: []
   lyric: []
 }>()
 
-const _rowHovered = ref(false)
+const rowHovered = ref(false)
 
 const { t } = useI18n()
 </script>

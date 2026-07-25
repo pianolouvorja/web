@@ -1,6 +1,9 @@
 import { readOrFetchCatalogJson } from '@shared/services/remote-catalog'
 
-import type { LiturgyBibleBookOption, LiturgyMusicOption } from '../types/liturgy'
+import type {
+  LiturgyBibleBookOption,
+  LiturgyMusicOption,
+} from '../types/liturgy'
 
 type CatalogHymnalRow = {
   id_music?: number | string
@@ -112,7 +115,10 @@ function hasInstrumentalFlag(row: CatalogHymnalRow): boolean {
   return Boolean(String(row.url_instrumental_music ?? '').trim())
 }
 
-function upsertMusicOption(byId: Map<number, LiturgyMusicOption>, option: LiturgyMusicOption) {
+function upsertMusicOption(
+  byId: Map<number, LiturgyMusicOption>,
+  option: LiturgyMusicOption,
+) {
   const existing = byId.get(option.id)
   if (!existing) {
     byId.set(option.id, option)
@@ -164,12 +170,15 @@ function mapMusicIndexRow(row: CatalogMusicIndexRow): LiturgyMusicOption | null 
   const albumNames =
     joinAlbumNames(
       row.albums_names,
-      ...(Array.isArray(row.albums) ? row.albums.map((album) => album.name) : []),
+      ...(Array.isArray(row.albums)
+        ? row.albums.map((album) => album.name)
+        : []),
     ) || 'Música'
 
   const hymnalTrack = parseTrack(row.track)
   const isHymnalAlbum =
-    albumNames.includes('Hinário Adventista') || albumNames.includes('Hinário Adventista 1996')
+    albumNames.includes('Hinário Adventista') ||
+    albumNames.includes('Hinário Adventista 1996')
 
   return {
     id,
@@ -195,7 +204,9 @@ async function loadFromMusicIndex(): Promise<LiturgyMusicOption[] | null> {
   return byId.size > 0 ? [...byId.values()] : null
 }
 
-async function loadHymnalOptions(byId: Map<number, LiturgyMusicOption>): Promise<void> {
+async function loadHymnalOptions(
+  byId: Map<number, LiturgyMusicOption>,
+): Promise<void> {
   for (const source of HYMNAL_SOURCES) {
     const rows = await readOrFetchCatalog<CatalogHymnalRow[]>(source.file)
     if (!rows || !Array.isArray(rows)) continue
@@ -209,7 +220,9 @@ async function loadHymnalOptions(byId: Map<number, LiturgyMusicOption>): Promise
   }
 }
 
-async function loadCollectionOptions(byId: Map<number, LiturgyMusicOption>): Promise<void> {
+async function loadCollectionOptions(
+  byId: Map<number, LiturgyMusicOption>,
+): Promise<void> {
   const categories = await readOrFetchCatalog<CatalogCategory[]>('pt_categories')
   if (!categories || !Array.isArray(categories)) return
 
@@ -231,7 +244,9 @@ async function loadCollectionOptions(byId: Map<number, LiturgyMusicOption>): Pro
     const batch = albumEntries.slice(index, index + batchSize)
     await Promise.all(
       batch.map(async ([albumId, albumName]) => {
-        const record = await readOrFetchCatalog<CatalogAlbumRecord>(`album_${albumId}`)
+        const record = await readOrFetchCatalog<CatalogAlbumRecord>(
+          `album_${albumId}`,
+        )
         if (!record?.musics || !Array.isArray(record.musics)) return
 
         const resolvedName = String(record.name ?? albumName).trim() || albumName
@@ -305,7 +320,11 @@ export function filterLiturgyMusicOptions(
     const title = entry.name.toLowerCase()
     const album = entry.albumNames.toLowerCase()
     if (isNum && numQuery != null) {
-      return title.includes(trimmed) || album.includes(trimmed) || entry.hymnalTrack === numQuery
+      return (
+        title.includes(trimmed) ||
+        album.includes(trimmed) ||
+        entry.hymnalTrack === numQuery
+      )
     }
     return title.includes(trimmed) || album.includes(trimmed)
   })

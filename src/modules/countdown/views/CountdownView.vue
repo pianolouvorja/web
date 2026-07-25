@@ -2,6 +2,14 @@
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
+import { GlassCard } from '@design-system/index'
+import PopupScreenControls from '@shared/components/PopupScreenControls.vue'
+
+import CountdownConfigDialog from '../components/CountdownConfigDialog.vue'
+import CountdownDurationInput from '../components/CountdownDurationInput.vue'
+import CountdownPreview from '../components/CountdownPreview.vue'
+import CountdownProjectFab from '../components/CountdownProjectFab.vue'
+import CountdownSavedList from '../components/CountdownSavedList.vue'
 import { useCountdownFeature } from '../composables/useCountdown'
 
 const { t } = useI18n()
@@ -32,15 +40,15 @@ const {
   refreshProjectionState,
 } = useCountdownFeature()
 
-function _goBack() {
+function goBack() {
   void router.push({ name: 'utilities-temporizador' })
 }
 
-function _onToggleProjection() {
+function onToggleProjection() {
   void toggleProjection()
 }
 
-function _onScreenControlsChanged() {
+function onScreenControlsChanged() {
   refreshProjectionState()
 }
 </script>

@@ -2,6 +2,15 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
+import PopupScreenControls from '@shared/components/PopupScreenControls.vue'
+
+import LiturgyCloneDialog from '../components/LiturgyCloneDialog.vue'
+import LiturgyCustomBar from '../components/LiturgyCustomBar.vue'
+import LiturgyCustomDialog from '../components/LiturgyCustomDialog.vue'
+import LiturgyDayTabs from '../components/LiturgyDayTabs.vue'
+import LiturgyItemDialog from '../components/LiturgyItemDialog.vue'
+import LiturgySidebar from '../components/LiturgySidebar.vue'
+import LiturgyTimeline from '../components/LiturgyTimeline.vue'
 import { useLiturgy } from '../composables/useLiturgy'
 
 const { t } = useI18n()
@@ -31,9 +40,6 @@ const {
   musicCatalogEmpty,
   musicInstrumentalById,
   busyMusicId,
-  lyricOpen,
-  lyricDoc,
-  isLoadingLyric,
   startLabels,
   durationLabels,
   videoProjectionItemId,
@@ -86,16 +92,15 @@ const {
   onMusicInstrumental,
   onMusicSlides,
   onMusicLyric,
-  closeLyric,
   setItemDraft,
   setMusicSearchQuery,
   refreshProjectionState,
 } = useLiturgy()
 
 /** Exibe avisos da liturgia e do player (ex.: áudio indisponível). */
-const _liturgyAlertKey = computed(() => lastActionMessageKey.value || null)
+const liturgyAlertKey = computed(() => lastActionMessageKey.value || null)
 
-function _onScreenControlsChanged() {
+function onScreenControlsChanged() {
   refreshProjectionState()
 }
 </script>
@@ -296,13 +301,6 @@ function _onScreenControlsChanged() {
       @close="closeCloneDialog"
       @confirm="cloneLiturgyFromSelected"
       @update:source-key="cloneSourceKey = $event"
-    />
-
-    <AlbumLyricDialog
-      :open="lyricOpen"
-      :loading="isLoadingLyric"
-      :document="lyricDoc"
-      @close="closeLyric"
     />
   </section>
 </template>

@@ -3,7 +3,7 @@ import { useI18n } from 'vue-i18n'
 
 import type { AlbumCollection } from '../types/albums'
 
-const _props = defineProps<{
+const props = defineProps<{
   collection: AlbumCollection
 }>()
 
@@ -13,7 +13,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
-function _onOpen() {
+function onOpen() {
   emit('open')
 }
 </script>

@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { computed, defineAsyncComponent, onMounted, onUnmounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
+
 import { BROWSER_STORAGE_KEYS } from '@shared/constants/storage-keys'
 import { getBrowserItem } from '@shared/services/browser-storage'
 import {
@@ -15,8 +18,6 @@ import {
   type PopupActionPayload,
   type PopupSyncPayload,
 } from '@shared/services/popup-windows'
-import { computed, defineAsyncComponent, onMounted, onUnmounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
 
 const route = useRoute()
 const moduleId = ref('')
@@ -35,20 +36,30 @@ const slotId = computed(() => {
 })
 
 const moduleViews: Record<string, ReturnType<typeof defineAsyncComponent>> = {
-  bible: defineAsyncComponent(() => import('@modules/bible/views/BibleProjectionView.vue')),
-  clock: defineAsyncComponent(() => import('@modules/clock/views/ClockProjectionView.vue')),
-  timer: defineAsyncComponent(() => import('@modules/timer/views/TimerProjectionView.vue')),
+  bible: defineAsyncComponent(
+    () => import('@modules/bible/views/BibleProjectionView.vue'),
+  ),
+  clock: defineAsyncComponent(
+    () => import('@modules/clock/views/ClockProjectionView.vue'),
+  ),
+  timer: defineAsyncComponent(
+    () => import('@modules/timer/views/TimerProjectionView.vue'),
+  ),
   countdown: defineAsyncComponent(
     () => import('@modules/countdown/views/CountdownProjectionView.vue'),
   ),
-  media: defineAsyncComponent(() => import('@modules/media/views/MediaProjectionView.vue')),
-  random: defineAsyncComponent(() => import('@modules/random/views/RandomProjectionView.vue')),
+  media: defineAsyncComponent(
+    () => import('@modules/media/views/MediaProjectionView.vue'),
+  ),
+  random: defineAsyncComponent(
+    () => import('@modules/random/views/RandomProjectionView.vue'),
+  ),
   'liturgy-web': defineAsyncComponent(
     () => import('@modules/liturgy/views/LiturgyWebProjectionView.vue'),
   ),
 }
 
-const _activeView = computed(() => {
+const activeView = computed(() => {
   if (!moduleId.value) return null
   return moduleViews[moduleId.value] ?? null
 })

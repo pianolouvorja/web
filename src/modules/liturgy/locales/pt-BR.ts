@@ -51,7 +51,8 @@ export default {
     },
     broadcastNote: {
       title: 'Notas Gerais do Dia',
-      placeholder: 'Notas, avisos, lembretes gerais para a equipe técnica de som',
+      placeholder:
+        'Notas, avisos, lembretes gerais para a equipe técnica de som',
     },
     days: {
       sunday: 'Domingo',
@@ -90,7 +91,8 @@ export default {
       verse: 'Versículo',
     },
     typeDescriptions: {
-      category: 'Categorias servem como separadores visuais entre seções da liturgia.',
+      category:
+        'Categorias servem como separadores visuais entre seções da liturgia.',
       music: 'Momento musical do culto',
       annotation: 'Texto livre para a equipe',
       notice: 'Avisos e comunicados',
@@ -116,7 +118,8 @@ export default {
       durationDecrease: 'Diminuir duração',
       durationIncrease: 'Aumentar duração',
       momentName: 'Título Descritivo Complementar',
-      momentNamePlaceholder: 'Ex: Boas Vindas, Oração Inicial, Ofertório, avisos',
+      momentNamePlaceholder:
+        'Ex: Boas Vindas, Oração Inicial, Ofertório, avisos',
       complementaryTitle: 'Título Descritivo Complementar',
       complementaryTitlePlaceholder: 'Ex: Regência, Mensagem Musical',
       categoryMomentName: 'Nome do momento da programação',
@@ -232,14 +235,21 @@ export default {
       liturgySaved: 'Liturgia salva com sucesso.',
       mediaDesktopOnly: 'Selecione um arquivo de mídia neste item.',
       catalogEmpty: 'Nenhuma música encontrada no catálogo local.',
-      customRequired: 'Crie ou selecione uma liturgia personalizada antes de adicionar itens.',
+      musicModuleUnavailable:
+        'Reprodução de músicas estará disponível após a migração de Álbuns.',
+      customRequired:
+        'Crie ou selecione uma liturgia personalizada antes de adicionar itens.',
       booksEmpty: 'Nenhum livro bíblico disponível. Conclua a inicialização.',
       urlMissing: 'Informe um link válido neste item.',
       urlInvalid: 'O link informado não é válido para projeção.',
-      projectionFailed: 'Não foi possível abrir a projeção nas telas configuradas.',
+      projectionFailed:
+        'Não foi possível abrir a projeção nas telas configuradas.',
       presentationOfficeMissing:
         'Para projetar PPT/PPTX, instale o LibreOffice (ou defina LIBREOFFICE_PATH).',
-      presentationWebUnsupported: 'Apresentações PPT/PPTX não são suportadas no navegador.',
+      presentationWebUnsupported:
+        'Apresentações PPT/PPTX não são suportadas no navegador.',
+      lyricUnavailable:
+        'Visualização de letra estará disponível após a migração de Álbuns.',
     },
     custom: {
       title: 'Liturgias avulsas',

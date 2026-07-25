@@ -1,10 +1,21 @@
-import { exitPopupModule, isPopupModuleOpen, openPopupModule } from '@shared/services/popup-windows'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
+import {
+  exitPopupModule,
+  isPopupModuleOpen,
+  openPopupModule,
+} from '@shared/services/popup-windows'
+
 import { computeElapsedMs } from '../services/timer-format'
-import { loadTimerDisplayConfig, saveTimerDisplayConfig } from '../services/timer-preferences'
-import { publishTimerRuntime, readTimerRuntimeFromStorage } from '../services/timer-runtime'
+import {
+  loadTimerDisplayConfig,
+  saveTimerDisplayConfig,
+} from '../services/timer-preferences'
+import {
+  publishTimerRuntime,
+  readTimerRuntimeFromStorage,
+} from '../services/timer-runtime'
 import {
   DEFAULT_TIMER_DISPLAY_CONFIG,
   DEFAULT_TIMER_RUNTIME,

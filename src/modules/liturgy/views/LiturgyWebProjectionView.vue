@@ -5,9 +5,9 @@ import {
   DEFAULT_LITURGY_WEB_RUNTIME,
   LITURGY_WEB_RUNTIME_CHANNEL,
   LITURGY_WEB_RUNTIME_STORAGE_KEY,
-  type LiturgyWebProjectionRuntime,
   normalizeLiturgyWebRuntime,
   readLiturgyWebRuntimeFromStorage,
+  type LiturgyWebProjectionRuntime,
 } from '../services/liturgy-web-runtime'
 
 const runtime = ref<LiturgyWebProjectionRuntime>({
@@ -17,7 +17,9 @@ const imageIndex = ref(0)
 let runtimeChannel: BroadcastChannel | null = null
 let imageTimer: ReturnType<typeof setInterval> | null = null
 
-const showContent = computed(() => runtime.value.active && Boolean(runtime.value.url))
+const showContent = computed(
+  () => runtime.value.active && Boolean(runtime.value.url),
+)
 
 const imageUrls = computed(() => {
   if (runtime.value.kind !== 'image') return []
@@ -28,9 +30,11 @@ const imageUrls = computed(() => {
       : []
 })
 
-const _currentImage = computed(() => imageUrls.value[imageIndex.value] ?? imageUrls.value[0] ?? '')
+const currentImage = computed(
+  () => imageUrls.value[imageIndex.value] ?? imageUrls.value[0] ?? '',
+)
 
-const _frameSrc = computed(() => {
+const frameSrc = computed(() => {
   if (!showContent.value) return ''
   const url = runtime.value.url
   if (runtime.value.kind === 'video' || runtime.value.kind === 'image') {

@@ -47,7 +47,11 @@ export function resolveBookTone(bookNumber: number): BibleBookTone {
   return 'neutral'
 }
 
-export function chapterRecordKey(versionId: number, bookId: number, chapter: number): string {
+export function chapterRecordKey(
+  versionId: number,
+  bookId: number,
+  chapter: number,
+): string {
   return `bible_${versionId}_${bookId}_${chapter}`
 }
 
@@ -87,7 +91,8 @@ export function pickDefaultVersionId(
 
   const ara = versions.find(
     (version) =>
-      version.abbreviation.toUpperCase() === 'ARA' || version.name.toUpperCase() === 'ARA',
+      version.abbreviation.toUpperCase() === 'ARA' ||
+      version.name.toUpperCase() === 'ARA',
   )
   return ara?.id ?? versions[0].id
 }

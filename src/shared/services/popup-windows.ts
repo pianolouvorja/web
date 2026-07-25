@@ -1,5 +1,4 @@
 import { BROWSER_STORAGE_KEYS } from '@shared/constants/storage-keys'
-import { getBrowserItem, setBrowserItem } from '@shared/services/browser-storage'
 import {
   captureCurrentBounds,
   getOpenFeatures,
@@ -11,8 +10,16 @@ import {
   scheduleRestoreOnWindow,
 } from '@shared/services/popup-layout'
 import { getPopupCount, getTargetPopupSlots } from '@shared/services/projection-preferences'
+import {
+  getBrowserItem,
+  setBrowserItem,
+} from '@shared/services/browser-storage'
 
-import { getPopupRefs, type PopupWindowRef, setPopupRefs } from './popup-registry'
+import {
+  getPopupRefs,
+  setPopupRefs,
+  type PopupWindowRef,
+} from './popup-registry'
 
 export const POPUP_STATE_CHANNEL = 'louvorja-popup-state'
 
@@ -74,7 +81,9 @@ function broadcastState(payload: PopupSyncPayload): void {
 function syncStateTo(popup: PopupWindowRef | null | undefined): void {
   if (!popup || popup.closed) return
 
-  const payloads: PopupSyncPayload[] = [{ param: 'popup_module', value: getActiveModule() }]
+  const payloads: PopupSyncPayload[] = [
+    { param: 'popup_module', value: getActiveModule() },
+  ]
 
   payloads.forEach((payload) => {
     try {
@@ -132,7 +141,9 @@ function saveOpenPopupLayouts(): void {
 
 function ensurePopups(moduleId?: string): PopupWindowRef[] {
   const availableCount = getPopupCount()
-  const targetSlots = getTargetPopupSlots().filter((slot) => slot >= 1 && slot <= availableCount)
+  const targetSlots = getTargetPopupSlots().filter(
+    (slot) => slot >= 1 && slot <= availableCount,
+  )
   let popups = getPopupRefs()
 
   // Preserva o slot real (não reindexa pelo índice do array).
@@ -177,7 +188,9 @@ function ensurePopups(moduleId?: string): PopupWindowRef[] {
     }
   }
 
-  popups = persistPopups([...popups].sort((a, b) => (a.__popupSlot ?? 0) - (b.__popupSlot ?? 0)))
+  popups = persistPopups(
+    [...popups].sort((a, b) => (a.__popupSlot ?? 0) - (b.__popupSlot ?? 0)),
+  )
 
   popups.forEach((popup) => {
     const slot = popup.__popupSlot

@@ -1,5 +1,9 @@
 import { BROWSER_STORAGE_KEYS } from '@shared/constants/storage-keys'
-import { getBrowserItem, removeBrowserItem, setBrowserItem } from '@shared/services/browser-storage'
+import {
+  getBrowserItem,
+  removeBrowserItem,
+  setBrowserItem,
+} from '@shared/services/browser-storage'
 
 export interface PopupBounds {
   left: number

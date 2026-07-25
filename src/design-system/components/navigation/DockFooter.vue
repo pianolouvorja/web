@@ -15,11 +15,11 @@ const emit = defineEmits<{
   select: [key: string]
 }>()
 
-function _isActive(key: string) {
+function isActive(key: string) {
   return props.activeKey === key
 }
 
-function _onSelect(key: string) {
+function onSelect(key: string) {
   emit('select', key)
 }
 </script>
@@ -52,19 +52,11 @@ function _onSelect(key: string) {
   height: var(--ds-dock-height, 72px);
   align-items: flex-end;
   justify-content: center;
-  gap: clamp(0.25rem, calc(100vw / 30), 3rem);
+  gap: 3rem;
   padding: 0 var(--ds-spacing-page, 32px) 0.5rem;
   border-top: 1px solid var(--ds-color-outline);
   background: var(--ds-color-surface);
   transition: background-color var(--ds-motion-duration, 280ms) ease;
-
-  @media (max-width: 600px) {
-    gap: 0;
-    justify-content: space-around;
-    padding: 0 0.25rem 0.25rem;
-    height: calc(var(--ds-dock-height, 72px) - env(safe-area-inset-bottom, 0px));
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-  }
 }
 
 .ds-dock__item {
@@ -74,8 +66,6 @@ function _onSelect(key: string) {
   align-items: center;
   justify-content: center;
   gap: 0.25rem;
-  min-width: 44px;
-  min-height: 44px;
   padding: 0.25rem 0.5rem;
   border: 0;
   background: transparent;
@@ -94,13 +84,6 @@ function _onSelect(key: string) {
   &--active {
     color: var(--ds-color-primary-soft);
   }
-
-  @media (max-width: 600px) {
-    gap: 0.125rem;
-    padding: 0.25rem 0.15rem;
-    flex: 1 1 0;
-    min-width: 0;
-  }
 }
 
 .ds-dock__icon {
@@ -116,14 +99,6 @@ function _onSelect(key: string) {
   letter-spacing: 0.02em;
   text-align: center;
   white-space: normal;
-
-  @media (max-width: 600px) {
-    font-size: 9px;
-    max-width: 3.5rem;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
 }
 
 .ds-dock__dot {

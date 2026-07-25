@@ -1,3 +1,5 @@
+import { createI18n } from 'vue-i18n'
+
 import ptBR from '@locales/pt-BR'
 import albumsPtBR from '@modules/albums/locales/pt-BR'
 import biblePtBR from '@modules/bible/locales/pt-BR'
@@ -9,7 +11,6 @@ import mediaPtBR from '@modules/media/locales/pt-BR'
 import randomPtBR from '@modules/random/locales/pt-BR'
 import settingsPtBR from '@modules/settings/locales/pt-BR'
 import timerPtBR from '@modules/timer/locales/pt-BR'
-import { createI18n } from 'vue-i18n'
 
 export default createI18n({
   legacy: false,

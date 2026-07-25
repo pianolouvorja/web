@@ -1,7 +1,12 @@
 <script setup lang="ts">
-import { closeAllPopups, hasLivePopups } from '@shared/services/popup-windows'
 import { onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+
+import PopupCountSelector from '@shared/components/PopupCountSelector.vue'
+import {
+  closeAllPopups,
+  hasLivePopups,
+} from '@shared/services/popup-windows'
 
 const emit = defineEmits<{
   changed: []
@@ -17,7 +22,7 @@ function refresh() {
   hasPopups.value = hasLivePopups()
 }
 
-async function _onCloseAll() {
+async function onCloseAll() {
   await closeAllPopups()
   refresh()
   emit('changed')

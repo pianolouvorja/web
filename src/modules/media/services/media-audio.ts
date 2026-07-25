@@ -20,7 +20,9 @@ export async function resolveMusicAudioUrl(
 }
 
 /** Resolve URL de imagem de slide/capa (streaming remoto na web). */
-export async function resolveSlideImageUrl(catalogPath: string | null): Promise<string | null> {
+export async function resolveSlideImageUrl(
+  catalogPath: string | null,
+): Promise<string | null> {
   if (!catalogPath?.trim()) return null
   return resolveRemoteFileUrl(catalogPath)
 }
@@ -107,7 +109,8 @@ export async function fadeVolumeMediaAudio(
     fadeResolvers.set(audio, finish)
     const interval = setInterval(() => {
       const next = audio.volume + step
-      const reached = (step >= 0 && next >= goal) || (step < 0 && next <= goal)
+      const reached =
+        (step >= 0 && next >= goal) || (step < 0 && next <= goal)
       if (!reached) {
         audio.volume = next
         return

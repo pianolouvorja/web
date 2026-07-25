@@ -2,6 +2,13 @@
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
+import { GlassCard } from '@design-system/index'
+import PopupScreenControls from '@shared/components/PopupScreenControls.vue'
+
+import TimerConfigDialog from '../components/TimerConfigDialog.vue'
+import TimerPreview from '../components/TimerPreview.vue'
+import TimerProjectFab from '../components/TimerProjectFab.vue'
+import TimerSavedList from '../components/TimerSavedList.vue'
 import { useTimerFeature } from '../composables/useTimer'
 
 const { t } = useI18n()
@@ -30,15 +37,15 @@ const {
   refreshProjectionState,
 } = useTimerFeature()
 
-function _goBack() {
+function goBack() {
   void router.push({ name: 'utilities-temporizador' })
 }
 
-function _onToggleProjection() {
+function onToggleProjection() {
   void toggleProjection()
 }
 
-function _onScreenControlsChanged() {
+function onScreenControlsChanged() {
   refreshProjectionState()
 }
 </script>

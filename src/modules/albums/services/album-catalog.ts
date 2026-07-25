@@ -112,7 +112,7 @@ export async function loadAlbumCategories(): Promise<AlbumCategory[]> {
 
     if (collections.length > 0) {
       result.push({
-        id: category.id_category ?? category.name ?? collections[0]?.id,
+        id: category.id_category ?? category.name ?? collections[0]!.id,
         name: String(category.name ?? '').trim() || 'Coletâneas',
         collections,
       })

@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import { hasLivePopups, syncPopupWindows } from '@shared/services/popup-windows'
+import { computed, nextTick, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+
 import {
   getPopupCount,
   getTargetPopupSlots,
   toggleTargetPopupSlot,
 } from '@shared/services/projection-preferences'
-import { computed, nextTick, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue'
-import { useI18n } from 'vue-i18n'
+import {
+  hasLivePopups,
+  syncPopupWindows,
+} from '@shared/services/popup-windows'
 
 withDefaults(
   defineProps<{
@@ -33,7 +37,7 @@ const menuStyle = ref<Record<string, string>>({})
 
 let syncTimer: ReturnType<typeof setInterval> | null = null
 
-const _optionsList = computed(() =>
+const optionsList = computed(() =>
   Array.from({ length: availableCount.value }, (_, index) => {
     const id = index + 1
     return {
@@ -46,7 +50,7 @@ const _optionsList = computed(() =>
 
 const selectedCount = computed(() => selectedSlots.value.length)
 
-const _triggerLabel = computed(() => {
+const triggerLabel = computed(() => {
   if (selectedCount.value > 0) {
     return t('monitors.selectedCount', { count: selectedCount.value })
   }
@@ -64,7 +68,10 @@ function updateMenuPosition() {
 
   const rect = trigger.getBoundingClientRect()
   const menuWidth = Math.min(296, Math.max(220, window.innerWidth - 16))
-  const left = Math.min(Math.max(8, rect.right - menuWidth), window.innerWidth - menuWidth - 8)
+  const left = Math.min(
+    Math.max(8, rect.right - menuWidth),
+    window.innerWidth - menuWidth - 8,
+  )
   const spaceBelow = window.innerHeight - rect.bottom
   const openUp = spaceBelow < 280 && rect.top > spaceBelow
 
@@ -79,11 +86,11 @@ function updateMenuPosition() {
   }
 }
 
-function _toggleMenu() {
+function toggleMenu() {
   menuOpen.value = !menuOpen.value
 }
 
-function _onToggle(slot: number) {
+function onToggle(slot: number) {
   selectedSlots.value = toggleTargetPopupSlot(slot)
   emit('change', selectedSlots.value)
   if (hasLivePopups()) {

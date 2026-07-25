@@ -3,6 +3,12 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
+import { GlassCard } from '@design-system/index'
+
+import AlbumCollectionCard from '../components/AlbumCollectionCard.vue'
+import AlbumHymnalCard from '../components/AlbumHymnalCard.vue'
+import AlbumLyricDialog from '../components/AlbumLyricDialog.vue'
+import AlbumSearchHitRow from '../components/AlbumSearchHitRow.vue'
 import { useAlbums } from '../composables/useAlbums'
 import type { AlbumCategory } from '../types/albums'
 
@@ -37,39 +43,48 @@ function isHymnalsCategory(category: AlbumCategory) {
   return String(category.id) === 'hymnals'
 }
 
-function _categoryTitle(category: AlbumCategory) {
+function categoryTitle(category: AlbumCategory) {
   if (isHymnalsCategory(category)) return t('albums.categories.hymnals')
-  if (category.name === 'CDs Oficiais/Ano' || /cds?\s*oficiais/i.test(category.name)) {
+  if (
+    category.name === 'CDs Oficiais/Ano' ||
+    /cds?\s*oficiais/i.test(category.name)
+  ) {
     return t('albums.categories.youthAlbums')
   }
   return category.name
 }
 
-function _categorySubtitle(category: AlbumCategory) {
+function categorySubtitle(category: AlbumCategory) {
   if (isHymnalsCategory(category)) return t('albums.categories.hymnalsSubtitle')
-  if (category.name === 'CDs Oficiais/Ano' || /cds?\s*oficiais/i.test(category.name)) {
+  if (
+    category.name === 'CDs Oficiais/Ano' ||
+    /cds?\s*oficiais/i.test(category.name)
+  ) {
     return t('albums.categories.albumsSubtitle')
   }
   return t('albums.categories.defaultSubtitle')
 }
 
-function _openCollection(collectionId: string | number) {
+function openCollection(collectionId: string | number) {
   void router.push({
     name: 'albums-collection',
     params: { collectionId: String(collectionId) },
   })
 }
 
-function _retry() {
+function retry() {
   clearError()
   void hydrateCatalog()
 }
 
-function _clearHubSearch() {
+function clearHubSearch() {
   hubSearchQuery.value = ''
 }
 
-async function _runAction(musicId: number, action: () => Promise<boolean | undefined>) {
+async function runAction(
+  musicId: number,
+  action: () => Promise<boolean | void>,
+) {
   busyMusicId.value = musicId
   try {
     await action()

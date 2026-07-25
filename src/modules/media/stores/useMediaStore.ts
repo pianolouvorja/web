@@ -1,6 +1,11 @@
-import { exitPopupModule, isPopupModuleOpen, openPopupModule } from '@shared/services/popup-windows'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
+
+import {
+  exitPopupModule,
+  isPopupModuleOpen,
+  openPopupModule,
+} from '@shared/services/popup-windows'
 
 import {
   attachMediaAudioListeners,
@@ -17,8 +22,14 @@ import {
   stopAllMediaAudio,
   switchMediaAudioElement,
 } from '../services/media-audio'
-import { loadMediaTrack, resolveAlbumSubtitle } from '../services/media-catalog'
-import { clearMediaRuntime, publishMediaRuntime } from '../services/media-runtime'
+import {
+  loadMediaTrack,
+  resolveAlbumSubtitle,
+} from '../services/media-catalog'
+import {
+  clearMediaRuntime,
+  publishMediaRuntime,
+} from '../services/media-runtime'
 import {
   buildMediaSlides,
   buildSlideTimesSec,
@@ -60,9 +71,9 @@ export const useMediaStore = defineStore('media', () => {
   let projectionWatchTimer: ReturnType<typeof setInterval> | null = null
   let boundAudioElement: HTMLAudioElement | null = null
   let playPauseSeq = 0
-  const _ondemandGen = 0
-  const _ondemandAbort = false
-  let _ondemandNoticeMusicId: number | null = null
+  let ondemandGen = 0
+  let ondemandAbort = false
+  let ondemandNoticeMusicId: number | null = null
   let audioHandlers: {
     onTimeUpdate: () => void
     onLoadedMetadata: () => void
@@ -119,7 +130,10 @@ export const useMediaStore = defineStore('media', () => {
     }
 
     if (end <= start) return 0
-    return Math.min(1, Math.max(0, (currentTimeSec.value - start) / (end - start)))
+    return Math.min(
+      1,
+      Math.max(0, (currentTimeSec.value - start) / (end - start)),
+    )
   })
 
   const currentTimeLabel = computed(() => formatMediaClock(currentTimeSec.value))
@@ -202,16 +216,17 @@ export const useMediaStore = defineStore('media', () => {
     ondemandDownloadPercent.value = null
     ondemandNoticeVisible.value = false
     ondemandDownloadDone.value = false
-    _ondemandNoticeMusicId = null
+    ondemandNoticeMusicId = null
   }
 
-  async function _startOndemandDownload(_musicId: number) {
+  async function startOndemandDownload(_musicId: number) {
     // Web: streaming direto da API — sem download sob demanda.
   }
 
   async function maybeStartOndemandDownload(_musicId: number) {
     // Web: streaming direto da API — sem download sob demanda.
   }
+
 
   function unbindAudio() {
     if (!audioHandlers || !boundAudioElement) {
@@ -603,7 +618,11 @@ export const useMediaStore = defineStore('media', () => {
     const slideTimesSec = buildSlideTimesSec(current.slides, nextMode)
 
     // Mesma fonte já carregada (ex.: sair de Sem áudio): só restaura o volume.
-    if (playbackUrl && current.audioUrl === playbackUrl && current.mode === 'no_audio') {
+    if (
+      playbackUrl &&
+      current.audioUrl === playbackUrl &&
+      current.mode === 'no_audio'
+    ) {
       session.value = {
         ...current,
         mode: nextMode,
@@ -790,7 +809,9 @@ export const useMediaStore = defineStore('media', () => {
     publishProjectionState()
   }
 
-  const hasInstrumental = computed(() => Boolean(session.value?.hasInstrumental))
+  const hasInstrumental = computed(
+    () => Boolean(session.value?.hasInstrumental),
+  )
   const playbackMode = computed(() => session.value?.mode ?? 'audio')
 
   return {

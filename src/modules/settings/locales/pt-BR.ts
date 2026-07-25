@@ -30,7 +30,8 @@ export default {
       interactionSoft: 'Suave',
       interactionMist: 'Névoa',
       preview: 'Pré-visualização',
-      previewHint: 'Este é um exemplo de como sua interface será exibida em apresentações.',
+      previewHint:
+        'Este é um exemplo de como sua interface será exibida em apresentações.',
       tipTitle: 'Dica de Performance',
       tipDark:
         'O Modo Escuro reduz o consumo de energia em monitores OLED e diminui a fadiga ocular em ambientes de culto.',
