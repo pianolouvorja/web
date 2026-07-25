@@ -107,5 +107,6 @@ const { t } = useI18n()
 .media-close-dialog__btn--yes {
   background: var(--ds-color-primary, #2196f3);
   color: #fff;
+  font-weight: 700;
 }
 </style>

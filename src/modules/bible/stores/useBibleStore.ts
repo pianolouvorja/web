@@ -391,6 +391,21 @@ export const useBibleStore = defineStore('bible', () => {
     showNavPanel.value = !showNavPanel.value
   }
 
+  function selectFirstValidVerse() {
+    const nums = Object.keys(verses.value)
+      .map(Number)
+      .filter((n) => !Number.isNaN(n))
+    const first = Math.min(...nums)
+    if (Number.isFinite(first)) selectVerse(first)
+  }
+
+  function selectLastValidVerse() {
+    const nums = Object.keys(verses.value)
+      .map(Number)
+      .filter((n) => !Number.isNaN(n))
+    const last = Math.max(...nums)
+    if (Number.isFinite(last)) selectVerse(last)
+  }
   async function goToAdjacentVerse(direction: -1 | 1) {
     if (selectedVerses.value.length === 0) return
 
@@ -408,47 +423,26 @@ export const useBibleStore = defineStore('bible', () => {
     const book = selectedBook.value
     if (!book) return
 
-    if (direction > 0) {
-      if (selectedChapter.value < book.chapters) {
-        await selectChapter(selectedChapter.value + 1)
-        const first = Math.min(
-          ...Object.keys(verses.value).map(Number).filter((n) => !Number.isNaN(n)),
-        )
-        if (Number.isFinite(first)) selectVerse(first)
-        return
-      }
+    const isForward = direction > 0
+    const sameBookNextChapter = isForward
+      ? selectedChapter.value < book.chapters
+      : selectedChapter.value > 1
 
-      const index = books.value.findIndex((item) => item.id === book.id)
-      const nextBook = books.value[index + 1] ?? books.value[0]
-      if (!nextBook) return
-      await selectBook(nextBook.id)
-      await selectChapter(1)
-      const first = Math.min(
-        ...Object.keys(verses.value).map(Number).filter((n) => !Number.isNaN(n)),
-      )
-      if (Number.isFinite(first)) selectVerse(first)
-      return
-    }
-
-    if (selectedChapter.value > 1) {
-      await selectChapter(selectedChapter.value - 1)
-      const last = Math.max(
-        ...Object.keys(verses.value).map(Number).filter((n) => !Number.isNaN(n)),
-      )
-      if (Number.isFinite(last)) selectVerse(last)
+    if (sameBookNextChapter) {
+      await selectChapter(selectedChapter.value + direction)
+      isForward ? selectFirstValidVerse() : selectLastValidVerse()
       return
     }
 
     const index = books.value.findIndex((item) => item.id === book.id)
-    const prevBook =
-      index > 0 ? books.value[index - 1] : books.value[books.value.length - 1]
-    if (!prevBook) return
-    await selectBook(prevBook.id)
-    await selectChapter(prevBook.chapters)
-    const last = Math.max(
-      ...Object.keys(verses.value).map(Number).filter((n) => !Number.isNaN(n)),
-    )
-    if (Number.isFinite(last)) selectVerse(last)
+    const nextBook = isForward
+      ? (books.value[index + 1] ?? books.value[0])
+      : (index > 0 ? books.value[index - 1] : books.value[books.value.length - 1])
+    if (!nextBook) return
+
+    await selectBook(nextBook.id)
+    await selectChapter(isForward ? 1 : nextBook.chapters)
+    isForward ? selectFirstValidVerse() : selectLastValidVerse()
   }
 
   return {

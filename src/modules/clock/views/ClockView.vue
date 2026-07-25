@@ -31,11 +31,11 @@ const {
 } = useClockFeature()
 
 function goBack() {
-  void router.push({ name: 'utilities-temporizador' })
+  router.push({ name: 'utilities-temporizador' })
 }
 
 function onToggleProjection() {
-  void toggleProjection()
+  toggleProjection()
 }
 
 function onScreenControlsChanged() {

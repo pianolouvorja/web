@@ -41,11 +41,11 @@ const {
 } = useCountdownFeature()
 
 function goBack() {
-  void router.push({ name: 'utilities-temporizador' })
+  router.push({ name: 'utilities-temporizador' })
 }
 
 function onToggleProjection() {
-  void toggleProjection()
+  toggleProjection()
 }
 
 function onScreenControlsChanged() {
@@ -402,17 +402,17 @@ function onScreenControlsChanged() {
 
   &--start {
     background: color-mix(in srgb, #43a047 22%, transparent);
-    color: #66bb6a;
+    color: #81c784;
   }
 
   &--pause {
     background: color-mix(in srgb, #fb8c00 22%, transparent);
-    color: #ffa726;
+    color: #ffb74d;
   }
 
   &--reset {
     background: color-mix(in srgb, #e53935 18%, transparent);
-    color: #ef5350;
+    color: #e57373;
   }
 
   &--save {

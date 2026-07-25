@@ -42,7 +42,7 @@ const navItems = computed<DockNavItem[]>(() =>
 function onNavigate(key: string) {
   const item = mainNavRoutes.find((nav) => nav.key === key)
   if (item) {
-    void router.push(item.to)
+    router.push(item.to)
   }
 }
 

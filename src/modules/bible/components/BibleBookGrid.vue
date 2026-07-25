@@ -250,12 +250,12 @@ const { t } = useI18n()
 
   &--history {
     background: color-mix(in srgb, #22c55e 12%, transparent);
-    color: color-mix(in srgb, #86efac 85%, transparent);
+    color: #4ade80;
   }
 
   &--prophets {
     background: color-mix(in srgb, #ca8a04 14%, transparent);
-    color: color-mix(in srgb, #fde68a 85%, transparent);
+    color: #fde68a;
   }
 
   &--gospels {
@@ -272,7 +272,7 @@ const { t } = useI18n()
   &--active {
     background: color-mix(in srgb, #ca8a04 40%, transparent);
     border-color: #eab308;
-    color: #fef08a;
+    color: #fef9c3;
     font-weight: 700;
   }
 }

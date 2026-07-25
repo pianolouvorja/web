@@ -66,7 +66,7 @@ function categorySubtitle(category: AlbumCategory) {
 }
 
 function openCollection(collectionId: string | number) {
-  void router.push({
+  router.push({
     name: 'albums-collection',
     params: { collectionId: String(collectionId) },
   })
@@ -74,7 +74,7 @@ function openCollection(collectionId: string | number) {
 
 function retry() {
   clearError()
-  void hydrateCatalog()
+  hydrateCatalog()
 }
 
 function clearHubSearch() {

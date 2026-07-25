@@ -182,13 +182,17 @@ function onEndTimeChange(event: Event) {
         />
         <h3>{{ t('liturgy.broadcastNote.title') }}</h3>
       </div>
+      <label for="liturgy-broadcast-note" class="sr-only">
+        {{ t('liturgy.broadcastNote.title') }}
+      </label>
       <textarea
+        id="liturgy-broadcast-note"
         class="liturgy-sidebar__note-input"
         :value="notes"
         :placeholder="t('liturgy.broadcastNote.placeholder')"
         rows="4"
         @input="onNotesInput"
-      />
+ />
     </GlassCard>
   </aside>
 </template>

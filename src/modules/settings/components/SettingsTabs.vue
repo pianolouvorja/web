@@ -14,7 +14,7 @@ function isActive(routeName: string) {
 
 function goTo(routeName: string) {
   if (route.name !== routeName) {
-    void router.push({ name: routeName })
+    router.push({ name: routeName })
   }
 }
 </script>

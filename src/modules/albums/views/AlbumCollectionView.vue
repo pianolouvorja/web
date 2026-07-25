@@ -47,15 +47,15 @@ async function load() {
 }
 
 onMounted(() => {
-  void load()
+  load()
 })
 
 watch(collectionId, () => {
-  void load()
+  load()
 })
 
 function goBack() {
-  void router.push({ name: 'albums' })
+  router.push({ name: 'albums' })
 }
 
 async function runAction(

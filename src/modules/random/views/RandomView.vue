@@ -50,11 +50,11 @@ const {
 } = useRandomFeature()
 
 function goBack() {
-  void router.push({ name: 'utilities' })
+  router.push({ name: 'utilities' })
 }
 
 function onToggleProjection() {
-  void toggleProjection()
+  toggleProjection()
 }
 
 function onScreenControlsChanged() {

@@ -20,6 +20,30 @@ import {
   playLiturgyWebOnConfiguredScreens,
 } from './liturgy-web-projection'
 
+const FAIL_DESKTOP: LiturgyActionResult = { ok: false, messageKey: 'liturgy.messages.mediaDesktopOnly' }
+const FAIL_PROJECTION: LiturgyActionResult = { ok: false, messageKey: 'liturgy.messages.projectionFailed' }
+const FAIL_URL: LiturgyActionResult = { ok: false, messageKey: 'liturgy.messages.urlMissing' }
+
+function labelOrFallback(item: LiturgyItem, fallback: string): string {
+  return item.name?.trim() || fallback
+}
+
+function requireBrowsableFile(filePath: string | undefined | null): LiturgyActionResult | null {
+  const trimmed = filePath?.trim()
+  if (!trimmed || !isBrowsableMediaUrl(trimmed)) return FAIL_DESKTOP
+  return null
+}
+
+async function tryOpenOnScreens(
+  fn: () => Promise<boolean>,
+): Promise<LiturgyActionResult> {
+  return (await fn()) ? { ok: true } : FAIL_PROJECTION
+}
+
+function extractUrl(item: LiturgyItem): string | null {
+  return item.url?.trim() || null
+}
+
 export type LiturgyActionResult =
   | { ok: true; messageKey?: string }
   | { ok: false; messageKey: string }
@@ -78,229 +102,128 @@ export async function openLiturgyMusicOnScreens(
 }
 
 /** Abre o item (música já projeta nas telas configuradas). */
+async function executeVerseItem(item: LiturgyItem, router: Router): Promise<LiturgyActionResult> {
+  if (item.verseBookId == null || item.verseChapter == null) return { ok: true }
+
+  const bibleStore = useBibleStore()
+  if (bibleStore.books.length === 0) await bibleStore.bootstrap()
+  await bibleStore.selectBook(item.verseBookId)
+  await bibleStore.selectChapter(item.verseChapter)
+
+  const verseQuery = item.verseNumbers?.trim()
+  if (verseQuery) {
+    bibleStore.verseSearchQuery = verseQuery
+    bibleStore.applyVerseSearch()
+  }
+
+  await router.push({ name: 'bible' })
+  return { ok: true }
+}
+
+async function executeFileItem(
+  item: LiturgyItem,
+  type: 'video' | 'images' | 'pdf',
+): Promise<LiturgyActionResult> {
+  const filePath = item.filePath?.trim()
+  if (!filePath) return FAIL_DESKTOP
+
+  if (type === 'video' || type === 'pdf') {
+    const check = requireBrowsableFile(filePath)
+    if (check) return check
+    const openFn = type === 'video' ? openLiturgyLocalVideoControl : openLiturgyLocalPdfControl
+    return tryOpenOnScreens(() => openFn(filePath, labelOrFallback(item, filePath)))
+  }
+
+  const paths = resolveImagePaths(item)
+  if (!hasBrowsableMedia(paths)) return FAIL_DESKTOP
+  return tryOpenOnScreens(() =>
+    openLiturgyLocalImageControl(paths, labelOrFallback(item, paths[0] || 'Imagens')),
+  )
+}
+
+async function executeUrlItem(
+  item: LiturgyItem,
+  type: 'online_video' | 'site',
+): Promise<LiturgyActionResult> {
+  const url = extractUrl(item)
+  if (!url) return FAIL_URL
+  const openFn = type === 'site' ? openLiturgySiteControl : openLiturgyVideoControl
+  return tryOpenOnScreens(() => openFn(url, labelOrFallback(item, url)))
+}
+
 export async function executeLiturgyItem(
   item: LiturgyItem,
   router: Router,
 ): Promise<LiturgyActionResult> {
-  if (!isExecutableItem(item)) {
-    return { ok: true }
-  }
+  if (!isExecutableItem(item)) return { ok: true }
 
   switch (item.type) {
     case 'music': {
       const result = await openLiturgyMusicOnScreens(item)
-      if (result.ok) {
-        await router.push({ name: 'media' })
-      }
+      if (result.ok) await router.push({ name: 'media' })
       return result
     }
-
-    case 'verse': {
-      if (item.verseBookId == null || item.verseChapter == null) {
-        return { ok: true }
-      }
-
-      const bibleStore = useBibleStore()
-      if (bibleStore.books.length === 0) {
-        await bibleStore.bootstrap()
-      }
-      await bibleStore.selectBook(item.verseBookId)
-      await bibleStore.selectChapter(item.verseChapter)
-
-      const verseQuery = item.verseNumbers?.trim()
-      if (verseQuery) {
-        bibleStore.verseSearchQuery = verseQuery
-        bibleStore.applyVerseSearch()
-      }
-
-      await router.push({ name: 'bible' })
-      return { ok: true }
-    }
-
-    case 'online_video': {
-      const rawUrl = item.url?.trim()
-      if (!rawUrl) {
-        return { ok: false, messageKey: 'liturgy.messages.urlMissing' }
-      }
-
-      const opened = await openLiturgyVideoControl(
-        rawUrl,
-        item.name?.trim() || rawUrl,
-      )
-      if (!opened) {
-        return { ok: false, messageKey: 'liturgy.messages.projectionFailed' }
-      }
-      return { ok: true }
-    }
-
-    case 'video': {
-      const filePath = item.filePath?.trim()
-      if (!filePath || !isBrowsableMediaUrl(filePath)) {
-        return { ok: false, messageKey: 'liturgy.messages.mediaDesktopOnly' }
-      }
-
-      const opened = await openLiturgyLocalVideoControl(
-        filePath,
-        item.name?.trim() || filePath,
-      )
-      if (!opened) {
-        return { ok: false, messageKey: 'liturgy.messages.projectionFailed' }
-      }
-      return { ok: true }
-    }
-
-    case 'images': {
-      const paths = resolveImagePaths(item)
-      if (!hasBrowsableMedia(paths)) {
-        return { ok: false, messageKey: 'liturgy.messages.mediaDesktopOnly' }
-      }
-
-      const opened = await openLiturgyLocalImageControl(
-        paths,
-        item.name?.trim() || paths[0] || 'Imagens',
-      )
-      if (!opened) {
-        return { ok: false, messageKey: 'liturgy.messages.projectionFailed' }
-      }
-      return { ok: true }
-    }
-
-    case 'pdf': {
-      const filePath = item.filePath?.trim()
-      if (!filePath || !isBrowsableMediaUrl(filePath)) {
-        return { ok: false, messageKey: 'liturgy.messages.mediaDesktopOnly' }
-      }
-
-      const opened = await openLiturgyLocalPdfControl(
-        filePath,
-        item.name?.trim() || filePath,
-      )
-      if (!opened) {
-        return { ok: false, messageKey: 'liturgy.messages.projectionFailed' }
-      }
-      return { ok: true }
-    }
-
-    case 'presentation': {
-      const filePath = item.filePath?.trim()
-      if (!filePath) {
-        return { ok: false, messageKey: 'liturgy.messages.mediaDesktopOnly' }
-      }
-
-      return {
-        ok: false,
-        messageKey: 'liturgy.messages.presentationWebUnsupported',
-      }
-    }
-
-    case 'site': {
-      const rawUrl = item.url?.trim()
-      if (!rawUrl) {
-        return { ok: false, messageKey: 'liturgy.messages.urlMissing' }
-      }
-
-      const opened = await openLiturgySiteControl(
-        rawUrl,
-        item.name?.trim() || rawUrl,
-      )
-      if (!opened) {
-        return { ok: false, messageKey: 'liturgy.messages.projectionFailed' }
-      }
-      return { ok: true }
-    }
-
-    default: {
-      if (INTERNAL_FILE_TYPES.includes(item.type)) {
-        if (!item.filePath?.trim()) {
-          return { ok: false, messageKey: 'liturgy.messages.mediaDesktopOnly' }
-        }
-        return { ok: false, messageKey: 'liturgy.messages.mediaDesktopOnly' }
-      }
-      return { ok: true }
-    }
+    case 'verse':
+      return executeVerseItem(item, router)
+    case 'online_video':
+      return executeUrlItem(item, 'online_video')
+    case 'video':
+    case 'pdf':
+    case 'images':
+      return executeFileItem(item, item.type as 'video' | 'images' | 'pdf')
+    case 'presentation':
+      return item.filePath?.trim()
+        ? { ok: false, messageKey: 'liturgy.messages.presentationWebUnsupported' }
+        : FAIL_DESKTOP
+    case 'site':
+      return executeUrlItem(item, 'site')
+    default:
+      return INTERNAL_FILE_TYPES.includes(item.type) ? FAIL_DESKTOP : { ok: true }
   }
 }
 
 /** Abre o controle (se preciso) e dá play — telas (popups) seguem. */
+async function playFileOnScreens(
+  item: LiturgyItem,
+  type: 'video' | 'images' | 'pdf',
+): Promise<LiturgyActionResult> {
+  if (type === 'images') {
+    const paths = resolveImagePaths(item)
+    if (!hasBrowsableMedia(paths)) return FAIL_DESKTOP
+    return tryOpenOnScreens(() =>
+      playLiturgyLocalImageOnScreens(paths, labelOrFallback(item, paths[0] || 'Imagens')),
+    )
+  }
+
+  const check = requireBrowsableFile(item.filePath)
+  if (check) return check
+  const playFn =
+    type === 'video' ? playLiturgyLocalVideoOnScreens : playLiturgyLocalPdfOnScreens
+  return tryOpenOnScreens(() => playFn(item.filePath!.trim(), labelOrFallback(item, item.filePath!.trim())))
+}
+
 export async function playLiturgyItemOnScreens(
   item: LiturgyItem,
 ): Promise<LiturgyActionResult> {
-  if (item.type === 'music') {
-    return openLiturgyMusicOnScreens(item)
-  }
-
-  if (item.type === 'video') {
-    const filePath = item.filePath?.trim()
-    if (!filePath || !isBrowsableMediaUrl(filePath)) {
-      return { ok: false, messageKey: 'liturgy.messages.mediaDesktopOnly' }
+  switch (item.type) {
+    case 'music':
+      return openLiturgyMusicOnScreens(item)
+    case 'video':
+    case 'images':
+    case 'pdf':
+      return playFileOnScreens(item, item.type as 'video' | 'images' | 'pdf')
+    case 'presentation':
+      return item.filePath?.trim()
+        ? { ok: false, messageKey: 'liturgy.messages.presentationWebUnsupported' }
+        : FAIL_DESKTOP
+    case 'online_video':
+    case 'site': {
+      const url = extractUrl(item)
+      if (!url) return FAIL_URL
+      const playFn = item.type === 'site' ? openLiturgySiteOnScreens : playLiturgyWebOnConfiguredScreens
+      return tryOpenOnScreens(() => playFn(url, labelOrFallback(item, url)))
     }
-    const ok = await playLiturgyLocalVideoOnScreens(
-      filePath,
-      item.name?.trim() || filePath,
-    )
-    if (!ok) {
-      return { ok: false, messageKey: 'liturgy.messages.projectionFailed' }
-    }
-    return { ok: true }
+    default:
+      return { ok: true }
   }
-
-  if (item.type === 'images') {
-    const paths = resolveImagePaths(item)
-    if (!hasBrowsableMedia(paths)) {
-      return { ok: false, messageKey: 'liturgy.messages.mediaDesktopOnly' }
-    }
-    const ok = await playLiturgyLocalImageOnScreens(
-      paths,
-      item.name?.trim() || paths[0] || 'Imagens',
-    )
-    if (!ok) {
-      return { ok: false, messageKey: 'liturgy.messages.projectionFailed' }
-    }
-    return { ok: true }
-  }
-
-  if (item.type === 'pdf') {
-    const filePath = item.filePath?.trim()
-    if (!filePath || !isBrowsableMediaUrl(filePath)) {
-      return { ok: false, messageKey: 'liturgy.messages.mediaDesktopOnly' }
-    }
-    const ok = await playLiturgyLocalPdfOnScreens(
-      filePath,
-      item.name?.trim() || filePath,
-    )
-    if (!ok) {
-      return { ok: false, messageKey: 'liturgy.messages.projectionFailed' }
-    }
-    return { ok: true }
-  }
-
-  if (item.type === 'presentation') {
-    const filePath = item.filePath?.trim()
-    if (!filePath) {
-      return { ok: false, messageKey: 'liturgy.messages.mediaDesktopOnly' }
-    }
-    return {
-      ok: false,
-      messageKey: 'liturgy.messages.presentationWebUnsupported',
-    }
-  }
-
-  if (item.type !== 'online_video' && item.type !== 'site') {
-    return { ok: true }
-  }
-
-  const rawUrl = item.url?.trim()
-  if (!rawUrl) {
-    return { ok: false, messageKey: 'liturgy.messages.urlMissing' }
-  }
-
-  const label = item.name?.trim() || rawUrl
-  const ok =
-    item.type === 'site'
-      ? await openLiturgySiteOnScreens(rawUrl, label)
-      : await playLiturgyWebOnConfiguredScreens(rawUrl, label)
-  if (!ok) {
-    return { ok: false, messageKey: 'liturgy.messages.projectionFailed' }
-  }
-  return { ok: true }
 }

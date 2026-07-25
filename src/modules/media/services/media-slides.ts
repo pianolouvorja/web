@@ -90,7 +90,7 @@ export function resolveSlideIndexForTime(
 export function stripHtmlBreaks(lyric: string): string {
   return lyric
     .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<[^>]+>/g, '')
+    .replace(/<[a-zA-Z][^>]*>/g, '')
     .trim()
 }
 

@@ -232,6 +232,8 @@ const rowHovered = ref(false)
           :aria-label="t('liturgy.actions.reorder')"
           :aria-disabled="item.done"
           @click.stop
+          @keydown.enter.stop
+          @keydown.space.prevent="!item.done && onHandleDragStart($event)"
           @dragstart.stop="!item.done && onHandleDragStart($event)"
           @dragend="onHandleDragEnd"
         >

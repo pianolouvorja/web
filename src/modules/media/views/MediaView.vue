@@ -85,10 +85,10 @@ onUnmounted(() => {
 /** Volta para a rota de origem (Liturgia, Álbuns, etc.), sem forçar Álbuns. */
 function leaveMediaRoute() {
   if (window.history.length > 1) {
-    void router.back()
+    router.back()
     return
   }
-  void router.replace({ name: 'albums' })
+  router.replace({ name: 'albums' })
 }
 
 watch(hasSession, (active) => {
