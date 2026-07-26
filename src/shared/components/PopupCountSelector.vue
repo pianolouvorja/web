@@ -185,7 +185,7 @@ onUnmounted(() => {
           {{ t('monitors.hint') }}
         </p>
 
-        <ul
+        <ul 
           class="popup-count-selector__list"
           role="group"
           :aria-label="t('monitors.selectScreens')"

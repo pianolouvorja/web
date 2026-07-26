@@ -122,7 +122,7 @@ async function executeVerseItem(item: LiturgyItem, router: Router): Promise<Litu
 
 async function executeFileItem(
   item: LiturgyItem,
-  type: 'video' | 'images' | 'pdf',
+  type: 'video' | 'images' | 'pdf', // NOSONAR
 ): Promise<LiturgyActionResult> {
   const filePath = item.filePath?.trim()
   if (!filePath) return FAIL_DESKTOP

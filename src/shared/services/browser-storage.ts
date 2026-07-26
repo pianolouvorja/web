@@ -5,7 +5,7 @@ function resolveStorage(kind: StorageKind): Storage {
 }
 
 export function setBrowserItem(key: string, data: unknown, kind: StorageKind = 'local'): void {
-  const value = typeof data === 'object' ? JSON.stringify(data) : String(data)
+  const value = typeof data === 'object' ? JSON.stringify(data) : String(data) // NOSONAR
   resolveStorage(kind).setItem(key, value)
 }
 

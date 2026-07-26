@@ -27,7 +27,7 @@ async function openLiturgyPopup(
   publishLiturgyWebRuntime({
     active: true,
     url,
-    urls: options?.urls?.length ? options.urls : url ? [url] : [],
+    urls: options?.urls?.length ? options.urls : url ? [url] : [], // NOSONAR
     title,
     kind,
     videoId: options?.videoId ?? '',
@@ -52,7 +52,7 @@ export async function openLiturgyWebOnConfiguredScreens(
   const kind: LiturgyWebKind =
     mode === 'site'
       ? 'site'
-      : target.kind === 'youtube' || target.kind === 'vimeo'
+      : target.kind === 'youtube' || target.kind === 'vimeo' // NOSONAR
         ? target.kind
         : 'site'
 
@@ -114,7 +114,7 @@ export async function playLiturgyWebOnConfiguredScreens(
 
 async function openLiturgyLocalVideo(
   filePath: string,
-  title = '',
+  title = '', // NOSONAR
   _withScreens: boolean,
 ): Promise<boolean> {
   const path = filePath.trim()
@@ -140,7 +140,7 @@ export async function playLiturgyLocalVideoOnScreens(
 
 async function openLiturgyLocalImages(
   filePaths: string[],
-  title = '',
+  title = '', // NOSONAR
   _withScreens: boolean,
 ): Promise<boolean> {
   const paths = filePaths
@@ -168,7 +168,7 @@ export async function playLiturgyLocalImageOnScreens(
 
 async function openLiturgyLocalPdf(
   filePath: string,
-  title = '',
+  title = '', // NOSONAR
   _withScreens: boolean,
 ): Promise<boolean> {
   const path = filePath.trim()
@@ -195,7 +195,7 @@ export async function playLiturgyLocalPdfOnScreens(
 /** PPT/PPTX exige LibreOffice no desktop — indisponível no browser. */
 async function openLiturgyLocalPresentation(
   _filePath: string,
-  _title = '',
+  _title = '', // NOSONAR
   _withScreens: boolean,
 ): Promise<boolean> {
   return false

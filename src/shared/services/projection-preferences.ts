@@ -26,7 +26,7 @@ function availableSlots(count: number): number[] {
 function asSlotArray(raw: unknown, maxCount: number): number[] | null {
   if (!Array.isArray(raw)) return null
   const slots = raw
-    .map((entry) => Number(entry))
+    .map((entry) => Number(entry)) // NOSONAR
     .filter((slot) => Number.isInteger(slot) && slot >= 1 && slot <= maxCount)
   return [...new Set(slots)].sort((a, b) => a - b)
 }

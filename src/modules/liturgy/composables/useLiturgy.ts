@@ -45,7 +45,6 @@ export function useLiturgy() {
     currentStartTime,
     currentEndTime,
     sessionStartedAt,
-    currentTitleKey,
     currentCustomTitle,
     isDraftValid,
     categoryOptions,

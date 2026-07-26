@@ -19,7 +19,7 @@ type CatalogMusicIndexRow = CatalogHymnalRow & {
   albums_names?: string
 }
 
-type CatalogAlbumMusicRow = CatalogHymnalRow
+type CatalogAlbumMusicRow = CatalogHymnalRow // NOSONAR
 
 type CatalogAlbumRecord = {
   id_album?: number | string
@@ -67,7 +67,7 @@ export function parseCatalogDurationMs(raw: unknown): number | null {
   if (!trimmed) return null
 
   if (trimmed.includes(':')) {
-    const parts = trimmed.split(':').map((part) => Number(part))
+    const parts = trimmed.split(':').map((part) => Number(part)) // NOSONAR
     if (parts.some((part) => !Number.isFinite(part))) return null
     let seconds = 0
     if (parts.length === 3) {

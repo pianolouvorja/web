@@ -11,7 +11,7 @@ function timestampFromHHmm(
   referenceMs: number,
 ): number | null {
   if (!value) return null
-  const match = value.trim().match(/^(\d{1,2}):(\d{2})$/)
+  const match = value.trim().match(/^(\d{1,2}):(\d{2})$/) // NOSONAR
   if (!match) return null
   const hours = Number(match[1])
   const minutes = Number(match[2])

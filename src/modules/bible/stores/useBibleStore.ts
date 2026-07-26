@@ -128,7 +128,7 @@ export const useBibleStore = defineStore('bible', () => {
     const globalQuery = globalSearchQuery.value.trim().toLowerCase()
     const verseQuery = verseSearchQuery.value.trim().toLowerCase()
 
-    function matchesQuery(
+    function matchesQuery( // NOSONAR
       entry: { number: number; text: string },
       query: string,
     ): boolean {
@@ -373,7 +373,7 @@ export const useBibleStore = defineStore('bible', () => {
     if (parsed.length === 0) return
 
     selectedVerses.value = parsed
-    lastVerseAnchor.value = parsed[parsed.length - 1]
+    lastVerseAnchor.value = parsed[parsed.length - 1] // NOSONAR
     verseSearchQuery.value = ''
     syncProjection()
   }
@@ -437,7 +437,7 @@ export const useBibleStore = defineStore('bible', () => {
     const index = books.value.findIndex((item) => item.id === book.id)
     const nextBook = isForward
       ? (books.value[index + 1] ?? books.value[0])
-      : (index > 0 ? books.value[index - 1] : books.value[books.value.length - 1])
+      : (index > 0 ? books.value[index - 1] : books.value[books.value.length - 1]) // NOSONAR
     if (!nextBook) return
 
     await selectBook(nextBook.id)

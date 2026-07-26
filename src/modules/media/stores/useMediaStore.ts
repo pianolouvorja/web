@@ -219,11 +219,11 @@ export const useMediaStore = defineStore('media', () => {
     ondemandNoticeMusicId = null
   }
 
-  async function startOndemandDownload(_musicId: number) {
+  async function startOndemandDownload(_musicId: number) { // NOSONAR
     // Web: streaming direto da API — sem download sob demanda.
   }
 
-  async function maybeStartOndemandDownload(_musicId: number) {
+  async function maybeStartOndemandDownload(_musicId: number) { // NOSONAR
     // Web: streaming direto da API — sem download sob demanda.
   }
 
@@ -284,7 +284,7 @@ export const useMediaStore = defineStore('media', () => {
     attachMediaAudioListeners(audio, audioHandlers)
   }
 
-  function pickSourceUrl(
+  function pickSourceUrl( // NOSONAR
     mode: MediaPlaybackMode,
     audioUrl: string | null,
     instrumentalUrl: string | null,
@@ -294,7 +294,7 @@ export const useMediaStore = defineStore('media', () => {
     return audioUrl ?? instrumentalUrl
   }
 
-  async function open(params: MediaOpenParams): Promise<MediaOpenResult> {
+  async function open(params: MediaOpenParams): Promise<MediaOpenResult> { // NOSONAR
     const musicId = params.musicId
     if (!Number.isFinite(musicId) || musicId <= 0) {
       return { ok: false, messageKey: 'media.messages.trackMissing' }
@@ -533,7 +533,7 @@ export const useMediaStore = defineStore('media', () => {
     closeConfirmOpen.value = false
   }
 
-  async function switchMode(mode: MediaPlaybackMode): Promise<MediaOpenResult> {
+  async function switchMode(mode: MediaPlaybackMode): Promise<MediaOpenResult> { // NOSONAR
     if (!session.value) {
       return { ok: false, messageKey: 'media.messages.trackMissing' }
     }

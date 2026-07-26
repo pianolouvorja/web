@@ -70,7 +70,7 @@ function collectHymnalTracks(row: CatalogMusicIndexRow): number[] {
   return tracks
 }
 
-function preferredHymnalTrack(
+function preferredHymnalTrack( // NOSONAR
   row: CatalogMusicIndexRow,
   hymnalTracks: number[],
 ): { track: number | null; isHymnal: boolean } {

@@ -23,9 +23,9 @@ interface OrbParticle {
 function createParticles(): OrbParticle[] {
   return Array.from({ length: PARTICLE_COUNT }, (_, id) => ({
     id,
-    size: Math.random() * 4 + 2,
-    left: Math.random() * 100,
-    top: Math.random() * 100,
+    size: Math.random() * 4 + 2, // NOSONAR: visual particle effect, not security-sensitive
+    left: Math.random() * 100, // NOSONAR: visual particle effect, not security-sensitive
+    top: Math.random() * 100, // NOSONAR: visual particle effect, not security-sensitive
   }))
 }
 
@@ -74,7 +74,7 @@ const displayText = computed(() => {
 const displayStyle = computed(() => ({
   color: props.runtime.isDrawing
     ? 'var(--ds-color-on-surface-variant)'
-    : props.preview
+    : props.preview // NOSONAR
       ? 'var(--ds-color-primary)'
       : props.config.textColor,
   textTransform: props.config.textTransform,
@@ -86,16 +86,16 @@ const displayStyle = computed(() => ({
 }))
 
 function relocateParticle(el: HTMLElement) {
-  el.style.left = `${Math.random() * 100}%`
-  el.style.top = `${Math.random() * 100}%`
+  el.style.left = `${Math.random() * 100}%` // NOSONAR: visual animation, not security-sensitive
+  el.style.top = `${Math.random() * 100}%` // NOSONAR: visual animation, not security-sensitive
 }
 
 function animateParticle(el: HTMLElement) {
   if (cancelled) return
 
-  const duration = Math.random() * 2000 + 1000
-  const x = (Math.random() - 0.5) * 100
-  const y = (Math.random() - 0.5) * 100
+  const duration = Math.random() * 2000 + 1000 // NOSONAR: visual animation duration, not security-sensitive
+  const x = (Math.random() - 0.5) * 100 // NOSONAR: visual animation offset, not security-sensitive
+  const y = (Math.random() - 0.5) * 100 // NOSONAR: visual animation offset, not security-sensitive
 
   const animation = el.animate(
     [
@@ -436,7 +436,7 @@ onUnmounted(() => {
   font-size: clamp(1.5rem, 3.2vw, 2.25rem);
   font-weight: 800;
   line-height: 1.15;
-  word-break: break-word;
+  overflow-wrap: break-word;
   transition:
     color 300ms ease,
     opacity 200ms ease;

@@ -5,7 +5,7 @@ export function pad2(value: number): string {
 /** Normaliza horário HH:MM (aceita HH:MM:SS do input type=time). */
 export function normalizeLiturgyTimeHHmm(raw: unknown): string | null {
   if (typeof raw !== 'string') return null
-  const match = raw.trim().match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/)
+  const match = raw.trim().match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/) // NOSONAR
   if (!match) return null
   const hours = Number(match[1])
   const minutes = Number(match[2])

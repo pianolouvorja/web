@@ -61,7 +61,7 @@ const textStyle = computed(() => ({
   font-weight: 900;
   line-height: 1.1;
   text-align: center;
-  word-break: break-word;
+  overflow-wrap: break-word;
   transition: all 300ms ease-out;
 }
 

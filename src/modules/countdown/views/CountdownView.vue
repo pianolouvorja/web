@@ -401,18 +401,18 @@ function onScreenControlsChanged() {
   }
 
   &--start {
-    background: color-mix(in srgb, #43a047 22%, transparent);
-    color: #81c784;
+    background: rgba(67, 160, 71, 0.30);
+    color: #a5d6a7;
   }
 
   &--pause {
-    background: color-mix(in srgb, #fb8c00 22%, transparent);
-    color: #ffb74d;
+    background: rgba(251, 140, 0, 0.30);
+    color: #ffcc80;
   }
 
   &--reset {
-    background: color-mix(in srgb, #e53935 18%, transparent);
-    color: #e57373;
+    background: rgba(229, 57, 53, 0.25);
+    color: #ef9a9a;
   }
 
   &--save {
