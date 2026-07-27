@@ -77,8 +77,9 @@ jobs:
   deploy-staging:
     name: Deploy Staging
     runs-on: ubuntu-latest
-    needs: [lint, typecheck, build]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    needs: [quality-gate]
+    # success() garante sequência: só roda após o Quality Gate passar
+    if: success() && github.event_name == 'push' && github.ref == 'refs/heads/develop'
     concurrency:
       group: deploy-staging
       cancel-in-progress: true
@@ -111,8 +112,9 @@ jobs:
   deploy-production:
     name: Deploy Production
     runs-on: ubuntu-latest
-    needs: [lint, typecheck, build]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [quality-gate]
+    # success() garante sequência: só roda após o Quality Gate passar
+    if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
     concurrency:
       group: deploy-production
       cancel-in-progress: false
