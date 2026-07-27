@@ -19,7 +19,7 @@ const isAvailable = props.available !== false
 
 function onActivate() {
   if (!isAvailable || !props.to) return
-  void router.push(props.to)
+  router.push(props.to)
 }
 
 function onKeydown(event: KeyboardEvent) {

@@ -107,10 +107,15 @@ function onFileChange(event: Event) {
         />
         {{ t('random.importList') }}
       </button>
+      <label for="random-file-input" class="sr-only">
+        {{ t('random.importList') }}
+      </label>
       <input
         ref="fileInput"
+        id="random-file-input"
         type="file"
         accept=".txt,text/plain"
+        :aria-label="t('random.importList')"
         class="random-available__file"
         @change="onFileChange"
       >

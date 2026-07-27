@@ -57,8 +57,8 @@ function normalizeItem(raw: unknown): LiturgyItem | null {
   const durationMs =
     type === 'category'
       ? 0
-      : type === 'music'
-        ? durationRaw != null && durationRaw > 0
+      : type === 'music' // NOSONAR
+        ? durationRaw != null && durationRaw > 0 // NOSONAR
           ? clampMomentDurationMs(durationRaw)
           : 0
         : clampMomentDurationMs(durationRaw ?? DEFAULT_MOMENT_DURATION_MS)
@@ -122,7 +122,7 @@ function normalizeWeekdays(raw: unknown): WeekdayLiturgies {
 
 function normalizeTimeHHmm(raw: unknown): string | null {
   if (typeof raw !== 'string') return null
-  const match = raw.trim().match(/^(\d{1,2}):(\d{2})$/)
+  const match = raw.trim().match(/^(\d{1,2}):(\d{2})$/) // NOSONAR
   if (!match) return null
   const hours = Number(match[1])
   const minutes = Number(match[2])

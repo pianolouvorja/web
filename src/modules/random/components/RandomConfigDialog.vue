@@ -74,7 +74,7 @@ function bumpFont(delta: number, current: number) {
 <template>
   <Teleport to="body">
     <Transition name="random-config-fade">
-      <div
+      <div 
         v-if="open"
         class="random-config"
         role="dialog"
@@ -133,7 +133,7 @@ function bumpFont(delta: number, current: number) {
                 role="radiogroup"
                 :aria-label="t('random.bgColor')"
               >
-                <button
+                <button 
                   v-for="color in RANDOM_BG_PRESETS"
                   :key="`bg-${color}`"
                   type="button"
@@ -177,7 +177,7 @@ function bumpFont(delta: number, current: number) {
                 role="radiogroup"
                 :aria-label="t('random.textColor')"
               >
-                <button
+                <button 
                   v-for="color in RANDOM_TEXT_PRESETS"
                   :key="`text-${color}`"
                   type="button"
@@ -248,7 +248,7 @@ function bumpFont(delta: number, current: number) {
                 role="radiogroup"
                 :aria-label="t('random.textTransform')"
               >
-                <button
+                <button 
                   v-for="value in RANDOM_TEXT_TRANSFORMS"
                   :key="value"
                   type="button"
@@ -279,7 +279,7 @@ function bumpFont(delta: number, current: number) {
                 role="radiogroup"
                 :aria-label="t('random.animation')"
               >
-                <button
+                <button 
                   v-for="speed in RANDOM_ANIMATION_SPEEDS"
                   :key="speed"
                   type="button"

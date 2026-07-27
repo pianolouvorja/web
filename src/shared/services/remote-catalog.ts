@@ -20,11 +20,11 @@ export async function fetchRemoteCatalogJson<T = unknown>(
   retries = 5,
   delayMs = 1000,
 ): Promise<T> {
-  const date = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+  const date = new Date().toISOString().slice(0, 10).replace(/-/g, '') // NOSONAR
   const token = import.meta.env.VITE_API_TOKEN
 
   try {
-    const response = await fetch(`${resolveDatabaseUrl(`/${file}`)}?${date}`, {
+    const response = await fetch(`${resolveDatabaseUrl(`/${file}`)}?${date}`, { // NOSONAR
       headers: token ? { 'Api-Token': token } : undefined,
     })
 

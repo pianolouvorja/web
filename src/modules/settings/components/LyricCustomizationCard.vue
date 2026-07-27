@@ -282,10 +282,15 @@ async function onFileSelected(event: Event) {
           <span>{{ t('settings.projection.lyrics.selectImage') }}</span>
         </button>
 
+        <label for="lyric-bg-file-input" class="sr-only">
+          {{ t('settings.projection.lyrics.selectImage') }}
+        </label>
         <input
           ref="fileInput"
+          id="lyric-bg-file-input"
           type="file"
           accept="image/*"
+          :aria-label="t('settings.projection.lyrics.selectImage')"
           class="lyric-custom__file"
           @change="onFileSelected"
         >

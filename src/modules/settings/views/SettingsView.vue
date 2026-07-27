@@ -26,7 +26,7 @@ const sectionTitleKey = computed(
 )
 
 function goBack() {
-  void router.push({ name: 'home' })
+  router.push({ name: 'home' })
 }
 </script>
 

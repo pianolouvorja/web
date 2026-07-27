@@ -28,15 +28,15 @@ onMounted(() => {
     </header>
 
     <div class="appearance-experience__layout">
-      <aside class="appearance-experience__col appearance-experience__col--left">
+      <aside class="appearance-experience__col appearance-experience__col--left" aria-label="Interaction mode settings">
         <InteractionModeCard />
       </aside>
 
-      <div class="appearance-experience__center">
+      <div class="appearance-experience__center" aria-label="Theme selection">
         <ThemeOrbitalSwitcher />
       </div>
 
-      <aside class="appearance-experience__col appearance-experience__col--right">
+      <aside class="appearance-experience__col appearance-experience__col--right" aria-label="Accent color settings">
         <AccentColorCard />
       </aside>
     </div>

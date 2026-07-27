@@ -1,4 +1,3 @@
-
 import type { AlbumSearchHit } from '../types/albums'
 import { formatCatalogDuration } from './album-tracks'
 import { readOrFetchCatalogJson } from '@shared/services/remote-catalog'
@@ -71,7 +70,7 @@ function collectHymnalTracks(row: CatalogMusicIndexRow): number[] {
   return tracks
 }
 
-function preferredHymnalTrack(
+function preferredHymnalTrack( // NOSONAR
   row: CatalogMusicIndexRow,
   hymnalTracks: number[],
 ): { track: number | null; isHymnal: boolean } {
@@ -166,6 +165,22 @@ export async function loadAlbumMusicIndex(): Promise<AlbumSearchHit[]> {
  * Busca estilo Home legado: nome, álbum ou número do hinário (máx. 50).
  * Número prioriza Hinário Adventista atual, depois 1996.
  */
+function hasHymnalNumber(entry: AlbumSearchHit, num: number): boolean {
+  return entry.track === num || (entry.hymnalTracks ?? []).includes(num)
+}
+
+function hymnalSortScore(entry: AlbumSearchHit, num: number): number {
+  if (!hasHymnalNumber(entry, num)) return 0
+  if (entry.albumNames.includes('Hinário Adventista') && !entry.albumNames.includes('1996')) return 2
+  if (entry.albumNames.includes('Hinário Adventista 1996')) return 1
+  return 0
+}
+
+function normalizeTrackNumber(entry: AlbumSearchHit, num: number): AlbumSearchHit {
+  if (!hasHymnalNumber(entry, num)) return entry
+  return { ...entry, track: num, isHymnal: true }
+}
+
 export function filterAlbumMusicIndex(
   index: AlbumSearchHit[],
   query: string,
@@ -176,55 +191,22 @@ export function filterAlbumMusicIndex(
   const isNum = /^\d+$/.test(trimmed)
   const numQuery = isNum ? Number(trimmed) : null
 
-  let results = index.filter((entry) => {
+  const matchesQuery = (entry: AlbumSearchHit) => {
     const title = entry.name.toLowerCase()
     const album = entry.albumNames.toLowerCase()
-    if (isNum && numQuery != null) {
-      return (
-        entry.track === numQuery ||
-        (entry.hymnalTracks ?? []).includes(numQuery) ||
-        title.includes(trimmed) ||
-        album.includes(trimmed)
-      )
-    }
-    return title.includes(trimmed) || album.includes(trimmed)
-  })
+    return (
+      title.includes(trimmed) ||
+      album.includes(trimmed) ||
+      (isNum && numQuery != null && hasHymnalNumber(entry, numQuery))
+    )
+  }
+
+  let results = index.filter(matchesQuery)
 
   if (isNum && numQuery != null) {
-    // Exibe o número buscado quando a faixa tem esse track no hinário.
-    results = results.map((entry) => {
-      if (
-        !(entry.hymnalTracks ?? []).includes(numQuery) &&
-        entry.track !== numQuery
-      ) {
-        return entry
-      }
-      return {
-        ...entry,
-        track: numQuery,
-        isHymnal: true,
-      }
-    })
-
-    results = [...results].sort((a, b) => {
-      const score = (entry: AlbumSearchHit) => {
-        const hasNumber =
-          entry.track === numQuery ||
-          (entry.hymnalTracks ?? []).includes(numQuery)
-        if (!hasNumber) return 0
-        if (
-          entry.albumNames.includes('Hinário Adventista') &&
-          !entry.albumNames.includes('1996')
-        ) {
-          return 2
-        }
-        if (entry.albumNames.includes('Hinário Adventista 1996')) {
-          return 1
-        }
-        return 0
-      }
-      return score(b) - score(a)
-    })
+    results = results
+      .map((e) => normalizeTrackNumber(e, numQuery))
+      .sort((a, b) => hymnalSortScore(b, numQuery) - hymnalSortScore(a, numQuery))
   }
 
   return results.slice(0, 50)

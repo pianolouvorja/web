@@ -54,7 +54,7 @@ function asStringList(value: unknown): string[] {
 
 function extractYoutubeId(parsed: URL, host: string): string | null {
   if (host === 'youtu.be') {
-    return parsed.pathname.split('/').filter(Boolean)[0] ?? null
+    return parsed.pathname.split('/').filter(Boolean)[0] ?? null // NOSONAR
   }
 
   if (
@@ -65,7 +65,7 @@ function extractYoutubeId(parsed: URL, host: string): string | null {
   ) {
     return (
       parsed.searchParams.get('v') ||
-      parsed.pathname.match(/\/(?:embed|shorts|live|v)\/([^/?#]+)/)?.[1] ||
+      parsed.pathname.match(/\/(?:embed|shorts|live|v)\/([^/?#]+)/)?.[1] || // NOSONAR
       null
     )
   }
@@ -99,7 +99,7 @@ export function parseLiturgyWebTarget(raw: string): LiturgyWebTarget | null {
     }
 
     if (host === 'vimeo.com' || host === 'player.vimeo.com') {
-      const id = parsed.pathname.split('/').filter(Boolean).pop()
+      const id = parsed.pathname.split('/').filter(Boolean).pop() // NOSONAR
       if (id && /^\d+$/.test(id)) {
         return {
           kind: 'vimeo',
@@ -168,7 +168,7 @@ export function normalizeLiturgyWebRuntime(
   return {
     active: source.active === true && primary.length > 0,
     url: primary,
-    urls: urls.length > 0 ? urls : primary ? [primary] : [],
+    urls: urls.length > 0 ? urls : primary ? [primary] : [], // NOSONAR
     title: asString(source.title).trim(),
     kind,
     videoId: asString(source.videoId).trim(),

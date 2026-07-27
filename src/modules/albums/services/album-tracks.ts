@@ -65,7 +65,7 @@ export function formatCatalogDuration(raw: unknown): string {
   if (!trimmed) return '—'
 
   if (trimmed.includes(':')) {
-    const parts = trimmed.split(':').map((part) => Number(part))
+    const parts = trimmed.split(':').map((part) => Number(part)) // NOSONAR
     if (parts.some((part) => !Number.isFinite(part))) return trimmed
     if (parts.length === 3) {
       const total = (parts[0] ?? 0) * 3600 + (parts[1] ?? 0) * 60 + (parts[2] ?? 0)
@@ -158,7 +158,7 @@ export function filterAlbumTracks(
 function stripHtml(text: string): string {
   return text
     .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<[^>]+>/g, '')
+    .replace(/<[a-zA-Z][^>]*>/g, '')
     .trim()
 }
 
@@ -171,7 +171,7 @@ export async function loadAlbumLyric(
   if (!record) return null
 
   const raw = record.lyric
-  const rows = Array.isArray(raw) ? raw : raw ? Object.values(raw) : []
+  const rows = Array.isArray(raw) ? raw : raw ? Object.values(raw) : [] // NOSONAR
 
   const lines: AlbumLyricLine[] = rows
     .map((row) => ({

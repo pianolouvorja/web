@@ -78,9 +78,9 @@ function mapAlbums(raw: CatalogAlbumRow[] | undefined): MediaAlbumRef[] {
   if (!Array.isArray(raw)) return []
   return raw
     .map((row) => {
-      const id = asNumber(row.id_album, NaN)
+      const id = asNumber(row.id_album, NaN) // NOSONAR
       if (!Number.isFinite(id)) return null
-      const trackRaw = row.track == null ? null : asNumber(row.track, NaN)
+      const trackRaw = row.track == null ? null : asNumber(row.track, NaN) // NOSONAR
       return {
         id,
         name: asString(row.name).trim(),

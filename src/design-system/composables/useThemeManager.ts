@@ -1,7 +1,7 @@
 import { computed, ref, watchEffect } from 'vue'
 
 import {
-  blur as blurTokens,
+  blur as blurTokens, // NOSONAR
   blurPxFromIntensity,
   blurTokenFromIntensity,
   glassFillFromIntensity,

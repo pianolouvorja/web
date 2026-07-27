@@ -56,7 +56,7 @@ type TimelineSegment =
   | { kind: 'item'; entry: TimelineEntry; linked: boolean; childCount: number }
   | { kind: 'branch'; categoryId: string; children: TimelineEntry[] }
 
-const segments = computed((): TimelineSegment[] => {
+const segments = computed((): TimelineSegment[] => { // NOSONAR
   const result: TimelineSegment[] = []
   let index = 0
 

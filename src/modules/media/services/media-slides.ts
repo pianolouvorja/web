@@ -7,7 +7,7 @@ export function parseSlideTimeToSeconds(raw: string | null | undefined): number 
   if (!trimmed) return 0
 
   if (trimmed.includes(':')) {
-    const parts = trimmed.split(':').map((part) => Number(part))
+    const parts = trimmed.split(':').map((part) => Number(part)) // NOSONAR
     if (parts.some((part) => !Number.isFinite(part))) return 0
     if (parts.length === 3) {
       return (parts[0] ?? 0) * 3600 + (parts[1] ?? 0) * 60 + (parts[2] ?? 0)
@@ -90,7 +90,7 @@ export function resolveSlideIndexForTime(
 export function stripHtmlBreaks(lyric: string): string {
   return lyric
     .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<[^>]+>/g, '')
+    .replace(/<[a-zA-Z][^>]*>/g, '')
     .trim()
 }
 

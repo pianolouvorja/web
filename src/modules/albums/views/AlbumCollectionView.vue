@@ -47,15 +47,15 @@ async function load() {
 }
 
 onMounted(() => {
-  void load()
+  load()
 })
 
 watch(collectionId, () => {
-  void load()
+  load()
 })
 
 function goBack() {
-  void router.push({ name: 'albums' })
+  router.push({ name: 'albums' })
 }
 
 async function runAction(
@@ -250,9 +250,6 @@ async function runAction(
   border: 1px solid var(--ds-color-outline-strong);
   padding: 1.25rem 1.4rem;
   color: var(--ds-color-on-surface-variant);
-}
-
-.album-collection-view__alert {
   display: flex;
   align-items: center;
   justify-content: space-between;

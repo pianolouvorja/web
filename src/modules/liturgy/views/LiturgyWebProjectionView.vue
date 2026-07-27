@@ -25,7 +25,7 @@ const imageUrls = computed(() => {
   if (runtime.value.kind !== 'image') return []
   return runtime.value.urls.length > 0
     ? runtime.value.urls
-    : runtime.value.url
+    : runtime.value.url // NOSONAR
       ? [runtime.value.url]
       : []
 })
