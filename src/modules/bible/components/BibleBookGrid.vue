@@ -244,35 +244,35 @@ const { t } = useI18n()
   }
 
   &--law {
-    background: color-mix(in srgb, #3b82f6 18%, transparent);
-    color: #93c5fd;
+    background: #1e3a5f;
+    color: #bfdbfe;
   }
 
   &--history {
-    background: color-mix(in srgb, #22c55e 12%, transparent);
-    color: color-mix(in srgb, #86efac 85%, transparent);
+    background: #1a3d28;
+    color: #86efac;
   }
 
   &--prophets {
-    background: color-mix(in srgb, #ca8a04 14%, transparent);
-    color: color-mix(in srgb, #fde68a 85%, transparent);
+    background: #3d2e0a;
+    color: #fef08a;
   }
 
   &--gospels {
-    background: color-mix(in srgb, #a855f7 12%, transparent);
-    color: color-mix(in srgb, #d8b4fe 85%, transparent);
+    background: #2d1a3d;
+    color: #e9d5ff;
   }
 
   &--letters,
   &--neutral {
-    background: color-mix(in srgb, white 5%, transparent);
+    background: rgba(255, 255, 255, 0.07);
     color: var(--ds-color-on-surface-variant);
   }
 
   &--active {
-    background: color-mix(in srgb, #ca8a04 40%, transparent);
+    background: rgba(202, 138, 4, 0.50);
     border-color: #eab308;
-    color: #fef08a;
+    color: #fffbeb;
     font-weight: 700;
   }
 }

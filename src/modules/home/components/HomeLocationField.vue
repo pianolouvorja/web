@@ -84,16 +84,18 @@ function onKeydown(event: KeyboardEvent) {
     <template v-if="editing">
       <span class="home-location-field__label">{{ label }}:</span>
       <input
+        id="home-location-field"
         ref="inputRef"
         v-model="draft"
         class="home-location-field__input"
         type="text"
         :placeholder="placeholder"
+        :aria-label="label"
         autocomplete="off"
         spellcheck="false"
         @keydown="onKeydown"
         @blur="commit"
-      >
+ >
     </template>
 
     <template v-else>

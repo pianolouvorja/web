@@ -127,6 +127,12 @@ function clearDragGhost() {
   dragGhostEl = null
 }
 
+function onKeyboardDragStart(_event: KeyboardEvent) {
+  // Keyboard activation of drag handle -- no dataTransfer available,
+  // just emit so the parent can track the source index for reordering.
+  emit('dragStart', props.index)
+}
+
 function onHandleDragStart(event: DragEvent) {
   const row = rootEl.value
   if (event.dataTransfer) {
@@ -232,6 +238,8 @@ const rowHovered = ref(false)
           :aria-label="t('liturgy.actions.reorder')"
           :aria-disabled="item.done"
           @click.stop
+          @keydown.enter.stop
+          @keydown.space.prevent="!item.done && onKeyboardDragStart($event)"
           @dragstart.stop="!item.done && onHandleDragStart($event)"
           @dragend="onHandleDragEnd"
         >
@@ -1236,11 +1244,11 @@ const rowHovered = ref(false)
     color: color-mix(in srgb, var(--ds-color-on-surface) 42%, transparent);
   }
 
-  .liturgy-item__card {
+  :where(.liturgy-item__card) {
     filter: grayscale(0.55);
   }
 
-  .liturgy-item__drag {
+  :where(.liturgy-item__drag) {
     pointer-events: none;
     opacity: 0.35;
   }

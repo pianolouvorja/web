@@ -36,7 +36,7 @@ const items: UtilityHubItem[] = [
 ]
 
 function goBack() {
-  void router.push({ name: 'utilities' })
+  router.push({ name: 'utilities' })
 }
 </script>
 

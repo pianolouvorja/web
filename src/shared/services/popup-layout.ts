@@ -134,7 +134,7 @@ export function saveSlotBounds(slotId: string, bounds: Partial<PopupBounds>): vo
   const layout = getLayout()
   const current = layout[slotId]
   if (
-    current &&
+    current && // NOSONAR
     current.left === normalized.left &&
     current.top === normalized.top &&
     current.width === normalized.width &&

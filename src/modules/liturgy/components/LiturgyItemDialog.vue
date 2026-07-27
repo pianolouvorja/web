@@ -804,6 +804,7 @@ function isLightDot(hex: string): boolean {
               ref="fileInputEl"
               type="file"
               class="moment-dialog__file-input"
+              :aria-label="t('liturgy.fields.selectFile')"
               :accept="acceptForType(draft.type)"
               :multiple="isImagesType"
               @change="onLocalFilesSelected"
@@ -1140,8 +1141,8 @@ function isLightDot(hex: string): boolean {
 
   &:hover {
     color: #fff;
-    background: color-mix(in srgb, #fff 10%, transparent);
-    border-color: color-mix(in srgb, #fff 20%, transparent);
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.22);
     transform: scale(1.02);
   }
 

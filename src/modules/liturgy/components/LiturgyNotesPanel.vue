@@ -24,7 +24,11 @@ function onInput(event: Event) {
     <h2 class="liturgy-notes__title">
       {{ t('liturgy.notes') }}
     </h2>
+    <label for="liturgy-notes-input" class="sr-only">
+      {{ t('liturgy.notes') }}
+    </label>
     <textarea
+      id="liturgy-notes-input"
       class="liturgy-notes__input"
       :value="modelValue"
       :placeholder="t('liturgy.notesPlaceholder')"

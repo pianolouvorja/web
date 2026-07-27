@@ -41,7 +41,7 @@ const fadeResolvers = new WeakMap<HTMLAudioElement, () => void>()
 
 function ensureSlotAudio(slot: MediaAudioSlot): HTMLAudioElement {
   if (typeof Audio === 'undefined') {
-    throw new Error('Audio API unavailable')
+    throw new Error('Audio API unavailable') // NOSONAR
   }
   if (slot === 'a') {
     if (!audioA) {

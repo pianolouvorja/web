@@ -15,7 +15,10 @@ import {
 import { normalizeLiturgyTimeHHmm, pad2 } from './liturgy-format'
 
 export function createLiturgyItemId(): string {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+  const randomBytes = new Uint8Array(7)
+  crypto.getRandomValues(randomBytes)
+  const randomHex = Array.from(randomBytes, (byte) => byte.toString(16).padStart(2, '0')).join('')
+  return `${Date.now()}-${randomHex}`
 }
 
 /** Categoria preferida ao adicionar item (seleção atual ou última sessão). */
@@ -62,7 +65,7 @@ export function getCategoryBlockEnd(
   categoryIndex: number,
 ): number {
   const category = items[categoryIndex]
-  if (!category || category.type !== 'category') return categoryIndex + 1
+  if (category?.type !== 'category') return categoryIndex + 1
   return findCategoryInsertIndex(items, category.id)
 }
 
@@ -84,9 +87,62 @@ function resolveDropCategoryIndex(
   return parentIndex >= 0 ? parentIndex : toIndex
 }
 
-/**
- * Reordena itens. Categorias movem com todos os subitens contíguos.
- */
+/** Move um item simples (não-categoria) dentro da lista. */
+function moveSimpleItem(
+  items: LiturgyItem[],
+  fromIndex: number,
+  toIndex: number,
+): LiturgyItem[] {
+  const next = [...items]
+  const [item] = next.splice(fromIndex, 1)
+  if (!item) return items
+  next.splice(toIndex, 0, item)
+  return next
+}
+
+/** Calcula o ponto de inserção para uma categoria sendo movida. */
+function resolveCategoryInsertAt(
+  items: LiturgyItem[],
+  fromIndex: number,
+  toIndex: number,
+  blockEnd: number,
+): number | null {
+  if (toIndex >= fromIndex && toIndex < blockEnd) return null
+
+  const targetCategoryIndex = resolveDropCategoryIndex(items, toIndex)
+  const target = items[targetCategoryIndex]
+
+  let insertAt: number
+  if (target?.type === 'category') {
+    const targetEnd = getCategoryBlockEnd(items, targetCategoryIndex)
+    insertAt = fromIndex < targetCategoryIndex ? targetEnd : targetCategoryIndex
+  } else {
+    insertAt = fromIndex < toIndex ? toIndex + 1 : toIndex
+  }
+
+  if (insertAt >= fromIndex && insertAt <= blockEnd) return null
+  return insertAt
+}
+
+/** Move um bloco de categoria para uma nova posição. */
+function moveCategoryBlock(
+  items: LiturgyItem[],
+  fromIndex: number,
+  blockEnd: number,
+  insertAt: number,
+): LiturgyItem[] {
+  const block = items.slice(fromIndex, blockEnd)
+  const next = [...items.slice(0, fromIndex), ...items.slice(blockEnd)]
+  let dest = insertAt
+  if (insertAt > fromIndex) {
+    dest = insertAt - (blockEnd - fromIndex)
+  }
+  dest = Math.max(0, Math.min(dest, next.length))
+  next.splice(dest, 0, ...block)
+  return next
+}
+
+/** Reordena itens. Categorias movem com todos os subitens contíguos. */
 export function reorderLiturgyItems(
   items: LiturgyItem[],
   fromIndex: number,
@@ -106,39 +162,14 @@ export function reorderLiturgyItems(
   if (!moved) return items
 
   if (moved.type !== 'category') {
-    const next = [...items]
-    const [item] = next.splice(fromIndex, 1)
-    if (!item) return items
-    next.splice(toIndex, 0, item)
-    return next
+    return moveSimpleItem(items, fromIndex, toIndex)
   }
 
   const blockEnd = getCategoryBlockEnd(items, fromIndex)
-  if (toIndex >= fromIndex && toIndex < blockEnd) return items
+  const insertAt = resolveCategoryInsertAt(items, fromIndex, toIndex, blockEnd)
+  if (insertAt === null) return items
 
-  const targetCategoryIndex = resolveDropCategoryIndex(items, toIndex)
-  const target = items[targetCategoryIndex]
-
-  let insertAt: number
-  if (target?.type === 'category') {
-    const targetEnd = getCategoryBlockEnd(items, targetCategoryIndex)
-    insertAt =
-      fromIndex < targetCategoryIndex ? targetEnd : targetCategoryIndex
-  } else {
-    insertAt = fromIndex < toIndex ? toIndex + 1 : toIndex
-  }
-
-  if (insertAt >= fromIndex && insertAt <= blockEnd) return items
-
-  const block = items.slice(fromIndex, blockEnd)
-  const next = [...items.slice(0, fromIndex), ...items.slice(blockEnd)]
-  let dest = insertAt
-  if (insertAt > fromIndex) {
-    dest = insertAt - (blockEnd - fromIndex)
-  }
-  dest = Math.max(0, Math.min(dest, next.length))
-  next.splice(dest, 0, ...block)
-  return next
+  return moveCategoryBlock(items, fromIndex, blockEnd, insertAt)
 }
 
 /** Copia itens com novos IDs, remapeando categoryId e limpando done. */
@@ -233,42 +264,108 @@ export function isValidLiturgyUrl(raw: string): boolean {
     return host.includes('.') && /[a-z0-9-]/i.test(host)
   } catch {
     return false
+  } // NOSONAR
+}
+
+function hasValidCategoryTimes(draft: LiturgyItemDraft): boolean {
+  if (draft.type !== 'category') return true
+  return (
+    normalizeLiturgyTimeHHmm(draft.startTime) !== null &&
+    normalizeLiturgyTimeHHmm(draft.endTime) !== null
+  )
+}
+
+function hasValidTypeSpecificFields(draft: LiturgyItemDraft): boolean {
+  if (draft.type === 'music' && draft.musicId == null) return false
+  if (draft.type !== 'category' && !draft.categoryId) return false
+  if (draft.type === 'images') {
+    return resolveImagePaths(draft).length > 0
   }
+  if (
+    draft.type === 'video' ||
+    draft.type === 'pdf' ||
+    draft.type === 'presentation'
+  ) {
+    return draft.filePath.trim().length > 0
+  }
+  if (draft.type === 'site' || draft.type === 'online_video') {
+    return isValidLiturgyUrl(draft.url)
+  }
+  return true
 }
 
 export function isLiturgyItemDraftValid(draft: LiturgyItemDraft): boolean {
   if (draft.type == null) return false
   if (draft.name.trim().length === 0) return false
-  if (draft.type === 'category') {
-    if (!normalizeLiturgyTimeHHmm(draft.startTime)) return false
-    if (!normalizeLiturgyTimeHHmm(draft.endTime)) return false
+  if (!hasValidCategoryTimes(draft)) return false
+  return hasValidTypeSpecificFields(draft)
+}
+
+function applyMusicFields(
+  item: LiturgyItem,
+  draft: LiturgyItemDraft,
+  details: string,
+  musicList: LiturgyMusicOption[],
+): void {
+  item.musicId = draft.musicId
+  item.musicMode = draft.musicMode
+  const complementary = draft.name.trim()
+  const music = musicList.find((entry) => entry.id === draft.musicId)
+  if (music) {
+    item.name = music.displayLabel
+    item.complementaryTitle = complementary || undefined
+    item.subtitle = music.albumNames
+    item.notes = details || undefined
+  } else {
+    item.name = complementary || 'Música'
+    item.complementaryTitle = undefined
+    item.subtitle = ''
+    item.notes = details || undefined
   }
-  if (draft.type === 'music' && draft.musicId == null) return false
-  if (draft.type !== 'category' && !draft.categoryId) return false
-  if (draft.type === 'images') {
-    const paths =
-      draft.filePaths.length > 0
-        ? draft.filePaths
-        : draft.filePath.trim()
-          ? [draft.filePath]
-          : []
-    if (paths.length === 0) return false
+}
+
+function applyVerseFields(
+  item: LiturgyItem,
+  draft: LiturgyItemDraft,
+  details: string,
+  bibleBooks: LiturgyBibleBookOption[],
+): void {
+  item.verseBookId = draft.verseBookId
+  item.verseChapter = draft.verseChapter
+  item.verseNumbers = draft.verseNumbers.trim()
+  const book = bibleBooks.find((entry) => entry.id === draft.verseBookId)
+  if (book && !details) {
+    const verses = item.verseNumbers ? `:${item.verseNumbers}` : ''
+    item.subtitle = `${book.name} ${draft.verseChapter}${verses}`
   }
-  if (
-    (draft.type === 'video' ||
-      draft.type === 'pdf' ||
-      draft.type === 'presentation') &&
-    !draft.filePath.trim()
-  ) {
-    return false
+}
+
+function applyInternalFileFields(
+  item: LiturgyItem,
+  draft: LiturgyItemDraft,
+  details: string,
+): void {
+  const type = draft.type
+  const paths =
+    type === 'images' ? resolveImagePaths(draft) : resolveSingleFilePath(draft.filePath)
+
+  item.filePath = paths[0] ?? ''
+  if (type === 'images' && paths.length > 0) {
+    item.filePaths = paths
+    if (!details) {
+      item.subtitle = `${paths.length} imagem(ns)`
+    }
+  } else if (item.filePath && !details) {
+    const parts = item.filePath.split(/[\\/]/)
+    item.subtitle = parts.at(-1) ?? item.filePath
   }
-  if (
-    (draft.type === 'site' || draft.type === 'online_video') &&
-    !isValidLiturgyUrl(draft.url)
-  ) {
-    return false
+}
+
+function applyUrlFields(item: LiturgyItem, draft: LiturgyItemDraft, details: string): void {
+  item.url = draft.url.trim()
+  if (item.url && !details) {
+    item.subtitle = item.url
   }
-  return true
 }
 
 export function buildLiturgyItemFromDraft(
@@ -292,14 +389,7 @@ export function buildLiturgyItemFromDraft(
     name: draft.name.trim(),
     subtitle: details,
     done: context.done ?? false,
-    durationMs:
-      type === 'category'
-        ? 0
-        : type === 'music'
-          ? draft.durationMs > 0
-            ? clampMomentDurationMs(draft.durationMs)
-            : 0
-          : clampMomentDurationMs(draft.durationMs),
+    durationMs: resolveDurationMs(type, draft.durationMs),
     accentColor: getTypeDotColor(type),
     categoryId: type === 'category' ? null : draft.categoryId,
     startTime:
@@ -309,113 +399,98 @@ export function buildLiturgyItemFromDraft(
   }
 
   if (type === 'music') {
-    item.musicId = draft.musicId
-    item.musicMode = draft.musicMode
-    const complementary = draft.name.trim()
-    const music = context.musicList.find((entry) => entry.id === draft.musicId)
-    if (music) {
-      item.name = music.displayLabel
-      item.complementaryTitle = complementary || undefined
-      item.subtitle = music.albumNames
-      item.notes = details || undefined
-    } else {
-      item.name = complementary || 'Música'
-      item.complementaryTitle = undefined
-      item.subtitle = ''
-      item.notes = details || undefined
-    }
+    applyMusicFields(item, draft, details, context.musicList)
   }
 
   if (type === 'verse') {
-    item.verseBookId = draft.verseBookId
-    item.verseChapter = draft.verseChapter
-    item.verseNumbers = draft.verseNumbers.trim()
-    const book = context.bibleBooks.find((entry) => entry.id === draft.verseBookId)
-    if (book && !details) {
-      const verses = item.verseNumbers ? `:${item.verseNumbers}` : ''
-      item.subtitle = `${book.name} ${draft.verseChapter}${verses}`
-    }
+    applyVerseFields(item, draft, details, context.bibleBooks)
   }
 
   if (INTERNAL_FILE_TYPES.includes(type)) {
-    const paths =
-      type === 'images'
-        ? (draft.filePaths.length > 0
-            ? draft.filePaths
-            : draft.filePath.trim()
-              ? [draft.filePath.trim()]
-              : []
-          ).map((entry) => entry.trim()).filter(Boolean)
-        : draft.filePath.trim()
-          ? [draft.filePath.trim()]
-          : []
-
-    item.filePath = paths[0] ?? ''
-    if (type === 'images' && paths.length > 0) {
-      item.filePaths = paths
-      if (!details) {
-        item.subtitle =
-          paths.length === 1
-            ? (paths[0]!.split(/[\\/]/).pop() ?? paths[0]!)
-            : `${paths.length} imagens`
-      }
-    } else if (item.filePath && !details) {
-      const parts = item.filePath.split(/[\\/]/)
-      item.subtitle = parts[parts.length - 1] ?? item.filePath
-    }
+    applyInternalFileFields(item, draft, details)
   }
 
   if (type === 'site' || type === 'online_video') {
-    item.url = draft.url.trim()
-    if (item.url && !details) {
-      item.subtitle = item.url
-    }
+    applyUrlFields(item, draft, details)
   }
 
   return item
 }
 
+/** Resolve lista de caminhos de arquivos a partir de um item existente. */
+function resolveFilePathsFromItem(item: LiturgyItem): string[] {
+  if (item.filePaths && item.filePaths.length > 0) {
+    return [...item.filePaths]
+  }
+  if (item.filePath) {
+    return [item.filePath]
+  }
+  return []
+}
+
+/** Resolve nome de exibição a partir do tipo do item. */
+function resolveDraftName(item: LiturgyItem): string {
+  return item.type === 'music'
+    ? (item.complementaryTitle ?? '').trim()
+    : item.name
+}
+
+/** Resolve subtítulo do draft a partir do tipo do item. */
+function resolveDraftSubtitle(item: LiturgyItem): string {
+  return item.type === 'music' ? (item.notes ?? '').trim() : item.subtitle
+}
+
 export function draftFromLiturgyItem(item: LiturgyItem): LiturgyItemDraft {
+  const isCategory = item.type === 'category'
   return {
     type: item.type,
-    name:
-      item.type === 'music'
-        ? (item.complementaryTitle ?? '').trim()
-        : item.name,
-    subtitle:
-      item.type === 'music' ? (item.notes ?? '').trim() : item.subtitle,
-    durationMs:
-      item.type === 'category'
-        ? 0
-        : item.type === 'music'
-          ? item.durationMs > 0
-            ? clampMomentDurationMs(item.durationMs)
-            : 0
-          : clampMomentDurationMs(item.durationMs),
+    name: resolveDraftName(item),
+    subtitle: resolveDraftSubtitle(item),
+    durationMs: resolveDurationMs(item.type, item.durationMs),
     accentColor: getTypeDotColor(item.type),
-    categoryId: item.type === 'category' ? null : (item.categoryId ?? null),
-    startTime:
-      item.type === 'category'
-        ? (normalizeLiturgyTimeHHmm(item.startTime) ?? '')
-        : '',
-    endTime:
-      item.type === 'category'
-        ? (normalizeLiturgyTimeHHmm(item.endTime) ?? '')
-        : '',
+    categoryId: isCategory ? null : (item.categoryId ?? null),
+    startTime: isCategory ? (normalizeLiturgyTimeHHmm(item.startTime) ?? '') : '',
+    endTime: isCategory ? (normalizeLiturgyTimeHHmm(item.endTime) ?? '') : '',
     musicId: item.musicId ?? null,
     musicMode: item.musicMode ?? 'audio',
     verseBookId: item.verseBookId ?? null,
     verseChapter: item.verseChapter ?? null,
     verseNumbers: item.verseNumbers ?? '',
     filePath: item.filePath ?? '',
-    filePaths:
-      item.filePaths && item.filePaths.length > 0
-        ? [...item.filePaths]
-        : item.filePath
-          ? [item.filePath]
-          : [],
+    filePaths: resolveFilePathsFromItem(item),
     url: item.url ?? '',
   }
+}
+
+/** Resolve a duração (ms) com base no tipo do item. */
+function resolveDurationMs(
+  type: LiturgyItemType,
+  rawDurationMs: number,
+): number {
+  if (type === 'category') return 0
+  if (type === 'music') {
+    return rawDurationMs > 0 ? clampMomentDurationMs(rawDurationMs) : 0
+  }
+  return clampMomentDurationMs(rawDurationMs)
+}
+
+/** Resolve lista de caminhos de arquivos para images. */
+function resolveImagePaths(draft: LiturgyItemDraft): string[] {
+  let paths: string[]
+  if (draft.filePaths.length > 0) {
+    paths = draft.filePaths
+  } else if (draft.filePath.trim()) {
+    paths = [draft.filePath]
+  } else {
+    paths = []
+  }
+  return paths.map((entry) => entry.trim()).filter(Boolean)
+}
+
+/** Resolve lista de caminhos para tipos de arquivo interno (não-images). */
+function resolveSingleFilePath(filePath: string): string[] {
+  const trimmed = filePath.trim()
+  return trimmed ? [trimmed] : []
 }
 
 /** Alinha nome/álbum da música ao catálogo e separa anotações do subtítulo. */
