@@ -1,13 +1,13 @@
 # CI + Deploy — LouvorJA Web
 # PR/push: lint, type-check, build, quality gate
-# Push develop → staging | Push main → produção
+# Push staging → ambiente staging | Push main → produção
 name: CI & Deploy
 
 on:
   pull_request:
-    branches: [develop, main]
+    branches: [staging, main]
   push:
-    branches: [develop, main]
+    branches: [staging, main]
 
 permissions:
   contents: read
@@ -77,8 +77,9 @@ jobs:
   deploy-staging:
     name: Deploy Staging
     runs-on: ubuntu-latest
-    needs: [lint, typecheck, build]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    needs: [quality-gate]
+    # success() garante sequência: só roda após o Quality Gate passar
+    if: success() && github.event_name == 'push' && github.ref == 'refs/heads/staging'
     concurrency:
       group: deploy-staging
       cancel-in-progress: true
@@ -111,8 +112,9 @@ jobs:
   deploy-production:
     name: Deploy Production
     runs-on: ubuntu-latest
-    needs: [lint, typecheck, build]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [quality-gate]
+    # success() garante sequência: só roda após o Quality Gate passar
+    if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
     concurrency:
       group: deploy-production
       cancel-in-progress: false
