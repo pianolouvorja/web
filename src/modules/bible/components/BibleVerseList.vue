@@ -73,8 +73,8 @@ function isSelected(verseNumber: number): boolean {
           type="button"
           class="bible-reader__circle-btn"
           :disabled="!canNavigate"
-          :aria-label="t('bible.previousVerse')"
-          :title="t('bible.previousVerse')"
+          :aria-label="t('bible.previousChapter')"
+          :title="t('bible.previousChapter')"
           @click="emit('previousVerse')"
         >
           <i
@@ -86,8 +86,8 @@ function isSelected(verseNumber: number): boolean {
           type="button"
           class="bible-reader__circle-btn"
           :disabled="!canNavigate"
-          :aria-label="t('bible.nextVerse')"
-          :title="t('bible.nextVerse')"
+          :aria-label="t('bible.nextChapter')"
+          :title="t('bible.nextChapter')"
           @click="emit('nextVerse')"
         >
           <i
@@ -277,6 +277,10 @@ function isSelected(verseNumber: number): boolean {
     &:hover:not(:disabled) {
       background: color-mix(in srgb, #93000a 62%, var(--ds-color-surface-container-high));
       color: #ffdad6;
+    }
+
+    @media (max-width: 600px) {
+      display: none;
     }
   }
 }
