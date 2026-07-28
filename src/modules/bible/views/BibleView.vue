@@ -206,11 +206,6 @@ function onNextVerse() {
   }
 }
 
-.bible-view__nav,
-.bible-view__reader {
-  min-height: 0;
-}
-
 .bible-view :deep(.bible-toolbar) {
   flex-shrink: 0;
 }

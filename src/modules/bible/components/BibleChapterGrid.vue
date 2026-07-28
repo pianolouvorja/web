@@ -58,24 +58,6 @@ const { t } = useI18n()
   flex-direction: column;
   width: 12rem;
   flex-shrink: 0;
-  height: 100%;
-  min-height: 0;
-  overflow: hidden;
-
-  /*
-   * Mesmo fix do bible-books: em single-column o parent nao tem altura
-   * definida e height: 100% colapsa para 0.
-   */
-  @media (max-width: 1279px) {
-    height: auto;
-    min-height: 200px;
-    overflow: visible;
-
-    .bible-chapters__grid {
-      min-height: 140px;
-      max-height: 40vh;
-    }
-  }
 
   @media (max-width: 600px) {
     width: 100%;
@@ -136,10 +118,7 @@ const { t } = useI18n()
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.5rem;
-  overflow-y: auto;
   padding-right: 0.15rem;
-  flex: 1;
-  min-height: 0;
   align-content: start;
 
   @media (max-width: 600px) {

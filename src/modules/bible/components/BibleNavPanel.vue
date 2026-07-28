@@ -66,32 +66,26 @@ const { t } = useI18n()
 .bible-nav-panel {
   display: flex;
   flex-direction: column;
-  min-height: 0;
 }
 
 .bible-nav-panel__inner {
   display: flex;
+  flex-direction: column;
   gap: 1.25rem;
-  flex: 1 1 auto;
   padding: 1.25rem;
 
   @media (max-width: 600px) {
-    flex-direction: column;
     gap: 0.75rem;
     padding: 0.75rem;
   }
 }
 
 .bible-nav-panel__divider {
-  width: 1px;
+  width: auto;
+  height: 1px;
   align-self: stretch;
   background: var(--ds-color-outline);
   flex-shrink: 0;
-
-  @media (max-width: 600px) {
-    width: auto;
-    height: 1px;
-  }
 }
 
 .visually-hidden {

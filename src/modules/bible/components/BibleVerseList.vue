@@ -204,7 +204,6 @@ function isSelected(verseNumber: number): boolean {
   position: relative;
   display: flex;
   flex-direction: column;
-  min-height: 0;
 }
 
 .bible-reader__header {

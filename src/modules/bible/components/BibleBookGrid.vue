@@ -93,23 +93,9 @@ const { t } = useI18n()
   display: flex;
   flex-direction: column;
   min-width: 0;
-  min-height: 0;
-  flex: 2;
-  height: 100%;
-  overflow: hidden;
+  flex-shrink: 0;
   container-type: inline-size;
   container-name: bible-books;
-
-  /*
-   * Em layout single-column (mobile e tablet < 1280px) o parent nao tem
-   * altura fixa, entao height: 100% colapsa para 0 e o componente some.
-   * Usar altura automatica com minimo visivel resolve sem quebrar desktop.
-   */
-  @media (max-width: 1279px) {
-    height: auto;
-    min-height: 320px;
-    overflow: visible;
-  }
 }
 
 .bible-books__search {
@@ -198,16 +184,8 @@ const { t } = useI18n()
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.5rem;
-  overflow-y: auto;
   padding-right: 0.25rem;
-  flex: 1;
-  min-height: 0;
   align-content: start;
-
-  @media (max-width: 1279px) {
-    min-height: 240px;
-    max-height: 50vh;
-  }
 
   &::-webkit-scrollbar {
     width: 6px;
