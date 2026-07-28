@@ -56,8 +56,14 @@ const { t } = useI18n()
 .bible-chapters {
   display: flex;
   flex-direction: column;
-  width: 12rem;
-  flex-shrink: 0;
+  flex: 0 0 14rem;
+  min-width: 0;
+  container-type: inline-size;
+  container-name: bible-chapters;
+
+  @media (max-width: 960px) {
+    flex: 1 1 auto;
+  }
 
   @media (max-width: 600px) {
     width: 100%;
@@ -120,6 +126,11 @@ const { t } = useI18n()
   gap: 0.5rem;
   padding-right: 0.15rem;
   align-content: start;
+
+  @container bible-chapters (min-width: 12rem) {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.4rem;
+  }
 
   @media (max-width: 600px) {
     grid-template-columns: repeat(5, minmax(0, 1fr));

@@ -70,9 +70,14 @@ const { t } = useI18n()
 
 .bible-nav-panel__inner {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 1.25rem;
   padding: 1.25rem;
+  min-height: 0;
+
+  @media (max-width: 960px) {
+    flex-direction: column;
+  }
 
   @media (max-width: 600px) {
     gap: 0.75rem;
@@ -81,11 +86,16 @@ const { t } = useI18n()
 }
 
 .bible-nav-panel__divider {
-  width: auto;
-  height: 1px;
+  width: 1px;
+  height: auto;
   align-self: stretch;
   background: var(--ds-color-outline);
   flex-shrink: 0;
+
+  @media (max-width: 960px) {
+    width: auto;
+    height: 1px;
+  }
 }
 
 .visually-hidden {

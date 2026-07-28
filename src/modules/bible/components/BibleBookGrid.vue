@@ -93,7 +93,7 @@ const { t } = useI18n()
   display: flex;
   flex-direction: column;
   min-width: 0;
-  flex-shrink: 0;
+  flex: 1 1 60%;
   container-type: inline-size;
   container-name: bible-books;
 }
