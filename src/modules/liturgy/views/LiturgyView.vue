@@ -368,6 +368,10 @@ function onScreenControlsChanged() {
 .liturgy-view__screens {
   display: inline-flex;
   align-items: center;
+
+  @media (max-width: 600px) {
+    display: none;
+  }
   flex-shrink: 0;
 }
 
