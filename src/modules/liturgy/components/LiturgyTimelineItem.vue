@@ -1283,7 +1283,7 @@ const rowHovered = ref(false)
   }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 600px) {
   .liturgy-item__card {
     flex-direction: column;
     align-items: stretch;

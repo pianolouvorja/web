@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
+import { useDisplay } from 'vuetify'
 
 import { usePageTransition } from '@design-system/composables'
 import { DockFooter, GradientBackground } from '@design-system/index'
@@ -9,13 +10,14 @@ import type { DockNavItem } from '@design-system/types/navigation'
 import MediaChrome from '@modules/media/components/MediaChrome.vue'
 import { mainNavRoutes } from '@shared/constants/navigation'
 import logoUrl from '@assets/brand/logo-louvor-ja.svg'
-import codenamePianoUrl from '@assets/brand/codenamePIANO.svg'
+import CodenameLogo from '@assets/brand/CodenameLogo.vue'
 import { APP_VERSION } from '@shared/constants/app'
 
 const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
 const { transitionName } = usePageTransition()
+const { smAndDown } = useDisplay()
 
 /** Login Google — reativar quando o fluxo de autenticação existir */
 const showAccountButton = false
@@ -70,14 +72,12 @@ function viewKey(viewRoute: typeof route) {
         </span>
       </div>
       <div class="app-shell__header-end">
-        <div class="app-shell__codename-block">
-          <img
+        <div v-if="!smAndDown" class="app-shell__codename-block">
+          <CodenameLogo
             class="app-shell__codename"
-            :src="codenamePianoUrl"
-            alt="codename PIANO"
             width="168"
             height="25"
-          >
+          />
           <span class="app-shell__version" aria-hidden="true">{{ APP_VERSION }}</span>
         </div>
         <button
@@ -177,7 +177,6 @@ function viewKey(viewRoute: typeof route) {
   display: block;
   height: 1.5rem;
   width: auto;
-  object-fit: contain;
   flex-shrink: 0;
 }
 
@@ -219,5 +218,35 @@ function viewKey(viewRoute: typeof route) {
   z-index: 1;
   min-height: calc(100vh - 5rem - var(--ds-dock-height));
   padding-bottom: var(--ds-dock-height);
+}
+
+/* ── Responsivo: telas pequenas (≤ 600px = breakpoint sm do Vuetify) ── */
+@media (max-width: 600px) {
+  .app-shell__header {
+    height: 3.5rem;
+    padding: 0 var(--ds-spacing-2, 0.5rem);
+  }
+
+  .app-shell__brand-group {
+    gap: 0.5rem;
+  }
+
+  .app-shell__logo {
+    width: 28px;
+    height: 28px;
+  }
+
+  .app-shell__brand {
+    font-size: 18px;
+    gap: 0.25em;
+  }
+
+  .app-shell__header-end {
+    gap: 0.5rem;
+  }
+
+  .app-shell__main {
+    min-height: calc(100vh - 3.5rem - var(--ds-dock-height));
+  }
 }
 </style>

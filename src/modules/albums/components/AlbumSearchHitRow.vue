@@ -150,7 +150,7 @@ const rowHovered = ref(false)
   justify-self: end;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 600px) {
   .album-search-hit {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:

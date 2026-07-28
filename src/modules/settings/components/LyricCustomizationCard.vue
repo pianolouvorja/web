@@ -391,7 +391,7 @@ async function onFileSelected(event: Event) {
   padding: 0;
   list-style: none;
 
-  @media (min-width: 768px) {
+  @media (min-width: 960px) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     column-gap: 3rem;
   }
@@ -439,7 +439,7 @@ async function onFileSelected(event: Event) {
   gap: 1.5rem;
   margin-top: 1rem;
 
-  @media (min-width: 768px) {
+  @media (min-width: 960px) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
