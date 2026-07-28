@@ -12,9 +12,14 @@ export {
 } from './blur'
 export { spacing } from './spacing'
 export { zIndex } from './zIndex'
+export {
+  breakpoints,
+  breakpointPx,
+} from './breakpoints'
 
 export type { ColorPalette } from './colors'
 export type { RadiusToken } from './radius'
 export type { BlurToken } from './blur'
 export type { SpacingToken } from './spacing'
 export type { ZIndexToken } from './zIndex'
+export type { BreakpointKey, BreakpointPx } from './breakpoints'

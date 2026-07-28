@@ -195,7 +195,7 @@ function onNextVerse() {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  @media (max-width: 1100px) {
+  @media (max-width: 1280px) {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: minmax(0, 0.95fr) minmax(0, 1.05fr);
   }

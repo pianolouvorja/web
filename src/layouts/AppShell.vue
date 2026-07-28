@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
+import { useDisplay } from 'vuetify'
 
 import { usePageTransition } from '@design-system/composables'
 import { DockFooter, GradientBackground } from '@design-system/index'
@@ -16,6 +17,7 @@ const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
 const { transitionName } = usePageTransition()
+const { smAndDown } = useDisplay()
 
 /** Login Google — reativar quando o fluxo de autenticação existir */
 const showAccountButton = false
@@ -70,7 +72,7 @@ function viewKey(viewRoute: typeof route) {
         </span>
       </div>
       <div class="app-shell__header-end">
-        <div class="app-shell__codename-block">
+        <div v-if="!smAndDown" class="app-shell__codename-block">
           <img
             class="app-shell__codename"
             :src="codenamePianoUrl"
@@ -219,5 +221,35 @@ function viewKey(viewRoute: typeof route) {
   z-index: 1;
   min-height: calc(100vh - 5rem - var(--ds-dock-height));
   padding-bottom: var(--ds-dock-height);
+}
+
+/* ── Responsivo: telas pequenas (≤ 600px = breakpoint sm do Vuetify) ── */
+@media (max-width: 600px) {
+  .app-shell__header {
+    height: 3.5rem;
+    padding: 0 var(--ds-spacing-2, 0.5rem);
+  }
+
+  .app-shell__brand-group {
+    gap: 0.5rem;
+  }
+
+  .app-shell__logo {
+    width: 28px;
+    height: 28px;
+  }
+
+  .app-shell__brand {
+    font-size: 18px;
+    gap: 0.25em;
+  }
+
+  .app-shell__header-end {
+    gap: 0.5rem;
+  }
+
+  .app-shell__main {
+    min-height: calc(100vh - 3.5rem - var(--ds-dock-height));
+  }
 }
 </style>

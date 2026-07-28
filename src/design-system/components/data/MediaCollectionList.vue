@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import { useDisplay } from 'vuetify'
+
+const { mdAndUp } = useDisplay()
+
 const props = withDefaults(
   defineProps<{
     modelValue: string
@@ -68,6 +72,7 @@ function clearSearch() {
 
     <div class="ds-media-collection-list__content">
       <div
+        v-if="mdAndUp"
         class="ds-media-collection-list__header"
         aria-hidden="true"
       >
@@ -140,7 +145,7 @@ function clearSearch() {
     background-color var(--ds-motion-duration, 280ms) ease;
 
   /* Mesma proporção dos containers de hinário (2 colunas). */
-  @media (min-width: 768px) {
+  @media (min-width: 960px) {
     width: calc((100cqi - 1.25rem) / 2);
   }
 
@@ -275,9 +280,4 @@ function clearSearch() {
   line-height: 1.25rem;
 }
 
-@media (max-width: 800px) {
-  .ds-media-collection-list__header {
-    display: none;
-  }
-}
 </style>

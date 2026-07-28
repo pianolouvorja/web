@@ -22,6 +22,9 @@ export default defineConfig(({ mode }) => {
     define: {
       __APP_VERSION__: JSON.stringify(pkg.version),
     },
+    server: {
+      allowedHosts: true,
+    },
     plugins: [
       vue(),
       vueDevTools(),

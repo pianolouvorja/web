@@ -157,7 +157,7 @@ const browseIcon = computed(() =>
   flex-shrink: 1;
   min-width: 0;
 
-  @media (max-width: 767px) {
+  @media (max-width: 600px) {
     max-width: 100%;
   }
 }

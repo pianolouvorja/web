@@ -1626,7 +1626,7 @@ function isLightDot(hex: string): boolean {
   }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 600px) {
   .moment-dialog__header,
   .moment-dialog__form {
     padding-inline: 0.9rem;

@@ -273,7 +273,7 @@ const { t } = useI18n()
   justify-self: end;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 600px) {
   .album-track-row {
     grid-template-columns: 3rem minmax(0, 1fr);
     grid-template-areas:
