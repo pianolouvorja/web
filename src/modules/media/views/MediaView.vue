@@ -451,7 +451,7 @@ async function onToggleFullscreen() {
   cursor: pointer;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 960px) {
   .media-window__body--playlist {
     grid-template-columns: 1fr;
     grid-template-rows: minmax(0, 1fr) 12rem;

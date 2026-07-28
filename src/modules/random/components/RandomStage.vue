@@ -6,6 +6,7 @@ import {
   useTemplateRef,
 } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useDisplay } from 'vuetify'
 
 import PopupScreenControls from '@shared/components/PopupScreenControls.vue'
 
@@ -50,6 +51,7 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const { lgAndUp } = useDisplay()
 const particlesLayerRef = useTemplateRef<HTMLElement>('particlesLayer')
 const particles = createParticles()
 
@@ -175,8 +177,14 @@ onUnmounted(() => {
     </div>
 
     <div class="random-stage__focal">
-      <div class="random-stage__orbit random-stage__orbit--outer" />
-      <div class="random-stage__orbit random-stage__orbit--inner" />
+      <div
+        v-if="lgAndUp"
+        class="random-stage__orbit random-stage__orbit--outer"
+      />
+      <div
+        v-if="lgAndUp"
+        class="random-stage__orbit random-stage__orbit--inner"
+      />
 
       <div class="random-stage__orb">
         <div
@@ -559,13 +567,6 @@ onUnmounted(() => {
 
   to {
     transform: rotate(360deg) scale(1);
-  }
-}
-
-@media (max-width: 1100px) {
-  .random-stage__orbit--outer,
-  .random-stage__orbit--inner {
-    display: none;
   }
 }
 

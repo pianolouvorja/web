@@ -367,7 +367,7 @@ async function onImportFile(file: File) {
   overflow: visible;
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 1280px) {
   .random-view__header {
     flex-wrap: wrap;
   }

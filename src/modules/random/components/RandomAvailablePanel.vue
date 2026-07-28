@@ -480,7 +480,7 @@ function onFileChange(event: Event) {
   }
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 1280px) {
   .random-available {
     width: 100%;
     max-height: none;

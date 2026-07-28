@@ -440,7 +440,7 @@ function selectMode(mode: MediaPlaybackMode) {
   }
 }
 
-@media (max-width: 780px) {
+@media (max-width: 960px) {
   .media-player-pill {
     border-radius: 1.25rem 0 1.25rem 0;
     width: min(100%, calc(100vw - 1.5rem));

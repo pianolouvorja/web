@@ -420,7 +420,7 @@ function onScreenControlsChanged() {
   }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 960px) {
   .timer-view__content {
     flex-direction: column;
     align-items: center;

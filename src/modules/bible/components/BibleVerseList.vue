@@ -297,7 +297,7 @@ function isSelected(verseNumber: number): boolean {
   max-width: calc((100% - 1.25rem) / 2);
   margin-left: auto;
 
-  @media (max-width: 767px) {
+  @media (max-width: 600px) {
     width: 100%;
     max-width: 100%;
   }
