@@ -62,6 +62,21 @@ const { t } = useI18n()
   min-height: 0;
   overflow: hidden;
 
+  /*
+   * Mesmo fix do bible-books: em single-column o parent nao tem altura
+   * definida e height: 100% colapsa para 0.
+   */
+  @media (max-width: 1279px) {
+    height: auto;
+    min-height: 200px;
+    overflow: visible;
+
+    .bible-chapters__grid {
+      min-height: 140px;
+      max-height: 40vh;
+    }
+  }
+
   @media (max-width: 600px) {
     width: 100%;
     flex-shrink: 1;

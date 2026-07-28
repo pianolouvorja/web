@@ -100,11 +100,15 @@ const { t } = useI18n()
   container-type: inline-size;
   container-name: bible-books;
 
-  @media (max-width: 600px) {
-    /* No mobile, altura adaptativa em vez de 100% que colapsa */
+  /*
+   * Em layout single-column (mobile e tablet < 1280px) o parent nao tem
+   * altura fixa, entao height: 100% colapsa para 0 e o componente some.
+   * Usar altura automatica com minimo visivel resolve sem quebrar desktop.
+   */
+  @media (max-width: 1279px) {
     height: auto;
-    max-height: 60vh;
-    overflow-y: auto;
+    min-height: 320px;
+    overflow: visible;
   }
 }
 
@@ -199,6 +203,11 @@ const { t } = useI18n()
   flex: 1;
   min-height: 0;
   align-content: start;
+
+  @media (max-width: 1279px) {
+    min-height: 240px;
+    max-height: 50vh;
+  }
 
   &::-webkit-scrollbar {
     width: 6px;
