@@ -1,12 +1,22 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
+import { useDisplay } from 'vuetify'
 
 import { VISIBLE_SETTINGS_SECTIONS } from '../constants/sections'
 
 const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
+const { smAndDown } = useDisplay()
+
+/** Tab de Projeção & Telas oculta em mobile — multi-telas não faz sentido. */
+const sections = computed(() =>
+  smAndDown.value
+    ? VISIBLE_SETTINGS_SECTIONS.filter((s) => s.id !== 'projection')
+    : VISIBLE_SETTINGS_SECTIONS,
+)
 
 function isActive(routeName: string) {
   return route.name === routeName
@@ -22,7 +32,7 @@ function goTo(routeName: string) {
 <template>
   <nav class="settings-tabs" :aria-label="t('settings.title')">
     <button
-      v-for="section in VISIBLE_SETTINGS_SECTIONS"
+      v-for="section in sections"
       :key="section.id"
       type="button"
       class="settings-tabs__item"

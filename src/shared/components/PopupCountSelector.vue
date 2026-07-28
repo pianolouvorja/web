@@ -221,6 +221,10 @@ onUnmounted(() => {
   display: inline-flex;
   align-items: center;
   gap: 0.55rem;
+
+  @media (max-width: 600px) {
+    display: none;
+  }
 }
 
 .popup-count-selector__label {
