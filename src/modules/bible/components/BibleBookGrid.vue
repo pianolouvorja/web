@@ -265,10 +265,22 @@ const { t } = useI18n()
     border-color: color-mix(in srgb, #4d7c0f 40%, transparent);
   }
 
-  &--prophets {
+  &--poetry {
+    background: color-mix(in srgb, #92400e 22%, var(--ds-color-surface-card));
+    color: color-mix(in srgb, #fbbf24 78%, var(--ds-color-on-surface));
+    border-color: color-mix(in srgb, #92400e 32%, transparent);
+  }
+
+  &--major-prophet {
     background: color-mix(in srgb, #c2410c 30%, var(--ds-color-surface-card));
     color: color-mix(in srgb, #fdba74 80%, var(--ds-color-on-surface));
     border-color: color-mix(in srgb, #c2410c 40%, transparent);
+  }
+
+  &--minor-prophet {
+    background: color-mix(in srgb, #b45309 26%, var(--ds-color-surface-card));
+    color: color-mix(in srgb, #fcd34d 78%, var(--ds-color-on-surface));
+    border-color: color-mix(in srgb, #b45309 38%, transparent);
   }
 
   // ═══════════════════════════════════════════════════
@@ -366,10 +378,22 @@ const { t } = useI18n()
   border-color: #65a30d;
 }
 
-[data-mode='light'] .bible-books__tile--prophets {
+[data-mode='light'] .bible-books__tile--poetry {
+  background: #fef9c3;
+  color: #78350f;
+  border-color: #d97706;
+}
+
+[data-mode='light'] .bible-books__tile--major-prophet {
   background: #fed7aa;
   color: #9a3412;
   border-color: #ea580c;
+}
+
+[data-mode='light'] .bible-books__tile--minor-prophet {
+  background: #fde68a;
+  color: #854d0e;
+  border-color: #d97706;
 }
 
 [data-mode='light'] .bible-books__tile--gospels {

@@ -1,0 +1,6 @@
+projectKey=pianolouvorja:web
+serverUrl=http://127.0.0.1:9000
+serverVersion=26.7.0.124771
+dashboardUrl=http://127.0.0.1:9000/dashboard?id=pianolouvorja%3Aweb
+ceTaskId=d0b79fb1-9b58-4fa3-a2f2-08aa3021594e
+ceTaskUrl=http://127.0.0.1:9000/api/ce/task?id=d0b79fb1-9b58-4fa3-a2f2-08aa3021594e
