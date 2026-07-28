@@ -454,7 +454,7 @@ async function runAction(
   grid-template-columns: 1fr;
   gap: 1.25rem;
 
-  @media (min-width: 768px) {
+  @media (min-width: 960px) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

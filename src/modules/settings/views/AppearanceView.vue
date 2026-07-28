@@ -89,7 +89,7 @@ onMounted(() => {
   width: 100%;
   max-width: 56rem;
 
-  @media (min-width: 1024px) {
+  @media (min-width: 960px) {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
@@ -103,7 +103,7 @@ onMounted(() => {
   gap: 1.5rem;
   width: 100%;
 
-  @media (min-width: 1024px) {
+  @media (min-width: 960px) {
     width: 18rem;
     flex-shrink: 0;
   }
@@ -115,7 +115,7 @@ onMounted(() => {
   width: 100%;
   order: -1;
 
-  @media (min-width: 1024px) {
+  @media (min-width: 960px) {
     order: 0;
     flex: 1;
     min-width: 0;
