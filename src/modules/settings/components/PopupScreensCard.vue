@@ -81,6 +81,10 @@ const {
 <style scoped lang="scss">
 .popup-screens {
   padding: 1.5rem;
+
+  @media (max-width: 600px) {
+    display: none;
+  }
 }
 
 .popup-screens__header {

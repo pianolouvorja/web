@@ -63,6 +63,10 @@ onUnmounted(() => {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
+
+  @media (max-width: 600px) {
+    display: none;
+  }
 }
 
 .popup-screen-controls__btn {
