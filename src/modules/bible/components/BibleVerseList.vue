@@ -108,6 +108,18 @@ function isSelected(verseNumber: number): boolean {
             aria-hidden="true"
           />
         </button>
+        <button
+          type="button"
+          class="bible-reader__circle-btn"
+          :aria-label="t('bible.copy')"
+          :title="t('bible.copy')"
+          @click="handleCopy"
+        >
+          <i
+            class="ti ti-copy"
+            aria-hidden="true"
+          />
+        </button>
       </div>
 
       <div class="bible-reader__screens">
@@ -127,21 +139,6 @@ function isSelected(verseNumber: number): boolean {
           :aria-label="t('bible.searchVerse')"
           @input="emit('update:verseSearchQuery', ($event.target as HTMLInputElement).value)"
         >
-      </div>
-
-      <div class="bible-reader__actions">
-        <button
-          type="button"
-          class="bible-reader__icon-btn"
-          :aria-label="t('bible.copy')"
-          :title="t('bible.copy')"
-          @click="handleCopy"
-        >
-          <i
-            class="ti ti-copy"
-            aria-hidden="true"
-          />
-        </button>
       </div>
     </header>
 
@@ -207,17 +204,21 @@ function isSelected(verseNumber: number): boolean {
   position: relative;
   display: flex;
   flex-direction: column;
-  height: 100%;
   min-height: 0;
-  overflow: hidden;
 }
 
 .bible-reader__header {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
   flex-shrink: 0;
   padding: 1.25rem 1.75rem 0.75rem;
+
+  @media (max-width: 600px) {
+    padding: 0.75rem 1rem 0.5rem;
+    gap: 0.5rem;
+  }
 }
 
 .bible-reader__title {
@@ -227,6 +228,11 @@ function isSelected(verseNumber: number): boolean {
   font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--ds-color-primary-soft);
+
+  @media (max-width: 600px) {
+    flex: 1 1 100%;
+    font-size: 1.15rem;
+  }
 }
 
 .bible-reader__nav {
@@ -298,8 +304,10 @@ function isSelected(verseNumber: number): boolean {
   margin-left: auto;
 
   @media (max-width: 600px) {
+    flex: 1 1 100%;
     width: 100%;
     max-width: 100%;
+    margin-left: 0;
   }
 }
 
@@ -334,29 +342,6 @@ function isSelected(verseNumber: number): boolean {
 }
 
 
-.bible-reader__actions {
-  display: flex;
-  gap: 0.35rem;
-  flex-shrink: 0;
-}
-
-.bible-reader__icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--ds-color-primary-soft);
-  cursor: pointer;
-
-  &:hover {
-    background: var(--ds-color-surface-variant);
-  }
-}
-
 .bible-reader__feedback {
   flex-shrink: 0;
   margin: 0;
@@ -366,22 +351,9 @@ function isSelected(verseNumber: number): boolean {
 }
 
 .bible-reader__scroll {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
   padding: 0.25rem 1.75rem 7rem;
   font-size: 1.05rem;
   line-height: 1.7;
-
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: var(--ds-color-outline);
-    border-radius: 999px;
-  }
 }
 
 .bible-reader__state {

@@ -91,7 +91,7 @@ const browseIcon = computed(() =>
           :class="['ti', browseIcon]"
           aria-hidden="true"
         />
-        <span>{{ browseLabel }}</span>
+        <span class="bible-toolbar__browse-label">{{ browseLabel }}</span>
       </button>
     </div>
   </GlassCard>
@@ -105,6 +105,13 @@ const browseIcon = computed(() =>
   gap: 1rem;
   padding: 1rem 1.25rem !important;
   overflow: visible;
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+    padding: 0.75rem 0.85rem !important;
+  }
 }
 
 .bible-toolbar__meta {
@@ -112,6 +119,11 @@ const browseIcon = computed(() =>
   align-items: center;
   gap: 1.5rem;
   min-width: 0;
+
+  @media (max-width: 600px) {
+    gap: 1rem;
+    width: 100%;
+  }
 }
 
 .bible-toolbar__field {
@@ -148,6 +160,11 @@ const browseIcon = computed(() =>
   gap: 0.75rem;
   flex-shrink: 0;
   min-width: 0;
+
+  @media (max-width: 600px) {
+    width: 100%;
+    gap: 0.5rem;
+  }
 }
 
 .bible-toolbar__search {
@@ -205,10 +222,17 @@ const browseIcon = computed(() =>
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
+  flex-shrink: 0;
   transition:
     background-color 180ms ease,
     border-color 180ms ease,
     transform 150ms ease;
+
+  @media (max-width: 600px) {
+    padding: 0.55rem 0.75rem;
+    aspect-ratio: 1;
+    justify-content: center;
+  }
 
   &:hover {
     background: color-mix(in srgb, var(--ds-color-primary) 22%, transparent);
@@ -221,6 +245,12 @@ const browseIcon = computed(() =>
   &--books {
     background: color-mix(in srgb, var(--ds-color-primary) 28%, transparent);
     border-color: color-mix(in srgb, var(--ds-color-primary) 45%, transparent);
+  }
+}
+
+.bible-toolbar__browse-label {
+  @media (max-width: 600px) {
+    display: none;
   }
 }
 

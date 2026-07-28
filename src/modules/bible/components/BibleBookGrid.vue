@@ -99,6 +99,13 @@ const { t } = useI18n()
   overflow: hidden;
   container-type: inline-size;
   container-name: bible-books;
+
+  @media (max-width: 600px) {
+    /* No mobile, altura adaptativa em vez de 100% que colapsa */
+    height: auto;
+    max-height: 60vh;
+    overflow-y: auto;
+  }
 }
 
 .bible-books__search {

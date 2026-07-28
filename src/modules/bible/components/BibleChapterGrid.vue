@@ -61,6 +61,11 @@ const { t } = useI18n()
   height: 100%;
   min-height: 0;
   overflow: hidden;
+
+  @media (max-width: 600px) {
+    width: 100%;
+    flex-shrink: 1;
+  }
 }
 
 .bible-chapters__search {
@@ -122,6 +127,11 @@ const { t } = useI18n()
   min-height: 0;
   align-content: start;
 
+  @media (max-width: 600px) {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.4rem;
+  }
+
   &::-webkit-scrollbar {
     width: 6px;
   }
@@ -146,6 +156,12 @@ const { t } = useI18n()
     border-color 160ms ease,
     box-shadow 160ms ease,
     transform 150ms ease;
+
+  @media (max-width: 600px) {
+    font-size: 0.95rem;
+    min-height: 44px;
+    border-radius: var(--ds-radius-md, 0.5rem 0 0.5rem 0);
+  }
 
   &:hover {
     background: color-mix(in srgb, var(--ds-color-primary) 45%, var(--ds-color-surface-container-high));

@@ -177,10 +177,14 @@ function onNextVerse() {
   flex-direction: column;
   gap: 1rem;
   box-sizing: border-box;
-  height: calc(100vh - 5rem - var(--ds-dock-height));
-  max-height: calc(100vh - 5rem - var(--ds-dock-height));
+  min-height: calc(100vh - 5rem - var(--ds-dock-height));
   padding: 0.75rem var(--ds-spacing-page, 2rem) 1rem;
-  overflow: hidden;
+  overflow-y: auto;
+
+  @media (max-width: 600px) {
+    gap: 0.5rem;
+    padding: 0.5rem 0.5rem 0.75rem;
+  }
 }
 
 .bible-view__body {
@@ -188,8 +192,6 @@ function onNextVerse() {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 1.25rem;
   flex: 1 1 auto;
-  min-height: 0;
-  overflow: hidden;
 
   &--reader-only {
     grid-template-columns: minmax(0, 1fr);
@@ -197,15 +199,16 @@ function onNextVerse() {
 
   @media (max-width: 1280px) {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  }
+
+  @media (max-width: 600px) {
+    gap: 0.5rem;
   }
 }
 
 .bible-view__nav,
 .bible-view__reader {
   min-height: 0;
-  height: 100%;
-  overflow: hidden;
 }
 
 .bible-view :deep(.bible-toolbar) {
