@@ -598,4 +598,39 @@ function onScreenControlsChanged() {
     align-items: flex-start;
   }
 }
+
+@media (max-width: 600px) {
+  .liturgy-view__toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .liturgy-view__toolbar :deep(.liturgy-day-tabs) {
+    flex: 0 0 auto;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  .liturgy-view__toolbar-actions {
+    justify-content: stretch;
+    gap: 0.5rem;
+  }
+
+  .liturgy-view__add {
+    flex: 1 1 auto;
+    justify-content: center;
+    width: 100%;
+    padding: 0.45rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  .liturgy-view__lock {
+    flex: 0 0 auto;
+  }
+
+  .liturgy-view__clear {
+    flex: 0 0 auto;
+  }
+}
 </style>
