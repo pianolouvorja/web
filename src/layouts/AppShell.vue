@@ -10,7 +10,7 @@ import type { DockNavItem } from '@design-system/types/navigation'
 import MediaChrome from '@modules/media/components/MediaChrome.vue'
 import { mainNavRoutes } from '@shared/constants/navigation'
 import logoUrl from '@assets/brand/logo-louvor-ja.svg'
-import codenamePianoUrl from '@assets/brand/codenamePIANO.svg'
+import CodenameLogo from '@assets/brand/CodenameLogo.vue'
 import { APP_VERSION } from '@shared/constants/app'
 
 const route = useRoute()
@@ -79,13 +79,11 @@ function viewKey(viewRoute: typeof route) {
       </div>
       <div class="app-shell__header-end">
         <div v-if="!smAndDown" class="app-shell__codename-block">
-          <img
+          <CodenameLogo
             class="app-shell__codename"
-            :src="codenamePianoUrl"
-            alt="codename PIANO"
             width="168"
             height="25"
-          >
+          />
           <span class="app-shell__version" aria-hidden="true">{{ APP_VERSION }}</span>
         </div>
         <button
@@ -185,7 +183,6 @@ function viewKey(viewRoute: typeof route) {
   display: block;
   height: 1.5rem;
   width: auto;
-  object-fit: contain;
   flex-shrink: 0;
 }
 
