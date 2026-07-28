@@ -21,14 +21,19 @@ export type BibleChapterVerses = Record<string, string>
 
 export type BibleTestament = 'ot' | 'nt'
 
-/** Tom visual do tile do livro (Stitch). */
+/** Tom visual do tile do livro — categorias canônicas OT/NT. */
 export type BibleBookTone =
-  | 'law'
-  | 'history'
-  | 'prophets'
-  | 'gospels'
-  | 'letters'
-  | 'neutral'
+  // AT — tons quentes/terrosos
+  | 'law'        // Pentateuco (1-5)
+  | 'history'    // Históricos AT (6-17)
+  | 'prophets'   // Profetas AT (18-39)
+  // NT — tons frios/espirituais
+  | 'gospels'    // Evangelhos (40-43)
+  | 'acts'       // Atos — Livro Histórico NT (44)
+  | 'pauline'    // Cartas Paulinas (45-57)
+  | 'general'    // Cartas Gerais (58-65)
+  | 'apocalyptic'// Apocalipse (66)
+  | 'neutral'    // fallback
 
 /** Seleção ativa para leitura e projeção. */
 export interface BibleSelection {

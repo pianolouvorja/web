@@ -37,13 +37,18 @@ export function resolveTestament(bookNumber: number): BibleTestament {
   return bookNumber <= 39 ? 'ot' : 'nt'
 }
 
-/** Tom visual do tile conforme faixas canônicas (Stitch). */
+/** Tom visual do tile conforme faixas canônicas. OT = quente/terroso, NT = frio/espiritual. */
 export function resolveBookTone(bookNumber: number): BibleBookTone {
-  if (bookNumber <= 5) return 'law'
-  if (bookNumber <= 17) return 'history'
-  if (bookNumber <= 39) return 'prophets'
-  if (bookNumber <= 43) return 'gospels'
-  if (bookNumber <= 66) return 'letters'
+  // Antigo Testamento (1-39)
+  if (bookNumber <= 5) return 'law'         // Gênesis–Deuteronômio
+  if (bookNumber <= 17) return 'history'    // Josué–Ester
+  if (bookNumber <= 39) return 'prophets'   // Jó–Malaquias
+  // Novo Testamento (40-66)
+  if (bookNumber <= 43) return 'gospels'    // Mateus–João
+  if (bookNumber === 44) return 'acts'      // Atos
+  if (bookNumber <= 57) return 'pauline'    // Romanos–Hebreus
+  if (bookNumber <= 65) return 'general'    // Tiago–Judas
+  if (bookNumber === 66) return 'apocalyptic' // Apocalipse
   return 'neutral'
 }
 

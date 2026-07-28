@@ -172,8 +172,21 @@ const { t } = useI18n()
   font-weight: 600;
   padding: 0.35rem 0.85rem;
   cursor: pointer;
+  transition:
+    background-color 200ms ease,
+    color 200ms ease;
 
-  &--active {
+  // AT ativo = âmbar quente (terroso)
+  &--active:first-child,
+  &--active:nth-child(1) {
+    background: color-mix(in srgb, var(--ds-color-brand-yellow) 70%, var(--ds-color-primary));
+    color: #fffbeb;
+    box-shadow: 0 1px 2px color-mix(in srgb, var(--ds-color-brand-yellow) 30%, transparent);
+  }
+
+  // NT ativo = azul frio (espiritual)
+  &--active:last-child,
+  &--active:nth-child(2) {
     background: var(--ds-color-primary);
     color: var(--ds-color-on-primary);
     box-shadow: 0 1px 2px color-mix(in srgb, var(--ds-color-primary) 25%, transparent);
@@ -237,37 +250,71 @@ const { t } = useI18n()
     box-shadow: 0 10px 20px rgb(0 0 0 / 0.3);
   }
 
+  // ═══════════════════════════════════════════════════
+  //  ANTIGO TESTAMENTO — tons quentes / terrosos
+  // ═══════════════════════════════════════════════════
   &--law {
-    background: #1e3a5f;
-    color: #bfdbfe;
+    background: color-mix(in srgb, var(--ds-color-brand-yellow) 22%, var(--ds-color-surface-card));
+    color: color-mix(in srgb, var(--ds-color-brand-yellow) 75%, var(--ds-color-on-surface));
+    border-color: color-mix(in srgb, var(--ds-color-brand-yellow) 30%, transparent);
   }
 
   &--history {
-    background: #1a3d28;
-    color: #86efac;
+    background: color-mix(in srgb, #4d7c0f 35%, var(--ds-color-surface-card));
+    color: color-mix(in srgb, #86efac 80%, var(--ds-color-on-surface));
+    border-color: color-mix(in srgb, #4d7c0f 40%, transparent);
   }
 
   &--prophets {
-    background: #3d2e0a;
-    color: #fef08a;
+    background: color-mix(in srgb, #c2410c 30%, var(--ds-color-surface-card));
+    color: color-mix(in srgb, #fdba74 80%, var(--ds-color-on-surface));
+    border-color: color-mix(in srgb, #c2410c 40%, transparent);
   }
 
+  // ═══════════════════════════════════════════════════
+  //  NOVO TESTAMENTO — tons frios / espirituais
+  // ═══════════════════════════════════════════════════
   &--gospels {
-    background: #2d1a3d;
-    color: #e9d5ff;
+    background: color-mix(in srgb, var(--ds-color-primary) 30%, var(--ds-color-surface-card));
+    color: color-mix(in srgb, var(--ds-color-primary-soft) 85%, var(--ds-color-on-surface));
+    border-color: color-mix(in srgb, var(--ds-color-primary) 40%, transparent);
   }
 
-  &--letters,
+  &--acts {
+    background: color-mix(in srgb, var(--ds-color-secondary) 28%, var(--ds-color-surface-card));
+    color: color-mix(in srgb, var(--ds-color-secondary) 85%, var(--ds-color-on-surface));
+    border-color: color-mix(in srgb, var(--ds-color-secondary) 40%, transparent);
+  }
+
+  &--pauline {
+    background: color-mix(in srgb, #6366f1 28%, var(--ds-color-surface-card));
+    color: color-mix(in srgb, #a5b4fc 82%, var(--ds-color-on-surface));
+    border-color: color-mix(in srgb, #6366f1 40%, transparent);
+  }
+
+  &--general {
+    background: color-mix(in srgb, #0891b2 26%, var(--ds-color-surface-card));
+    color: color-mix(in srgb, #67e8f9 82%, var(--ds-color-on-surface));
+    border-color: color-mix(in srgb, #0891b2 38%, transparent);
+  }
+
+  &--apocalyptic {
+    background: color-mix(in srgb, var(--ds-color-brand-yellow) 18%, #7c2d12 30%, var(--ds-color-surface-card));
+    color: color-mix(in srgb, #fde68a 85%, var(--ds-color-on-surface));
+    border-color: color-mix(in srgb, #f59e0b 45%, transparent);
+  }
+
   &--neutral {
     background: rgba(255, 255, 255, 0.07);
     color: var(--ds-color-on-surface-variant);
   }
 
   &--active {
-    background: rgba(202, 138, 4, 0.50);
-    border-color: #eab308;
+    background: color-mix(in srgb, var(--ds-color-brand-yellow) 50%, transparent);
+    border-color: var(--ds-color-brand-yellow);
     color: #fffbeb;
     font-weight: 700;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--ds-color-brand-yellow) 35%, transparent);
   }
 }
 
@@ -308,30 +355,53 @@ const { t } = useI18n()
 }
 
 [data-mode='light'] .bible-books__tile--law {
-  background: #bfdbfe;
-  color: #1e40af;
-  border-color: #60a5fa;
+  background: #fef3c7;
+  color: #92400e;
+  border-color: #f59e0b;
 }
 
 [data-mode='light'] .bible-books__tile--history {
-  background: #bbf7d0;
-  color: #166534;
-  border-color: #4ade80;
+  background: #d9f99d;
+  color: #365314;
+  border-color: #65a30d;
 }
 
 [data-mode='light'] .bible-books__tile--prophets {
-  background: #fecaca;
-  color: #991b1b;
-  border-color: #f87171;
+  background: #fed7aa;
+  color: #9a3412;
+  border-color: #ea580c;
 }
 
 [data-mode='light'] .bible-books__tile--gospels {
-  background: #e9d5ff;
-  color: #6b21a8;
-  border-color: #c084fc;
+  background: #dbeafe;
+  color: #1e40af;
+  border-color: #3b82f6;
 }
 
-[data-mode='light'] .bible-books__tile--letters,
+[data-mode='light'] .bible-books__tile--acts {
+  background: #cffafe;
+  color: #155e75;
+  border-color: #06b6d4;
+}
+
+[data-mode='light'] .bible-books__tile--pauline {
+  background: #e0e7ff;
+  color: #3730a3;
+  border-color: #6366f1;
+}
+
+[data-mode='light'] .bible-books__tile--general {
+  background: #ccfbf1;
+  color: #115e59;
+  border-color: #14b8a6;
+}
+
+[data-mode='light'] .bible-books__tile--apocalyptic {
+  background: #fef9c3;
+  color: #713f12;
+  border-color: #ca8a04;
+}
+
 [data-mode='light'] .bible-books__tile--neutral {
   background: #f1f3f7;
   color: #475569;
