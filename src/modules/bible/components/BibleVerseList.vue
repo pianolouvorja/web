@@ -353,6 +353,10 @@ function isSelected(verseNumber: number): boolean {
   padding: 0.25rem 1.75rem 7rem;
   font-size: 1.05rem;
   line-height: 1.7;
+
+  @media (max-width: 600px) {
+    padding: 0.25rem 0 7rem;
+  }
 }
 
 .bible-reader__state {
@@ -384,6 +388,10 @@ function isSelected(verseNumber: number): boolean {
     background-color 160ms ease,
     border-color 160ms ease;
 
+  @media (max-width: 600px) {
+    padding-inline: 1rem;
+  }
+
   &:hover {
     opacity: 0.9;
     background: color-mix(in srgb, var(--ds-color-primary) 6%, transparent);
@@ -397,6 +405,12 @@ function isSelected(verseNumber: number): boolean {
     background: color-mix(in srgb, var(--ds-color-primary) 12%, transparent);
     border-left-color: var(--ds-color-primary);
     box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ds-color-primary) 20%, transparent);
+
+    @media (max-width: 600px) {
+      margin-inline: 0;
+      padding-inline: 1rem;
+      border-radius: 0;
+    }
 
     .bible-reader__verse-text {
       font-weight: 500;
@@ -436,6 +450,10 @@ function isSelected(verseNumber: number): boolean {
   border: 1px solid rgb(255 255 255 / 0.2);
   box-shadow: 0 16px 40px rgb(0 0 0 / 0.45);
   pointer-events: none;
+
+  @media (max-width: 600px) {
+    display: none;
+  }
 }
 
 .bible-reader__preview-text {

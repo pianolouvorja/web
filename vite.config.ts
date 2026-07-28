@@ -71,6 +71,16 @@ export default defineConfig(({ mode }) => {
               sizes: '180x180',
               type: 'image/png',
             },
+            {
+              src: `${base}ico/favicon-192x192.png`,
+              sizes: '192x192',
+              type: 'image/png',
+            },
+            {
+              src: `${base}ico/favicon-512x512.png`,
+              sizes: '512x512',
+              type: 'image/png',
+            },
           ],
         },
       }),
