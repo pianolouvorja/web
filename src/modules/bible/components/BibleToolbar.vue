@@ -106,11 +106,12 @@ const browseIcon = computed(() =>
   padding: 1rem 1.25rem !important;
   overflow: visible;
 
-  @media (max-width: 600px) {
+  @media (max-width: 768px) {
     flex-direction: column;
     align-items: stretch;
     gap: 0.75rem;
     padding: 0.75rem 0.85rem !important;
+    width: 100%;
   }
 }
 
@@ -120,7 +121,7 @@ const browseIcon = computed(() =>
   gap: 1.5rem;
   min-width: 0;
 
-  @media (max-width: 600px) {
+  @media (max-width: 768px) {
     gap: 1rem;
     width: 100%;
   }
@@ -161,7 +162,7 @@ const browseIcon = computed(() =>
   flex-shrink: 0;
   min-width: 0;
 
-  @media (max-width: 600px) {
+  @media (max-width: 768px) {
     width: 100%;
     gap: 0.5rem;
   }
@@ -174,7 +175,7 @@ const browseIcon = computed(() =>
   flex-shrink: 1;
   min-width: 0;
 
-  @media (max-width: 600px) {
+  @media (max-width: 768px) {
     max-width: 100%;
   }
 }
@@ -228,7 +229,7 @@ const browseIcon = computed(() =>
     border-color 180ms ease,
     transform 150ms ease;
 
-  @media (max-width: 600px) {
+  @media (max-width: 768px) {
     padding: 0.55rem 0.75rem;
     aspect-ratio: 1;
     justify-content: center;
@@ -249,7 +250,7 @@ const browseIcon = computed(() =>
 }
 
 .bible-toolbar__browse-label {
-  @media (max-width: 600px) {
+  @media (max-width: 768px) {
     display: none;
   }
 }

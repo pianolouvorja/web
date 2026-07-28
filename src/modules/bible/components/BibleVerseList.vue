@@ -97,7 +97,7 @@ function isSelected(verseNumber: number): boolean {
         </button>
         <button
           type="button"
-          class="bible-reader__circle-btn bible-reader__circle-btn--clear"
+          class="bible-reader__circle-btn bible-reader__circle-btn--clear bible-reader__circle-btn--projection"
           :disabled="!hasProjection"
           :aria-label="t('bible.clearProjection')"
           :title="t('bible.clearProjection')"
@@ -278,8 +278,10 @@ function isSelected(verseNumber: number): boolean {
       background: color-mix(in srgb, #93000a 62%, var(--ds-color-surface-container-high));
       color: #ffdad6;
     }
+  }
 
-    @media (max-width: 600px) {
+  &--projection {
+    @media (max-width: 768px) {
       display: none;
     }
   }

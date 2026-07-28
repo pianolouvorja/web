@@ -251,69 +251,73 @@ const { t } = useI18n()
   }
 
   // ═══════════════════════════════════════════════════
-  //  ANTIGO TESTAMENTO — tons quentes / terrosos
+  //  ANTIGO TESTAMENTO
+  //  Base: azul (Lei), verde (História), marrom-âmbar (Profetas)
   // ═══════════════════════════════════════════════════
+
+  // Lei — azul original #1e3a5f
   &--law {
-    background: color-mix(in srgb, var(--ds-color-brand-yellow) 22%, var(--ds-color-surface-card));
-    color: color-mix(in srgb, var(--ds-color-brand-yellow) 75%, var(--ds-color-on-surface));
-    border-color: color-mix(in srgb, var(--ds-color-brand-yellow) 30%, transparent);
+    background: #1e3a5f;
+    color: #bfdbfe;
   }
 
+  // História — verde original #1a3d28
   &--history {
-    background: color-mix(in srgb, #4d7c0f 35%, var(--ds-color-surface-card));
-    color: color-mix(in srgb, #86efac 80%, var(--ds-color-on-surface));
-    border-color: color-mix(in srgb, #4d7c0f 40%, transparent);
+    background: #1a3d28;
+    color: #86efac;
   }
 
+  // Poesia — variação âmbar-clara do profeta original (#3d2e0a)
   &--poetry {
-    background: color-mix(in srgb, #92400e 22%, var(--ds-color-surface-card));
-    color: color-mix(in srgb, #fbbf24 78%, var(--ds-color-on-surface));
-    border-color: color-mix(in srgb, #92400e 32%, transparent);
+    background: #4a3815;
+    color: #fef3c7;
   }
 
+  // Profetas Maiores — âmbar original #3d2e0a
   &--major-prophet {
-    background: color-mix(in srgb, #c2410c 30%, var(--ds-color-surface-card));
-    color: color-mix(in srgb, #fdba74 80%, var(--ds-color-on-surface));
-    border-color: color-mix(in srgb, #c2410c 40%, transparent);
+    background: #3d2e0a;
+    color: #fef08a;
   }
 
+  // Profetas Menores — variação âmbar-escura
   &--minor-prophet {
-    background: color-mix(in srgb, #b45309 26%, var(--ds-color-surface-card));
-    color: color-mix(in srgb, #fcd34d 78%, var(--ds-color-on-surface));
-    border-color: color-mix(in srgb, #b45309 38%, transparent);
+    background: #2e2108;
+    color: #fde68a;
   }
 
   // ═══════════════════════════════════════════════════
-  //  NOVO TESTAMENTO — tons frios / espirituais
+  //  NOVO TESTAMENTO
+  //  Base: roxo (Evangelhos) com variações na família púrpura/violeta
   // ═══════════════════════════════════════════════════
+
+  // Evangelhos — roxo original #2d1a3d
   &--gospels {
-    background: color-mix(in srgb, var(--ds-color-primary) 30%, var(--ds-color-surface-card));
-    color: color-mix(in srgb, var(--ds-color-primary-soft) 85%, var(--ds-color-on-surface));
-    border-color: color-mix(in srgb, var(--ds-color-primary) 40%, transparent);
+    background: #2d1a3d;
+    color: #e9d5ff;
   }
 
+  // Atos — variação roxo-azulada (transição Evangelhos → Cartas)
   &--acts {
-    background: color-mix(in srgb, var(--ds-color-secondary) 28%, var(--ds-color-surface-card));
-    color: color-mix(in srgb, var(--ds-color-secondary) 85%, var(--ds-color-on-surface));
-    border-color: color-mix(in srgb, var(--ds-color-secondary) 40%, transparent);
+    background: #1e2a52;
+    color: #c7d2fe;
   }
 
+  // Cartas Paulinas — variação violeta
   &--pauline {
-    background: color-mix(in srgb, #6366f1 28%, var(--ds-color-surface-card));
-    color: color-mix(in srgb, #a5b4fc 82%, var(--ds-color-on-surface));
-    border-color: color-mix(in srgb, #6366f1 40%, transparent);
+    background: #3b1f50;
+    color: #ddd6fe;
   }
 
+  // Cartas Gerais — variação índigo
   &--general {
-    background: color-mix(in srgb, #0891b2 26%, var(--ds-color-surface-card));
-    color: color-mix(in srgb, #67e8f9 82%, var(--ds-color-on-surface));
-    border-color: color-mix(in srgb, #0891b2 38%, transparent);
+    background: #2a1b4a;
+    color: #d0bcfe;
   }
 
+  // Apocalipse — variação púrpura-profundo (escatológico)
   &--apocalyptic {
-    background: color-mix(in srgb, var(--ds-color-brand-yellow) 18%, #7c2d12 30%, var(--ds-color-surface-card));
-    color: color-mix(in srgb, #fde68a 85%, var(--ds-color-on-surface));
-    border-color: color-mix(in srgb, #f59e0b 45%, transparent);
+    background: #3d0f3d;
+    color: #f3e8ff;
   }
 
   &--neutral {
@@ -367,63 +371,63 @@ const { t } = useI18n()
 }
 
 [data-mode='light'] .bible-books__tile--law {
-  background: #fef3c7;
-  color: #92400e;
-  border-color: #f59e0b;
+  background: #bfdbfe;
+  color: #1e40af;
+  border-color: #60a5fa;
 }
 
 [data-mode='light'] .bible-books__tile--history {
-  background: #d9f99d;
-  color: #365314;
-  border-color: #65a30d;
+  background: #bbf7d0;
+  color: #166534;
+  border-color: #4ade80;
 }
 
 [data-mode='light'] .bible-books__tile--poetry {
-  background: #fef9c3;
+  background: #fef3c7;
   color: #78350f;
   border-color: #d97706;
 }
 
 [data-mode='light'] .bible-books__tile--major-prophet {
-  background: #fed7aa;
-  color: #9a3412;
-  border-color: #ea580c;
+  background: #fecaca;
+  color: #991b1b;
+  border-color: #f87171;
 }
 
 [data-mode='light'] .bible-books__tile--minor-prophet {
-  background: #fde68a;
-  color: #854d0e;
-  border-color: #d97706;
+  background: #fed7aa;
+  color: #9a3412;
+  border-color: #fb923c;
 }
 
 [data-mode='light'] .bible-books__tile--gospels {
-  background: #dbeafe;
-  color: #1e40af;
-  border-color: #3b82f6;
+  background: #e9d5ff;
+  color: #6b21a8;
+  border-color: #c084fc;
 }
 
 [data-mode='light'] .bible-books__tile--acts {
-  background: #cffafe;
-  color: #155e75;
-  border-color: #06b6d4;
+  background: #c7d2fe;
+  color: #3730a3;
+  border-color: #818cf8;
 }
 
 [data-mode='light'] .bible-books__tile--pauline {
-  background: #e0e7ff;
-  color: #3730a3;
-  border-color: #6366f1;
+  background: #ddd6fe;
+  color: #5b21b6;
+  border-color: #a78bfa;
 }
 
 [data-mode='light'] .bible-books__tile--general {
-  background: #ccfbf1;
-  color: #115e59;
-  border-color: #14b8a6;
+  background: #e9d5ff;
+  color: #6b21a8;
+  border-color: #c084fc;
 }
 
 [data-mode='light'] .bible-books__tile--apocalyptic {
-  background: #fef9c3;
-  color: #713f12;
-  border-color: #ca8a04;
+  background: #f3e8ff;
+  color: #86198f;
+  border-color: #d946ef;
 }
 
 [data-mode='light'] .bible-books__tile--neutral {

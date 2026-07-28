@@ -11,6 +11,7 @@ export default {
     browseBooksAndChapters: 'Navegar em Livros e Capítulos',
     books: 'Livros',
     chapters: 'Cap.',
+    chapter: 'Capítulo',
     testamentOld: 'AT',
     testamentNew: 'NT',
     searchBible: 'Pesquisar na Bíblia',
