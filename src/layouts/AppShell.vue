@@ -32,13 +32,18 @@ const showMediaChrome = computed(() => activeKey.value !== 'liturgy')
 
 const showHeaderLogo = computed(() => activeKey.value !== 'home')
 
+/** Items ocultos no dock em mobile (issue #3 — Ezequias 24/07/2026). */
+const MOBILE_HIDDEN_KEYS = new Set<string>(['liturgy', 'utilities', 'settings'])
+
 const navItems = computed<DockNavItem[]>(() =>
-  mainNavRoutes.map((item) => ({
-    key: item.key,
-    icon: item.icon,
-    label: t(item.labelKey),
-    to: item.to,
-  })),
+  mainNavRoutes
+    .filter((item) => !(smAndDown.value && MOBILE_HIDDEN_KEYS.has(item.key)))
+    .map((item) => ({
+      key: item.key,
+      icon: item.icon,
+      label: t(item.labelKey),
+      to: item.to,
+    })),
 )
 
 function onNavigate(key: string) {
