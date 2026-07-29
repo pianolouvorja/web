@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
+import { useDisplay } from 'vuetify'
 
 import { usePageTransition } from '@design-system/composables'
 import { DockFooter, GradientBackground } from '@design-system/index'
@@ -16,6 +17,7 @@ const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
 const { transitionName } = usePageTransition()
+const { smAndDown } = useDisplay()
 
 /** Login Google — reativar quando o fluxo de autenticação existir */
 const showAccountButton = false
@@ -30,13 +32,19 @@ const showMediaChrome = computed(() => activeKey.value !== 'liturgy')
 
 const showHeaderLogo = computed(() => activeKey.value !== 'home')
 
+/** Items ocultos no dock em mobile (issue #3 — Ezequias 24/07/2026).
+ * Settings permanece por questões cosméticas. */
+const DOCK_HIDDEN_ON_MOBILE = new Set<string>(['liturgy', 'utilities'])
+
 const navItems = computed<DockNavItem[]>(() =>
-  mainNavRoutes.map((item) => ({
-    key: item.key,
-    icon: item.icon,
-    label: t(item.labelKey),
-    to: item.to,
-  })),
+  mainNavRoutes
+    .filter((item) => !smAndDown.value || !DOCK_HIDDEN_ON_MOBILE.has(item.key))
+    .map((item) => ({
+      key: item.key,
+      icon: item.icon,
+      label: t(item.labelKey),
+      to: item.to,
+    })),
 )
 
 function onNavigate(key: string) {
@@ -61,8 +69,8 @@ function viewKey(viewRoute: typeof route) {
           class="app-shell__logo"
           :src="logoUrl"
           :alt="t('app.name')"
-          width="32"
-          height="32"
+          width="36"
+          height="36"
         >
         <span class="app-shell__brand">
           <span class="app-shell__brand-louvor">{{ t('app.nameLouvor') }}</span>
@@ -73,8 +81,8 @@ function viewKey(viewRoute: typeof route) {
         <div class="app-shell__codename-block">
           <CodenameLogo
             class="app-shell__codename"
-            width="140"
-            height="21"
+            width="168"
+            height="25"
           />
           <span class="app-shell__version" aria-hidden="true">{{ APP_VERSION }}</span>
         </div>
@@ -122,10 +130,8 @@ function viewKey(viewRoute: typeof route) {
   height: 5rem;
   padding: 0 var(--ds-spacing-page);
   border-bottom: 1px solid var(--ds-color-outline);
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 40;
-  background: var(--ds-color-surface);
 }
 
 .app-shell__brand-group {
@@ -135,8 +141,8 @@ function viewKey(viewRoute: typeof route) {
 }
 
 .app-shell__logo {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   object-fit: contain;
   display: block;
   flex-shrink: 0;
@@ -146,7 +152,7 @@ function viewKey(viewRoute: typeof route) {
   display: inline-flex;
   align-items: baseline;
   gap: 0.35em;
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 600;
   letter-spacing: -0.01em;
 }
@@ -168,22 +174,22 @@ function viewKey(viewRoute: typeof route) {
 
 .app-shell__codename-block {
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 0.3rem;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.2rem;
 }
 
 .app-shell__codename {
   display: block;
-  height: 0.8rem;
+  height: 1.5rem;
   width: auto;
   flex-shrink: 0;
   opacity: 0.4;
 }
 
-/* Tema claro: codename com 100% de opacidade */
-:global([data-mode='light']) .app-shell__codename {
-  opacity: 1;
+/* Tema claro: codename com 100% de opacidade — seletor global para vencer especificidade scoped */
+:global(html[data-mode='light'] .app-shell__codename) {
+  opacity: 1 !important;
 }
 
 .app-shell__version {
@@ -222,14 +228,12 @@ function viewKey(viewRoute: typeof route) {
 .app-shell__main {
   position: relative;
   z-index: 1;
-  display: flex;
-  flex-direction: column;
   min-height: calc(100vh - 5rem - var(--ds-dock-height));
   padding-bottom: var(--ds-dock-height);
 }
 
-/* ── Responsivo: telas pequenas (≤ 768px = breakpoint tablet/mobile) ── */
-@media (max-width: 768px) {
+/* ── Responsivo: telas pequenas (≤ 600px = breakpoint sm do Vuetify) ── */
+@media (max-width: 600px) {
   .app-shell__header {
     height: 3.5rem;
     padding: 0 var(--ds-spacing-2, 0.5rem);
@@ -240,12 +244,12 @@ function viewKey(viewRoute: typeof route) {
   }
 
   .app-shell__logo {
-    width: 26px;
-    height: 26px;
+    width: 28px;
+    height: 28px;
   }
 
   .app-shell__brand {
-    font-size: 17px;
+    font-size: 18px;
     gap: 0.25em;
   }
 
@@ -255,15 +259,6 @@ function viewKey(viewRoute: typeof route) {
 
   .app-shell__main {
     min-height: calc(100vh - 3.5rem - var(--ds-dock-height));
-  }
-
-  .app-shell__codename {
-    max-width: 80px;
-  }
-
-  .app-shell__version {
-    font-size: 9px;
-    opacity: 0.6;
   }
 }
 </style>

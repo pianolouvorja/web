@@ -244,14 +244,7 @@ function isSelected(verseNumber: number): boolean {
   gap: 0.85rem;
   flex-shrink: 0;
 
-  @media (max-width: 768px) {
-    width: 100%;
-    justify-content: space-between;
-  }
-
   @media (max-width: 600px) {
-    width: auto;
-    flex-shrink: 0;
     margin-left: auto;
     gap: 0.5rem;
   }

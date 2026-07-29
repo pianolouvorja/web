@@ -54,11 +54,11 @@ const featureToggles = [
     labelKey: 'settings.projection.lyrics.customTextFormat',
     set: setCustomTextFormat,
   },
-  {
-    key: 'customBackground' as const,
-    labelKey: 'settings.projection.lyrics.customBackground',
-    set: setCustomBackground,
-  },
+  // {
+  //   key: 'customBackground' as const,
+  //   labelKey: 'settings.projection.lyrics.customBackground',
+  //   set: setCustomBackground,
+  // },
 ]
 
 function openFilePicker() {
