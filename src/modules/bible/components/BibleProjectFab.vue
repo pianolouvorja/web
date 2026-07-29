@@ -83,5 +83,9 @@ function onClick(projecting: boolean, disabled: boolean) {
     opacity: 0.45;
     cursor: not-allowed;
   }
+
+  @media (max-width: 960px) {
+    display: none;
+  }
 }
 </style>

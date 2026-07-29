@@ -41,7 +41,7 @@ export const useBibleStore = defineStore('bible', () => {
 
   const selectedVersionId = ref<number | null>(null)
   const selectedBookId = ref<number | null>(null)
-  const selectedChapter = ref(1)
+  const selectedChapter = ref<number | null>(null)
   const selectedVerses = ref<number[]>([])
   const lastVerseAnchor = ref(1)
 
@@ -112,6 +112,7 @@ export const useBibleStore = defineStore('bible', () => {
 
   const locationLabel = computed(() => {
     if (!selectedBook.value) return ''
+    if (selectedChapter.value == null) return selectedBook.value.name
     return formatScripturalReference({
       bookName: selectedBook.value.name,
       chapter: selectedChapter.value,
@@ -121,6 +122,7 @@ export const useBibleStore = defineStore('bible', () => {
 
   const chapterTitle = computed(() => {
     if (!selectedBook.value) return ''
+    if (selectedChapter.value == null) return selectedBook.value.name
     return `${selectedBook.value.name} ${selectedChapter.value}`
   })
 
@@ -229,7 +231,12 @@ export const useBibleStore = defineStore('bible', () => {
   }
 
   async function refreshChapter() {
-    if (selectedVersionId.value == null || selectedBookId.value == null) {
+    const chapter = selectedChapter.value
+    if (
+      selectedVersionId.value == null ||
+      selectedBookId.value == null ||
+      chapter == null
+    ) {
       verses.value = {}
       return
     }
@@ -239,7 +246,7 @@ export const useBibleStore = defineStore('bible', () => {
       verses.value = await loadChapterVerses(
         selectedVersionId.value,
         selectedBookId.value,
-        selectedChapter.value,
+        chapter,
       )
     } catch (error) {
       console.error('[bible] falha ao carregar capítulo', error)
@@ -275,17 +282,16 @@ export const useBibleStore = defineStore('bible', () => {
       const versionId = pickDefaultVersionId(loadedVersions, saved)
       selectedVersionId.value = versionId
 
-      const firstBook = loadedBooks[0]
-      selectedBookId.value = firstBook.id
-      testamentFilter.value = resolveTestament(firstBook.bookNumber)
-      selectedChapter.value = 1
+      // Nao selecionar livro/capitulo por padrao - usuario escolhe manualmente
+      selectedBookId.value = null
+      selectedChapter.value = null
       selectedVerses.value = []
       lastVerseAnchor.value = 1
+      verses.value = {}
 
       isProjecting.value = isPopupModuleOpen('bible')
       if (isProjecting.value) startProjectionWatch()
-
-      await refreshChapter()
+      // Nao carregar versiculos automaticamente - aguardar selecao do usuario
     } catch (error) {
       console.error('[bible] falha ao iniciar módulo', error)
       setError('bible.errors.loadCatalogFailed')
@@ -312,17 +318,13 @@ export const useBibleStore = defineStore('bible', () => {
 
     selectedBookId.value = bookId
     testamentFilter.value = resolveTestament(book.bookNumber)
+    selectedChapter.value = null
     selectedVerses.value = []
     lastVerseAnchor.value = 1
 
-    if (selectedChapter.value > book.chapters) {
-      selectedChapter.value = book.chapters
-    } else if (selectedChapter.value < 1) {
-      selectedChapter.value = 1
-    }
-
     syncProjection()
-    await refreshChapter()
+    // Versiculos so carregam apos selecionar capitulo
+    verses.value = {}
   }
 
   async function selectChapter(chapter: number) {
@@ -424,12 +426,15 @@ export const useBibleStore = defineStore('bible', () => {
     if (!book) return
 
     const isForward = direction > 0
+    const currentChapter = selectedChapter.value
+    if (currentChapter == null) return
+
     const sameBookNextChapter = isForward
-      ? selectedChapter.value < book.chapters
-      : selectedChapter.value > 1
+      ? currentChapter < book.chapters
+      : currentChapter > 1
 
     if (sameBookNextChapter) {
-      await selectChapter(selectedChapter.value + direction)
+      await selectChapter(currentChapter + direction)
       isForward ? selectFirstValidVerse() : selectLastValidVerse()
       return
     }

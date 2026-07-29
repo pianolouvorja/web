@@ -1,0 +1,78 @@
+#!/usr/bin/env sh
+
+# ═══════════════════════════════════════════════════════
+#  PRE-PUSH HOOK — Quality Gate SonarQube
+#  Roda scan + verifica QG antes de permitir git push.
+#  Se o SonarQube estiver offline, SKIP (não bloqueia).
+# ═══════════════════════════════════════════════════════
+
+echo "▶ [pre-push] Verificando SonarQube Quality Gate..."
+
+# 1. Verificar se SonarQube está online
+if ! curl -sf http://127.0.0.1:9000/api/system/status >/dev/null 2>&1; then
+  echo "⚠ [pre-push] SonarQube offline — pulando quality gate."
+  exit 0
+fi
+
+# 2. Obter token de scanner do env
+if [ -z "$SONAR_TOKEN" ]; then
+  echo "⚠ [pre-push] SONAR_TOKEN não definido — pulando quality gate."
+  echo "  Defina SONAR_TOKEN no ambiente para habilitar a verificação."
+  exit 0
+fi
+
+# 3. Rodar type-check + build ANTES do scan (não faz sentido scanear código que não compila)
+echo "▶ [pre-push] Type-check..."
+npx vue-tsc --build 2>/dev/null
+if [ $? -ne 0 ]; then
+  echo "✗ [pre-push] Type-check falhou — corrija os erros antes do push."
+  exit 1
+fi
+
+# 4. Rodar scan SonarQube
+echo "▶ [pre-push] Executando scan SonarQube..."
+sonar-scanner -Dsonar.login="$SONAR_TOKEN" \
+  -Dsonar.projectKey=pianolouvorja:web \
+  -Dsonar.host.url=http://127.0.0.1:9000 \
+  -Dsonar.scanner.dumpToFile=/tmp/sonar-scan-dump.txt \
+  2>&1 | grep -E 'INFO|ERROR|WARN' || true
+
+# 5. Aguardar processamento do CE task (~10s)
+sleep 10
+
+# 6. Verificar Quality Gate
+QG_STATUS=$(curl -sf -H "Authorization: Bearer $SONAR_TOKEN" \
+  "http://127.0.0.1:9000/api/qualitygates/project_status?projectKey=pianolouvorja:web" \
+  2>/dev/null | python3 -c "
+import sys, json
+try:
+    data = json.load(sys.stdin)
+    status = data.get('projectStatus', {}).get('status', 'UNKNOWN')
+    conditions = data.get('projectStatus', {}).get('conditions', [])
+    print(status)
+    for c in conditions:
+        metric = c.get('metricKey', '?')
+        s = c.get('status', '?')
+        actual = c.get('actualValue', '-')
+        threshold = c.get('errorThreshold', '-')
+        if s != 'OK':
+            print(f'  FAIL {metric}: actual={actual} threshold={threshold}')
+except Exception:
+    print('ERROR')
+" 2>/dev/null)
+
+if [ "$QG_STATUS" = "ERROR" ]; then
+  echo ""
+  echo "✗ [pre-push] SonarQube Quality Gate FALHOU:"
+  echo "$QG_STATUS"
+  echo ""
+  echo "  Corrija as violations em http://127.0.0.1:9000/dashboard?id=pianolouvorja%3Aweb"
+  echo "  Ou use --no-verify para bypass (NÃO recomendado em develop/main)."
+  exit 1
+elif [ "$QG_STATUS" = "OK" ]; then
+  echo "✓ [pre-push] SonarQube Quality Gate PASSOU."
+  exit 0
+else
+  echo "⚠ [pre-push] Não foi possível verificar QG ($QG_STATUS) — permitindo push."
+  exit 0
+fi

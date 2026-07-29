@@ -35,7 +35,24 @@ export default defineConfig(({ mode }) => {
           enabled: true,
         },
         workbox: {
-          globPatterns: ['**/*.{html,js,css,svg,png}'],
+          globPatterns: ['**/*.{html,js,css,svg,png,woff,woff2,ttf}'],
+          maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+          runtimeCaching: [
+            {
+              urlPattern: ({ request }) => request.destination === 'font',
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'piano-fonts',
+                expiration: {
+                  maxEntries: 20,
+                  maxAgeSeconds: 60 * 60 * 24 * 365,
+                },
+                cacheableResponse: {
+                  statuses: [0, 200],
+                },
+              },
+            },
+          ],
         },
         manifest: {
           name: 'LouvorJA - PIANO',
@@ -69,6 +86,16 @@ export default defineConfig(({ mode }) => {
             {
               src: `${base}ico/favicon-180x180.png`,
               sizes: '180x180',
+              type: 'image/png',
+            },
+            {
+              src: `${base}ico/favicon-192x192.png`,
+              sizes: '192x192',
+              type: 'image/png',
+            },
+            {
+              src: `${base}ico/favicon-512x512.png`,
+              sizes: '512x512',
               type: 'image/png',
             },
           ],
