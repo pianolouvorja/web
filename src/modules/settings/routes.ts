@@ -10,6 +10,7 @@ export const settingsRoutes: RouteRecordRaw[] = [
     component: SettingsView,
     meta: {
       navKey: 'settings',
+      desktopOnly: false,
     },
     redirect: { name: 'settings-appearance' },
     children: [
@@ -19,6 +20,7 @@ export const settingsRoutes: RouteRecordRaw[] = [
         component: AppearanceView,
         meta: {
           navKey: 'settings',
+          desktopOnly: false,
         },
       },
       // Geral / Mídia — ocultos no menu; redirect até reativarmos as seções.
@@ -26,11 +28,17 @@ export const settingsRoutes: RouteRecordRaw[] = [
         path: 'general',
         name: 'settings-general',
         redirect: { name: 'settings-appearance' },
+        meta: {
+          desktopOnly: true,
+        },
       },
       {
         path: 'media',
         name: 'settings-media',
         redirect: { name: 'settings-appearance' },
+        meta: {
+          desktopOnly: true,
+        },
       },
       {
         path: 'projection',
@@ -38,6 +46,7 @@ export const settingsRoutes: RouteRecordRaw[] = [
         component: ProjectionView,
         meta: {
           navKey: 'settings',
+          desktopOnly: true,
         },
       },
     ],

@@ -9,6 +9,7 @@ export const timerRoutes: RouteRecordRaw[] = [
     component: TimerView,
     meta: {
       navKey: 'utilities',
+      desktopOnly: true,
     },
   },
 ]

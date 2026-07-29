@@ -12,6 +12,7 @@ import { randomRoutes } from '@modules/random/routes'
 import { settingsRoutes } from '@modules/settings/routes'
 import { timerRoutes } from '@modules/timer/routes'
 import PopupHost from '@shared/views/PopupHost.vue'
+import { createMobileRouteGuard } from '@shared/composables/useMobileRouteGuard'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -46,5 +47,8 @@ const router = createRouter({
     },
   ],
 })
+
+// Guard para rotas desktop-only no mobile
+router.beforeEach(createMobileRouteGuard())
 
 export default router

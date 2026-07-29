@@ -9,6 +9,7 @@ export const liturgyRoutes: RouteRecordRaw[] = [
     component: LiturgyView,
     meta: {
       navKey: 'liturgy',
+      desktopOnly: true,
     },
   },
 ]

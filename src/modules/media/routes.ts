@@ -9,6 +9,7 @@ export const mediaRoutes: RouteRecordRaw[] = [
     component: MediaView,
     meta: {
       navKey: 'albums',
+      desktopOnly: true,
     },
   },
 ]
