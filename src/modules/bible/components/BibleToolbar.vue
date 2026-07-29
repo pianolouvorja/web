@@ -91,7 +91,7 @@ const browseIcon = computed(() =>
           :class="['ti', browseIcon]"
           aria-hidden="true"
         />
-        <span>{{ browseLabel }}</span>
+        <span class="bible-toolbar__browse-label">{{ browseLabel }}</span>
       </button>
     </div>
   </GlassCard>
@@ -105,6 +105,15 @@ const browseIcon = computed(() =>
   gap: 1rem;
   padding: 1rem 1.25rem !important;
   overflow: visible;
+
+  @media (max-width: 768px) {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.65rem !important;
+    width: 100%;
+    flex-wrap: nowrap;
+  }
 }
 
 .bible-toolbar__meta {
@@ -112,6 +121,15 @@ const browseIcon = computed(() =>
   align-items: center;
   gap: 1.5rem;
   min-width: 0;
+  flex: 1 1 auto;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
 }
 
 .bible-toolbar__field {
@@ -119,6 +137,12 @@ const browseIcon = computed(() =>
   flex-direction: column;
   gap: 0.15rem;
   min-width: 0;
+
+  @media (max-width: 768px) {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.35rem;
+  }
 }
 
 .bible-toolbar__label {
@@ -128,11 +152,22 @@ const browseIcon = computed(() =>
   text-transform: uppercase;
   color: var(--ds-color-on-surface-variant);
   opacity: 0.75;
+
+  @media (max-width: 768px) {
+    display: none;
+  }
 }
 
 .bible-toolbar__location {
   font-weight: 500;
   color: var(--ds-color-on-surface);
+
+  @media (max-width: 768px) {
+    font-size: 0.8rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 
 .bible-toolbar__divider {
@@ -140,6 +175,10 @@ const browseIcon = computed(() =>
   height: 2rem;
   background: var(--ds-color-outline);
   flex-shrink: 0;
+
+  @media (max-width: 768px) {
+    display: none;
+  }
 }
 
 .bible-toolbar__actions {
@@ -148,6 +187,12 @@ const browseIcon = computed(() =>
   gap: 0.75rem;
   flex-shrink: 0;
   min-width: 0;
+
+  @media (max-width: 768px) {
+    width: auto;
+    gap: 0.4rem;
+    flex-shrink: 0;
+  }
 }
 
 .bible-toolbar__search {
@@ -157,8 +202,9 @@ const browseIcon = computed(() =>
   flex-shrink: 1;
   min-width: 0;
 
-  @media (max-width: 600px) {
-    max-width: 100%;
+  @media (max-width: 768px) {
+    max-width: 120px;
+    flex: 0 1 auto;
   }
 }
 
@@ -169,6 +215,11 @@ const browseIcon = computed(() =>
   transform: translateY(-50%);
   color: var(--ds-color-on-surface-variant);
   pointer-events: none;
+
+  @media (max-width: 768px) {
+    left: 0.6rem;
+    font-size: 0.9rem;
+  }
 }
 
 .bible-toolbar__search-input {
@@ -184,6 +235,11 @@ const browseIcon = computed(() =>
     background-color 160ms ease,
     border-color 160ms ease,
     box-shadow 160ms ease;
+
+  @media (max-width: 768px) {
+    padding: 0.4rem 0.6rem 0.4rem 2rem;
+    font-size: 0.8rem;
+  }
 
   &:focus {
     border-color: color-mix(in srgb, var(--ds-color-primary) 55%, transparent);
@@ -205,10 +261,17 @@ const browseIcon = computed(() =>
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
+  flex-shrink: 0;
   transition:
     background-color 180ms ease,
     border-color 180ms ease,
     transform 150ms ease;
+
+  @media (max-width: 768px) {
+    padding: 0.55rem 0.75rem;
+    aspect-ratio: 1;
+    justify-content: center;
+  }
 
   &:hover {
     background: color-mix(in srgb, var(--ds-color-primary) 22%, transparent);
@@ -221,6 +284,12 @@ const browseIcon = computed(() =>
   &--books {
     background: color-mix(in srgb, var(--ds-color-primary) 28%, transparent);
     border-color: color-mix(in srgb, var(--ds-color-primary) 45%, transparent);
+  }
+}
+
+.bible-toolbar__browse-label {
+  @media (max-width: 768px) {
+    display: none;
   }
 }
 

@@ -44,3 +44,11 @@ __screenshots__/
 
 # PWA (vite-plugin-pwa em modo dev)
 /dev-dist
+
+# SonarQube / auditoria
+.scannerwork/
+AUDIT-RECOMMENDATIONS.md
+
+# Lock files (projeto usa npm, não pnpm)
+pnpm-lock.yaml
+pnpm-workspace.yaml

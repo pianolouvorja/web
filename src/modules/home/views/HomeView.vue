@@ -72,7 +72,7 @@ const { formattedTime } = useHomeClock()
 }
 
 .home-view__logo-wrap {
-  margin-bottom: 2.5rem;
+  margin-bottom: 2rem;
   transition: transform 500ms ease;
 
   &:hover {
@@ -81,8 +81,8 @@ const { formattedTime } = useHomeClock()
 }
 
 .home-view__logo {
-  width: 8rem;
-  height: 8rem;
+  width: 7rem;
+  height: 7rem;
   object-fit: contain;
   display: block;
 }
@@ -96,12 +96,59 @@ const { formattedTime } = useHomeClock()
 
 .home-view__clock {
   margin-top: 1rem;
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 700;
-  line-height: 40px;
+  line-height: 36px;
   letter-spacing: -0.02em;
   color: var(--ds-color-primary);
   text-shadow: 0 0 8px color-mix(in srgb, var(--ds-color-primary) 50%, transparent);
   font-variant-numeric: tabular-nums;
+}
+
+/* ── Responsivo: telas pequenas (≤ 768px = breakpoint tablet/mobile) ── */
+@media (max-width: 768px) {
+  .home-view {
+    padding: 1rem 1rem;
+    min-height: calc(100vh - 3.5rem - var(--ds-dock-height));
+  }
+
+  .home-view__content {
+    max-width: 100%;
+  }
+
+  .home-view__logo {
+    width: 4.5rem;
+    height: 4.5rem;
+  }
+
+  .home-view__logo-wrap {
+    margin-bottom: 1.25rem;
+  }
+
+  .home-view__clock {
+    font-size: 22px;
+    line-height: 28px;
+  }
+}
+
+/* ── Responsivo: telas muito pequenas (≤ 360px) ── */
+@media (max-width: 360px) {
+  .home-view {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .home-view__logo {
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+
+  .home-view__logo-wrap {
+    margin-bottom: 0.75rem;
+  }
+
+  .home-view__clock {
+    font-size: 18px;
+    line-height: 24px;
+  }
 }
 </style>

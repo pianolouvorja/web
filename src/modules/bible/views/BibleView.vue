@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import BibleNavPanel from '../components/BibleNavPanel.vue'
@@ -6,6 +7,7 @@ import BibleProjectFab from '../components/BibleProjectFab.vue'
 import BibleToolbar from '../components/BibleToolbar.vue'
 import BibleVerseList from '../components/BibleVerseList.vue'
 import { useBibleReader } from '../composables/useBibleReader'
+import { useBibleNavCollapse } from '../composables/useBibleNavCollapse'
 
 const { t } = useI18n()
 
@@ -67,6 +69,10 @@ function onPreviousVerse() {
 function onNextVerse() {
   void goToAdjacentVerse(1)
 }
+
+// ═══ SCROLL CONTROL: mobile ═══
+const { isMobile, booksCollapsed, chaptersCollapsed } = useBibleNavCollapse()
+const navAllCollapsed = computed(() => isMobile.value && booksCollapsed.value && chaptersCollapsed.value)
 </script>
 
 <template>
@@ -124,7 +130,10 @@ function onNextVerse() {
     <div
       v-else
       class="bible-view__body"
-      :class="{ 'bible-view__body--reader-only': !showNavPanel }"
+      :class="{
+        'bible-view__body--reader-only': !showNavPanel,
+        'bible-view__body--nav-collapsed': navAllCollapsed,
+      }"
     >
       <BibleNavPanel
         v-if="showNavPanel"
@@ -144,6 +153,7 @@ function onNextVerse() {
       />
 
       <BibleVerseList
+        v-if="selectedBookId !== null && selectedChapter !== null"
         class="bible-view__reader"
         :chapter-title="chapterTitle"
         :verses="verseEntries"
@@ -160,6 +170,18 @@ function onNextVerse() {
         @clear-projection="clearSelection"
         @screen-controls-changed="onScreenControlsChanged"
       />
+      <div
+        v-else-if="selectedBookId !== null"
+        class="bible-view__reader bible-view__placeholder"
+      >
+        {{ t('bible.selectChapterPrompt') }}
+      </div>
+      <div
+        v-else
+        class="bible-view__reader bible-view__placeholder"
+      >
+        {{ t('bible.selectBookAndChapter') }}
+      </div>
     </div>
 
     <BibleProjectFab
@@ -177,10 +199,14 @@ function onNextVerse() {
   flex-direction: column;
   gap: 1rem;
   box-sizing: border-box;
-  height: calc(100vh - 5rem - var(--ds-dock-height));
-  max-height: calc(100vh - 5rem - var(--ds-dock-height));
-  padding: 0.75rem var(--ds-spacing-page, 2rem) 1rem;
-  overflow: hidden;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 0.75rem var(--ds-spacing-page, 2rem) 0;
+
+  @media (max-width: 600px) {
+    gap: 0.5rem;
+    padding: 0.5rem 0.5rem 0;
+  }
 }
 
 .bible-view__body {
@@ -189,23 +215,54 @@ function onNextVerse() {
   gap: 1.25rem;
   flex: 1 1 auto;
   min-height: 0;
-  overflow: hidden;
 
   &--reader-only {
     grid-template-columns: minmax(0, 1fr);
   }
 
+  // Mobile (≤1280px): layout em coluna.
+  // Quando nav-panel aberto: tudo flui naturalmente (auto auto), barra do browser rola.
+  // Quando nav colapsado: reader ocupa resto da tela com scroll proprio.
   @media (max-width: 1280px) {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: minmax(0, 0.95fr) minmax(0, 1.05fr);
+    grid-template-rows: auto auto;
+
+    // Nav colapsado: header compacto + reader com altura fixa e scroll interno.
+    // Altura = viewport - header app - toolbar bible - paddings - dock.
+    &--nav-collapsed {
+      grid-template-rows: auto minmax(0, 1fr);
+      height: calc(100vh - 3.5rem - 5rem - var(--ds-dock-height, 4.5rem));
+      overflow: hidden;
+
+      @media (max-width: 600px) {
+        height: calc(100vh - 3.5rem - 4rem - var(--ds-dock-height, 4.5rem));
+      }
+    }
+  }
+
+  @media (max-width: 600px) {
+    gap: 0.5rem;
   }
 }
 
-.bible-view__nav,
+.bible-view__nav {
+  min-height: 0;
+
+  @media (max-width: 1280px) {
+    flex-shrink: 0;
+  }
+
+  // Mobile: o nav-panel colapsavel precisa se expandir sem ser cortado
+  @media (max-width: 768px) {
+    overflow: visible;
+  }
+}
+
 .bible-view__reader {
   min-height: 0;
-  height: 100%;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .bible-view :deep(.bible-toolbar) {
@@ -253,6 +310,16 @@ function onNextVerse() {
     background: transparent;
     border: 1px solid var(--ds-color-outline);
   }
+}
+
+.bible-view__placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--ds-color-on-surface-variant, rgba(255, 255, 255, 0.6));
+  font-size: 0.95rem;
+  padding: 2rem;
 }
 </style>
 
