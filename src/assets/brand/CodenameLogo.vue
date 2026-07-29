@@ -16,8 +16,8 @@ defineProps<{
 <template>
   <svg
     class="codename-logo"
-    width="168"
-    height="25"
+    width="140"
+    height="21"
     viewBox="0 0 584 144"
     xmlns="http://www.w3.org/2000/svg"
     role="img"
@@ -71,6 +71,7 @@ defineProps<{
 .codename-logo {
   display: block;
   flex-shrink: 0;
+  max-width: 100%;
 }
 
 /* Cor dinamica: fundo claro → preto, fundo escuro → branco */

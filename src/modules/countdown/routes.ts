@@ -9,6 +9,7 @@ export const countdownRoutes: RouteRecordRaw[] = [
     component: CountdownView,
     meta: {
       navKey: 'utilities',
+      desktopOnly: true,
     },
   },
 ]

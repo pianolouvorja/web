@@ -142,9 +142,9 @@ function onKeydown(event: KeyboardEvent) {
   }
 
   .home-location-field__input {
-    font-size: 16px;
+    font-size: 13px;
     font-weight: 500;
-    line-height: 24px;
+    line-height: 20px;
     color: var(--ds-color-on-surface);
   }
 }
@@ -162,9 +162,9 @@ function onKeydown(event: KeyboardEvent) {
   }
 
   .home-location-field__input {
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 500;
-    line-height: 20px;
+    line-height: 18px;
     color: var(--ds-color-on-surface-variant);
   }
 }
@@ -261,5 +261,67 @@ function onKeydown(event: KeyboardEvent) {
 .home-location-field--filled:focus-within .home-location-field__edit {
   opacity: 1;
   pointer-events: auto;
+}
+
+/* ── Responsivo: telas pequenas (≤ 768px) ── */
+@media (max-width: 768px) {
+  .home-location-field--lg {
+    .home-location-field__label,
+    .home-location-field__text {
+      font-size: 22px;
+      line-height: 30px;
+    }
+
+    .home-location-field__input {
+      font-size: 12px;
+    }
+  }
+
+  .home-location-field--md {
+    .home-location-field__label,
+    .home-location-field__text {
+      font-size: 17px;
+      line-height: 24px;
+    }
+
+    .home-location-field__input {
+      font-size: 11px;
+    }
+  }
+
+  .home-location-field {
+    gap: 0.35rem;
+  }
+}
+
+/* ── Responsivo: telas muito pequenas (≤ 360px) ── */
+@media (max-width: 360px) {
+  .home-location-field--lg {
+    .home-location-field__label,
+    .home-location-field__text {
+      font-size: 18px;
+      line-height: 24px;
+    }
+
+    .home-location-field__input {
+      font-size: 11px;
+    }
+  }
+
+  .home-location-field--md {
+    .home-location-field__label,
+    .home-location-field__text {
+      font-size: 14px;
+      line-height: 20px;
+    }
+
+    .home-location-field__input {
+      font-size: 10px;
+    }
+  }
+
+  .home-location-field {
+    gap: 0.25rem;
+  }
 }
 </style>

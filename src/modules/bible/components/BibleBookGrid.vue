@@ -93,10 +93,7 @@ const { t } = useI18n()
   display: flex;
   flex-direction: column;
   min-width: 0;
-  min-height: 0;
-  flex: 2;
-  height: 100%;
-  overflow: hidden;
+  flex: 1 1 60%;
   container-type: inline-size;
   container-name: bible-books;
 }
@@ -175,8 +172,21 @@ const { t } = useI18n()
   font-weight: 600;
   padding: 0.35rem 0.85rem;
   cursor: pointer;
+  transition:
+    background-color 200ms ease,
+    color 200ms ease;
 
-  &--active {
+  // AT ativo = âmbar quente (terroso)
+  &--active:first-child,
+  &--active:nth-child(1) {
+    background: color-mix(in srgb, var(--ds-color-brand-yellow) 70%, var(--ds-color-primary));
+    color: #fffbeb;
+    box-shadow: 0 1px 2px color-mix(in srgb, var(--ds-color-brand-yellow) 30%, transparent);
+  }
+
+  // NT ativo = azul frio (espiritual)
+  &--active:last-child,
+  &--active:nth-child(2) {
     background: var(--ds-color-primary);
     color: var(--ds-color-on-primary);
     box-shadow: 0 1px 2px color-mix(in srgb, var(--ds-color-primary) 25%, transparent);
@@ -187,10 +197,7 @@ const { t } = useI18n()
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.5rem;
-  overflow-y: auto;
   padding-right: 0.25rem;
-  flex: 1;
-  min-height: 0;
   align-content: start;
 
   &::-webkit-scrollbar {
@@ -243,37 +250,87 @@ const { t } = useI18n()
     box-shadow: 0 10px 20px rgb(0 0 0 / 0.3);
   }
 
+  // ═══════════════════════════════════════════════════
+  //  ANTIGO TESTAMENTO
+  //  Base: azul (Lei), verde (História), marrom-âmbar (Profetas)
+  // ═══════════════════════════════════════════════════
+
+  // Lei — azul original #1e3a5f
   &--law {
     background: #1e3a5f;
     color: #bfdbfe;
   }
 
+  // História — verde original #1a3d28
   &--history {
     background: #1a3d28;
     color: #86efac;
   }
 
-  &--prophets {
+  // Poesia — variação âmbar-clara do profeta original (#3d2e0a)
+  &--poetry {
+    background: #4a3815;
+    color: #fef3c7;
+  }
+
+  // Profetas Maiores — âmbar original #3d2e0a
+  &--major-prophet {
     background: #3d2e0a;
     color: #fef08a;
   }
 
+  // Profetas Menores — variação âmbar-escura
+  &--minor-prophet {
+    background: #2e2108;
+    color: #fde68a;
+  }
+
+  // ═══════════════════════════════════════════════════
+  //  NOVO TESTAMENTO
+  //  Base: roxo (Evangelhos) com variações na família púrpura/violeta
+  // ═══════════════════════════════════════════════════
+
+  // Evangelhos — roxo original #2d1a3d
   &--gospels {
     background: #2d1a3d;
     color: #e9d5ff;
   }
 
-  &--letters,
+  // Atos — variação roxo-azulada (transição Evangelhos → Cartas)
+  &--acts {
+    background: #1e2a52;
+    color: #c7d2fe;
+  }
+
+  // Cartas Paulinas — variação violeta
+  &--pauline {
+    background: #3b1f50;
+    color: #ddd6fe;
+  }
+
+  // Cartas Gerais — variação índigo
+  &--general {
+    background: #2a1b4a;
+    color: #d0bcfe;
+  }
+
+  // Apocalipse — variação púrpura-profundo (escatológico)
+  &--apocalyptic {
+    background: #3d0f3d;
+    color: #f3e8ff;
+  }
+
   &--neutral {
     background: rgba(255, 255, 255, 0.07);
     color: var(--ds-color-on-surface-variant);
   }
 
   &--active {
-    background: rgba(202, 138, 4, 0.50);
-    border-color: #eab308;
+    background: color-mix(in srgb, var(--ds-color-brand-yellow) 50%, transparent);
+    border-color: var(--ds-color-brand-yellow);
     color: #fffbeb;
     font-weight: 700;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--ds-color-brand-yellow) 35%, transparent);
   }
 }
 
@@ -325,10 +382,22 @@ const { t } = useI18n()
   border-color: #4ade80;
 }
 
-[data-mode='light'] .bible-books__tile--prophets {
+[data-mode='light'] .bible-books__tile--poetry {
+  background: #fef3c7;
+  color: #78350f;
+  border-color: #d97706;
+}
+
+[data-mode='light'] .bible-books__tile--major-prophet {
   background: #fecaca;
   color: #991b1b;
   border-color: #f87171;
+}
+
+[data-mode='light'] .bible-books__tile--minor-prophet {
+  background: #fed7aa;
+  color: #9a3412;
+  border-color: #fb923c;
 }
 
 [data-mode='light'] .bible-books__tile--gospels {
@@ -337,7 +406,30 @@ const { t } = useI18n()
   border-color: #c084fc;
 }
 
-[data-mode='light'] .bible-books__tile--letters,
+[data-mode='light'] .bible-books__tile--acts {
+  background: #c7d2fe;
+  color: #3730a3;
+  border-color: #818cf8;
+}
+
+[data-mode='light'] .bible-books__tile--pauline {
+  background: #ddd6fe;
+  color: #5b21b6;
+  border-color: #a78bfa;
+}
+
+[data-mode='light'] .bible-books__tile--general {
+  background: #e9d5ff;
+  color: #6b21a8;
+  border-color: #c084fc;
+}
+
+[data-mode='light'] .bible-books__tile--apocalyptic {
+  background: #f3e8ff;
+  color: #86198f;
+  border-color: #d946ef;
+}
+
 [data-mode='light'] .bible-books__tile--neutral {
   background: #f1f3f7;
   color: #475569;

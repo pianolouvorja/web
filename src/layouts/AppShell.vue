@@ -78,7 +78,7 @@ function viewKey(viewRoute: typeof route) {
         </span>
       </div>
       <div class="app-shell__header-end">
-        <div v-if="!smAndDown" class="app-shell__codename-block">
+        <div class="app-shell__codename-block">
           <CodenameLogo
             class="app-shell__codename"
             width="168"
@@ -184,6 +184,12 @@ function viewKey(viewRoute: typeof route) {
   height: 1.5rem;
   width: auto;
   flex-shrink: 0;
+  opacity: 0.4;
+}
+
+/* Tema claro: codename com 100% de opacidade — seletor global para vencer especificidade scoped */
+:global(html[data-mode='light'] .app-shell__codename) {
+  opacity: 1 !important;
 }
 
 .app-shell__version {

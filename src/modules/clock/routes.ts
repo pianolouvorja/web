@@ -11,6 +11,7 @@ export const utilitiesRoutes: RouteRecordRaw[] = [
     component: UtilitiesView,
     meta: {
       navKey: 'utilities',
+      desktopOnly: true,
     },
   },
   {
@@ -19,6 +20,7 @@ export const utilitiesRoutes: RouteRecordRaw[] = [
     component: TemporizadorView,
     meta: {
       navKey: 'utilities',
+      desktopOnly: true,
     },
   },
   {
@@ -27,6 +29,7 @@ export const utilitiesRoutes: RouteRecordRaw[] = [
     component: ClockView,
     meta: {
       navKey: 'utilities',
+      desktopOnly: true,
     },
   },
 ]

@@ -3,7 +3,7 @@ import { useI18n } from 'vue-i18n'
 
 defineProps<{
   chapters: number[]
-  selectedChapter: number
+  selectedChapter: number | null
   searchQuery: string
 }>()
 
@@ -56,11 +56,19 @@ const { t } = useI18n()
 .bible-chapters {
   display: flex;
   flex-direction: column;
-  width: 12rem;
-  flex-shrink: 0;
-  height: 100%;
-  min-height: 0;
-  overflow: hidden;
+  flex: 0 0 14rem;
+  min-width: 0;
+  container-type: inline-size;
+  container-name: bible-chapters;
+
+  @media (max-width: 960px) {
+    flex: 1 1 auto;
+  }
+
+  @media (max-width: 600px) {
+    width: 100%;
+    flex-shrink: 1;
+  }
 }
 
 .bible-chapters__search {
@@ -116,11 +124,18 @@ const { t } = useI18n()
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.5rem;
-  overflow-y: auto;
   padding-right: 0.15rem;
-  flex: 1;
-  min-height: 0;
   align-content: start;
+
+  @container bible-chapters (min-width: 12rem) {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.4rem;
+  }
+
+  @media (max-width: 600px) {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.4rem;
+  }
 
   &::-webkit-scrollbar {
     width: 6px;
@@ -146,6 +161,12 @@ const { t } = useI18n()
     border-color 160ms ease,
     box-shadow 160ms ease,
     transform 150ms ease;
+
+  @media (max-width: 600px) {
+    font-size: 0.95rem;
+    min-height: 44px;
+    border-radius: var(--ds-radius-md, 0.5rem 0 0.5rem 0);
+  }
 
   &:hover {
     background: color-mix(in srgb, var(--ds-color-primary) 45%, var(--ds-color-surface-container-high));

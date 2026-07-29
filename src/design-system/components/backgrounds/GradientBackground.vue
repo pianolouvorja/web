@@ -34,7 +34,9 @@ withDefaults(
   width: 100%;
   background-color: var(--ds-color-background);
   color: var(--ds-color-on-surface);
-  overflow: hidden;
+  /* clip-path substitui overflow: hidden — recorta os glows
+     sem criar um scroll container que quebra position: sticky */
+  clip-path: inset(0);
 }
 
 .ds-gradient-bg[data-intensity='medium'] {
