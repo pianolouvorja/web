@@ -3,7 +3,7 @@ import { useI18n } from 'vue-i18n'
 
 defineProps<{
   chapters: number[]
-  selectedChapter: number
+  selectedChapter: number | null
   searchQuery: string
 }>()
 

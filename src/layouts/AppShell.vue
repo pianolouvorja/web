@@ -2,7 +2,6 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
-import { useDisplay } from 'vuetify'
 
 import { usePageTransition } from '@design-system/composables'
 import { DockFooter, GradientBackground } from '@design-system/index'
@@ -17,7 +16,6 @@ const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
 const { transitionName } = usePageTransition()
-const { smAndDown } = useDisplay()
 
 /** Login Google — reativar quando o fluxo de autenticação existir */
 const showAccountButton = false
@@ -63,8 +61,8 @@ function viewKey(viewRoute: typeof route) {
           class="app-shell__logo"
           :src="logoUrl"
           :alt="t('app.name')"
-          width="36"
-          height="36"
+          width="32"
+          height="32"
         >
         <span class="app-shell__brand">
           <span class="app-shell__brand-louvor">{{ t('app.nameLouvor') }}</span>
@@ -72,11 +70,11 @@ function viewKey(viewRoute: typeof route) {
         </span>
       </div>
       <div class="app-shell__header-end">
-        <div v-if="!smAndDown" class="app-shell__codename-block">
+        <div class="app-shell__codename-block">
           <CodenameLogo
             class="app-shell__codename"
-            width="168"
-            height="25"
+            width="140"
+            height="21"
           />
           <span class="app-shell__version" aria-hidden="true">{{ APP_VERSION }}</span>
         </div>
@@ -124,8 +122,10 @@ function viewKey(viewRoute: typeof route) {
   height: 5rem;
   padding: 0 var(--ds-spacing-page);
   border-bottom: 1px solid var(--ds-color-outline);
-  position: relative;
+  position: sticky;
+  top: 0;
   z-index: 40;
+  background: var(--ds-color-surface);
 }
 
 .app-shell__brand-group {
@@ -135,8 +135,8 @@ function viewKey(viewRoute: typeof route) {
 }
 
 .app-shell__logo {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   object-fit: contain;
   display: block;
   flex-shrink: 0;
@@ -146,7 +146,7 @@ function viewKey(viewRoute: typeof route) {
   display: inline-flex;
   align-items: baseline;
   gap: 0.35em;
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 600;
   letter-spacing: -0.01em;
 }
@@ -168,16 +168,22 @@ function viewKey(viewRoute: typeof route) {
 
 .app-shell__codename-block {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.2rem;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.3rem;
 }
 
 .app-shell__codename {
   display: block;
-  height: 1.5rem;
+  height: 0.8rem;
   width: auto;
   flex-shrink: 0;
+  opacity: 0.4;
+}
+
+/* Tema claro: codename com 100% de opacidade */
+:global([data-mode='light']) .app-shell__codename {
+  opacity: 1;
 }
 
 .app-shell__version {
@@ -216,12 +222,14 @@ function viewKey(viewRoute: typeof route) {
 .app-shell__main {
   position: relative;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
   min-height: calc(100vh - 5rem - var(--ds-dock-height));
   padding-bottom: var(--ds-dock-height);
 }
 
-/* ── Responsivo: telas pequenas (≤ 600px = breakpoint sm do Vuetify) ── */
-@media (max-width: 600px) {
+/* ── Responsivo: telas pequenas (≤ 768px = breakpoint tablet/mobile) ── */
+@media (max-width: 768px) {
   .app-shell__header {
     height: 3.5rem;
     padding: 0 var(--ds-spacing-2, 0.5rem);
@@ -232,12 +240,12 @@ function viewKey(viewRoute: typeof route) {
   }
 
   .app-shell__logo {
-    width: 28px;
-    height: 28px;
+    width: 26px;
+    height: 26px;
   }
 
   .app-shell__brand {
-    font-size: 18px;
+    font-size: 17px;
     gap: 0.25em;
   }
 
@@ -247,6 +255,15 @@ function viewKey(viewRoute: typeof route) {
 
   .app-shell__main {
     min-height: calc(100vh - 3.5rem - var(--ds-dock-height));
+  }
+
+  .app-shell__codename {
+    max-width: 80px;
+  }
+
+  .app-shell__version {
+    font-size: 9px;
+    opacity: 0.6;
   }
 }
 </style>

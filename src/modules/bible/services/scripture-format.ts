@@ -27,7 +27,7 @@ export function formatVerseIntervals(verses: number[]): string {
 /** Monta a referência bíblica exibida/projetada. */
 export function formatScripturalReference(selection: {
   bookName: string
-  chapter: number
+  chapter: number | null
   verses: number[]
   versionAbbreviation?: string
 }): string {

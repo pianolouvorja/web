@@ -15,7 +15,7 @@ const props = defineProps<{
   testament: BibleTestament
   bookSearchQuery: string
   chapters: number[]
-  selectedChapter: number
+  selectedChapter: number | null
   chapterSearchQuery: string
 }>()
 
@@ -31,6 +31,7 @@ const { t } = useI18n()
 
 const {
   isMobile,
+  activePanel,
   booksCollapsed,
   chaptersCollapsed,
   toggleBooks,
@@ -38,6 +39,8 @@ const {
   onBookSelected,
   onChapterSelected,
 } = useBibleNavCollapse()
+
+const allCollapsed = computed(() => booksCollapsed.value && chaptersCollapsed.value)
 
 const selectedBookName = computed(() => {
   if (!props.selectedBookId) return null
@@ -95,6 +98,7 @@ function handleSelectChapter(chapter: number) {
     <div
       v-else
       class="bible-nav-panel__mobile"
+      :class="{ 'bible-nav-panel__mobile--all-collapsed': allCollapsed }"
     >
       <!-- Header colapsavel: Livros -->
       <button
@@ -148,7 +152,7 @@ function handleSelectChapter(chapter: number) {
           aria-hidden="true"
         />
         <span class="bible-nav-panel__collapse-label">
-          {{ chaptersCollapsed ? `${t('bible.chapter')} ${selectedChapter}` : t('bible.chapters') }}
+          {{ chaptersCollapsed ? (selectedChapter != null ? `${t('bible.chapter')} ${selectedChapter}` : t('bible.chapters')) : t('bible.chapters') }}
         </span>
         <i
           class="ti bible-nav-panel__collapse-chevron"
@@ -200,9 +204,12 @@ function handleSelectChapter(chapter: number) {
 }
 
 // ═══ MOBILE ═══
+// User quer: SEM scrollbar interna no nav-panel.
+// O conteudo cresce naturalmente e a pagina rola com a barra do browser.
 .bible-nav-panel__mobile {
   display: flex;
   flex-direction: column;
+  // Sem max-height, sem overflow - deixa o conteudo fluir naturalmente
 }
 
 .bible-nav-panel__collapse-header {
@@ -238,6 +245,17 @@ function handleSelectChapter(chapter: number) {
   &--active {
     border-bottom-color: color-mix(in srgb, var(--ds-color-primary) 35%, transparent);
   }
+
+  // Compactar quando colapsado
+  .bible-nav-panel__mobile & {
+    padding: 0.55rem 0.75rem;
+    font-size: 0.85rem;
+    gap: 0.45rem;
+
+    .ti {
+      font-size: 1rem;
+    }
+  }
 }
 
 .bible-nav-panel__collapse-label {
@@ -253,16 +271,18 @@ function handleSelectChapter(chapter: number) {
 }
 
 .bible-nav-panel__mobile-content {
-  padding: 0.75rem;
+  padding: 0.5rem;
+  // SEM overflow-y - user quer apenas barra de rolagem do browser
+  flex: 0 0 auto;
 
   :deep(.bible-books) {
     width: 100%;
-    flex: 1 1 auto;
+    container-type: normal;
   }
 
   :deep(.bible-chapters) {
     width: 100%;
-    flex: 1 1 auto;
+    container-type: normal;
   }
 }
 

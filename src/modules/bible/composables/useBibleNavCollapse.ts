@@ -1,4 +1,4 @@
-import { ref, computed, onMounted, onUnmounted, type ComputedRef } from 'vue'
+import { ref, computed, type ComputedRef } from 'vue'
 
 export type NavPanel = 'books' | 'chapters' | null
 
@@ -18,32 +18,34 @@ export interface UseBibleNavCollapse {
  *
  * Desktop (>768px): sem colapso, tudo visivel.
  * Mobile (<=768px): um painel aberto por vez, auto-colapsa ao selecionar.
+ *
+ * Estado module-level (singleton) para que BibleNavPanel e BibleView
+ * compartilhem o mesmo estado reativo.
  */
-export function useBibleNavCollapse(): UseBibleNavCollapse {
-  const MOBILE_BREAKPOINT = 768
-  const mediaQuery = typeof window !== 'undefined'
-    ? window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`)
-    : null
 
-  const isMobileRef = ref(mediaQuery?.matches ?? false)
-  const activePanelRef = ref<NavPanel>('books')
+// ═══ ESTADO SINGLETON (module-level) ═══
+const MOBILE_BREAKPOINT = 768
+const mediaQuery = typeof window !== 'undefined'
+  ? window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`)
+  : null
 
-  function onMediaChange(e: MediaQueryListEvent) {
-    isMobileRef.value = e.matches
-    if (!e.matches) {
-      activePanelRef.value = null
-    } else if (activePanelRef.value === null) {
-      activePanelRef.value = 'books'
-    }
+const isMobileRef = ref(mediaQuery?.matches ?? false)
+const activePanelRef = ref<NavPanel>('books')
+
+function onMediaChange(e: MediaQueryListEvent) {
+  isMobileRef.value = e.matches
+  if (!e.matches) {
+    activePanelRef.value = null
+  } else if (activePanelRef.value === null) {
+    activePanelRef.value = 'books'
   }
+}
 
-  onMounted(() => {
-    mediaQuery?.addEventListener('change', onMediaChange)
-  })
+if (typeof window !== 'undefined') {
+  mediaQuery?.addEventListener('change', onMediaChange)
+}
 
-  onUnmounted(() => {
-    mediaQuery?.removeEventListener('change', onMediaChange)
-  })
+export function useBibleNavCollapse(): UseBibleNavCollapse {
 
   const isMobile = computed(() => isMobileRef.value)
   const activePanel = computed(() =>

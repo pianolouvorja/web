@@ -43,7 +43,7 @@ export interface BibleSelection {
   bookId: number | null
   versionAbbreviation: string
   bookName: string
-  chapter: number
+  chapter: number | null
   verses: number[]
   scripturalReference: string
   text: string
