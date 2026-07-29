@@ -9,6 +9,7 @@ export const randomRoutes: RouteRecordRaw[] = [
     component: RandomView,
     meta: {
       navKey: 'utilities',
+      desktopOnly: true,
     },
   },
 ]

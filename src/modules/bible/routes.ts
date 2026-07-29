@@ -9,6 +9,7 @@ export const bibleRoutes: RouteRecordRaw[] = [
     component: BibleView,
     meta: {
       navKey: 'bible',
+      mobileOnly: false,
     },
   },
 ]
