@@ -6,23 +6,17 @@
  * - [data-mode="light"] no <html> → color: #000000 (fill preto no fundo claro)
  * - [data-mode="dark"]  no <html> → color: #ffffff (fill branco no fundo escuro)
  * - Cores internas (ciano/amarelo/azul) preservadas do design original
+ * - Tamanho controlado via CSS (width/height), nao por atributos SVG
  */
-defineProps<{
-  width?: number | string
-  height?: number | string
-}>()
 </script>
 
 <template>
   <svg
     class="codename-logo"
-    width="140"
-    height="21"
     viewBox="0 0 584 144"
     xmlns="http://www.w3.org/2000/svg"
     role="img"
     aria-label="codename PIANO"
-    :style="{ width: width ?? undefined, height: height ?? undefined }"
   >
     <!-- GRUPO CODENOME: letras vazadas (fill dinamico via currentColor, fill-rule evenodd) -->
     <g id="codenome" fill="currentColor" fill-rule="evenodd" stroke="none">
@@ -72,6 +66,7 @@ defineProps<{
   display: block;
   flex-shrink: 0;
   max-width: 100%;
+  color: var(--ds-color-on-surface);
 }
 
 /* Cor dinamica: fundo claro → preto, fundo escuro → branco */
