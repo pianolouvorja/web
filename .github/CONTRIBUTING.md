@@ -58,6 +58,64 @@ src/
 └── router/           # Configuração de rotas
 ```
 
+## Fluxo de release
+
+O projeto usa fluxo git-flow simplificado com homologação:
+
+```
+feature/x ──> PR ──> staging (homologação/teste)
+                        │
+                        │  PR de release (squash merge)
+                        ▼
+                      main (produção)
+```
+
+### Regras
+
+1. **Todo PR targeta `staging`** — nunca abra PR direto para `main`
+2. **`staging` é homologação** — teste tudo antes de promover
+3. **Promoção para `main`** via PR com título `release: vX.Y.Z`
+4. **Tags** seguem versionamento semântico (`v1.16.0`, `v1.16.1`, etc.)
+5. **Squash merge** ao promover staging → main (história linear)
+
+### Versionamento
+
+Use os scripts NPM para bumpar a versão:
+
+```bash
+pnpm run version:patch   # 1.15.2 → 1.15.3 (bugfix)
+pnpm run version:minor   # 1.15.2 → 1.16.0 (feature)
+pnpm run version:major   # 1.15.2 → 2.0.0   (breaking change)
+```
+
+### CI/CD automático
+
+O pipeline `.github/workflows/ci.yml` executa automaticamente:
+
+- **Em todo PR/push para staging ou main:**
+  - Lint (Biome)
+  - Type Check (vue-tsc)
+  - Build (Vite + PWA)
+  - Quality Gate (bloqueia merge se algo falhar)
+
+- **Push em `staging`:**
+  - Deploy automático para `staging.pianolouvorja.com.br` (rsync via SSH)
+
+- **Push em `main`:**
+  - Deploy automático para `app.pianolouvorja.com.br` (rsync via SSH)
+
+Branch protection exige que todos os status checks passem antes do merge.
+
+### Responsabilidades
+
+| Papel | Responsável |
+|-------|-------------|
+| Backend/Código | Rafael Zendron |
+| Deploy/Servidor/Secrets | Ezequias Fonseira |
+| Design UX | ElomarXA |
+| Electron | Elias Vieira |
+| Gerência TI | Eric |
+
 ## Dúvidas?
 
 Abra uma issue com a label `question` ou entre em contato com a equipe.
