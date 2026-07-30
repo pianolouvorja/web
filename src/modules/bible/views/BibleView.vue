@@ -386,6 +386,14 @@ const navAllCollapsed = computed(() => isMobile.value && booksCollapsed.value &&
 </style>
 
 <style lang="scss">
+// Telas ≤430px: travar o body/viewport para que apenas o scroll interno do reader funcione.
+@media (max-width: 430px) {
+  body:has(.bible-view) {
+    overflow-y: hidden !important;
+    overscroll-behavior: none;
+  }
+}
+
 [data-mode='light'] .bible-view .ds-glass-card {
   background: color-mix(in srgb, #ffffff 82%, transparent);
   border-color: #e8ecf3;
