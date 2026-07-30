@@ -112,9 +112,6 @@ Branch protection exige que todos os status checks passem antes do merge.
 |-------|-------------|
 | Backend/Código | Rafael Zendron |
 | Deploy/Servidor/Secrets | Ezequias Fonseira |
-| Design UX | ElomarXA |
-| Electron | Elias Vieira |
-| Gerência TI | Eric |
 
 ## Dúvidas?
 
