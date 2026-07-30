@@ -284,6 +284,17 @@ function handleSelectChapter(chapter: number) {
     width: 100%;
     container-type: normal;
   }
+
+  // ≤430px: scroll interno nas listas de livro/capítulo.
+  // Cada painel colapsável tem sua própria rolagem em vez de empurrar a página.
+  @media (max-width: 430px) {
+    max-height: 35vh;
+    overflow-y: auto;
+    flex: 0 1 auto;
+    min-height: 0;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 .visually-hidden {

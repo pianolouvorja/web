@@ -28,6 +28,8 @@ export const USER_PREFERENCE_KEYS = {
   mediaLazyLoad: 'media_lazy_load',
   mediaFadeAudio: 'media_fade_audio',
   bibleSelectedVersion: 'bible.selectedVersionId',
+  bibleSelectedBook: 'bible.selectedBookId',
+  bibleSelectedChapter: 'bible.selectedChapter',
   clockConfig: 'clock.config',
   timerConfig: 'timer.config',
   countdownConfig: 'countdown.config',
