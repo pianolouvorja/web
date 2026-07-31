@@ -69,7 +69,12 @@ function goBack() {
   width: 100%;
   max-width: 80rem;
   margin: 0 auto;
-  padding: 1.5rem var(--ds-spacing-page) 2rem;
+  padding: 1.5rem var(--ds-spacing-page) 6rem;
+  overflow-x: hidden;
+
+  @media (min-width: 960px) {
+    padding: 1.5rem var(--ds-spacing-page) 2rem;
+  }
 
   &--appearance {
     max-width: 90rem;

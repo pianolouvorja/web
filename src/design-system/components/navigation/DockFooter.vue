@@ -50,10 +50,10 @@ function onSelect(key: string) {
   display: flex;
   width: 100%;
   height: var(--ds-dock-height, 72px);
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
   gap: clamp(0.25rem, calc(100vw / 30), 3rem);
-  padding: 0 var(--ds-spacing-page, 32px) 0.5rem;
+  padding: 0 var(--ds-spacing-page, 32px);
   border-top: 1px solid var(--ds-color-outline);
   background: var(--ds-color-surface);
   transition: background-color var(--ds-motion-duration, 280ms) ease;
@@ -61,9 +61,12 @@ function onSelect(key: string) {
   @media (max-width: 600px) {
     gap: 0;
     justify-content: space-around;
-    padding: 0 0.25rem 0.25rem;
+    padding: 0 0.25rem env(safe-area-inset-bottom, 0px);
     height: calc(var(--ds-dock-height, 72px) - env(safe-area-inset-bottom, 0px));
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  @media (max-width: 360px) {
+    padding: 0 0.1rem env(safe-area-inset-bottom, 0px);
   }
 }
 
@@ -86,9 +89,11 @@ function onSelect(key: string) {
     transform 300ms cubic-bezier(0.22, 1, 0.36, 1),
     color 200ms ease;
 
-  &:hover {
-    color: var(--ds-color-on-surface);
-    transform: scale(1.25) translateY(-4px);
+  @media (hover: hover) {
+    &:hover {
+      color: var(--ds-color-on-surface);
+      transform: scale(1.25) translateY(-4px);
+    }
   }
 
   &--active {
@@ -104,7 +109,7 @@ function onSelect(key: string) {
 }
 
 .ds-dock__icon {
-  font-size: 24px;
+  font-size: 28px;
   line-height: 1;
 }
 
@@ -116,6 +121,7 @@ function onSelect(key: string) {
   letter-spacing: 0.02em;
   text-align: center;
   white-space: normal;
+  text-transform: capitalize;
 
   @media (max-width: 600px) {
     font-size: 9px;
@@ -123,6 +129,11 @@ function onSelect(key: string) {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  @media (max-width: 360px) {
+    font-size: 8px;
+    max-width: 3rem;
   }
 }
 
