@@ -1,19 +1,11 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import AccentColorCard from '../components/AccentColorCard.vue'
 import InteractionModeCard from '../components/InteractionModeCard.vue'
-import LyricCustomizationCard from '../components/LyricCustomizationCard.vue'
 import ThemeOrbitalSwitcher from '../components/ThemeOrbitalSwitcher.vue'
-import { useLyricCustomization } from '../composables/useLyricCustomization'
 
 const { t } = useI18n()
-const { hydrate } = useLyricCustomization()
-
-onMounted(() => {
-  hydrate()
-})
 </script>
 
 <template>
@@ -41,9 +33,7 @@ onMounted(() => {
       </aside>
     </div>
 
-    <section class="appearance-experience__lyrics">
-      <LyricCustomizationCard />
-    </section>
+
   </div>
 </template>
 
@@ -55,6 +45,8 @@ onMounted(() => {
   align-items: center;
   width: 100%;
   padding-bottom: 1rem;
+  overflow-x: hidden;
+  max-width: 100%;
 }
 
 .appearance-experience__hero {

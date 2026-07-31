@@ -10,7 +10,6 @@ export const albumsRoutes: RouteRecordRaw[] = [
     component: AlbumsView,
     meta: {
       navKey: 'albums',
-      desktopOnly: true,
     },
   },
   {
@@ -19,7 +18,6 @@ export const albumsRoutes: RouteRecordRaw[] = [
     component: AlbumCollectionView,
     meta: {
       navKey: 'albums',
-      desktopOnly: true,
     },
   },
 ]

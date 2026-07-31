@@ -141,6 +141,11 @@ function preferDark() {
   width: 16rem;
   height: 16rem;
 
+  @media (max-width: 360px) {
+    width: 12rem;
+    height: 12rem;
+  }
+
   @media (min-width: 960px) {
     width: 20rem;
     height: 20rem;
@@ -173,12 +178,20 @@ function preferDark() {
   &--inner {
     inset: -1.25rem;
     animation: orbital-spin 20s linear infinite;
+
+    @media (max-width: 360px) {
+      inset: -0.75rem;
+    }
   }
 
   &--outer {
     inset: -2.5rem;
     opacity: 0.5;
     animation: orbital-spin 30s linear infinite reverse;
+
+    @media (max-width: 360px) {
+      inset: -1.5rem;
+    }
   }
 }
 
@@ -199,6 +212,11 @@ function preferDark() {
     0 25px 50px -12px rgb(0 0 0 / 0.45);
   transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 
+  @media (max-width: 360px) {
+    width: 9rem;
+    height: 9rem;
+  }
+
   @media (min-width: 960px) {
     width: 14rem;
     height: 14rem;
@@ -213,6 +231,10 @@ function preferDark() {
   transition:
     color var(--ds-motion-duration, 700ms) ease,
     transform var(--ds-motion-duration, 700ms) ease;
+
+  @media (max-width: 360px) {
+    font-size: 3.5rem;
+  }
 
   @media (min-width: 960px) {
     font-size: 5.5rem;

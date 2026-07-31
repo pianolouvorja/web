@@ -30,7 +30,6 @@ const activeKey = computed(() => {
 /** Na liturgia o FAB de mídia fica na própria view (padrão Bíblia). */
 const showMediaChrome = computed(() => activeKey.value !== 'liturgy')
 
-const showHeaderLogo = computed(() => activeKey.value !== 'home')
 
 /** Items ocultos no dock em mobile (issue #3 — Ezequias 24/07/2026).
  * Settings permanece por questões cosméticas. */
@@ -39,12 +38,22 @@ const DOCK_HIDDEN_ON_MOBILE = new Set<string>(['liturgy', 'utilities'])
 const navItems = computed<DockNavItem[]>(() =>
   mainNavRoutes
     .filter((item) => !smAndDown.value || !DOCK_HIDDEN_ON_MOBILE.has(item.key))
-    .map((item) => ({
-      key: item.key,
-      icon: item.icon,
-      label: t(item.labelKey),
-      to: item.to,
-    })),
+    .map((item) => {
+      let label = t(item.labelKey)
+      if (smAndDown.value) {
+        if (item.key === 'settings') {
+          label = 'config'
+        } else if (item.key === 'albums') {
+          label = 'midia'
+        }
+      }
+      return {
+        key: item.key,
+        icon: item.icon,
+        label,
+        to: item.to,
+      }
+    }),
 )
 
 function onNavigate(key: string) {
@@ -65,35 +74,23 @@ function viewKey(viewRoute: typeof route) {
     <header class="app-shell__header">
       <div class="app-shell__brand-group" :aria-label="t('app.name')">
         <img
-          v-if="showHeaderLogo"
+          v-if="activeKey !== 'home'"
           class="app-shell__logo"
           :src="logoUrl"
           :alt="t('app.name')"
-          width="36"
-          height="36"
+          width="52"
+          height="52"
         >
         <span class="app-shell__brand">
           <span class="app-shell__brand-louvor">{{ t('app.nameLouvor') }}</span>
           <span class="app-shell__brand-ja">{{ t('app.nameJa') }}</span>
         </span>
       </div>
-      <div class="app-shell__header-end">
-        <div class="app-shell__codename-block">
-          <CodenameLogo
-            class="app-shell__codename"
-            width="168"
-            height="25"
-          />
-          <span class="app-shell__version" aria-hidden="true">{{ APP_VERSION }}</span>
-        </div>
-        <button
-          v-if="showAccountButton"
-          type="button"
-          class="app-shell__account"
-          :aria-label="t('app.name')"
-        >
-          <i class="ti ti-user-circle" aria-hidden="true" />
-        </button>
+      <div class="app-shell__codename-block">
+        <CodenameLogo
+          class="app-shell__codename"
+        />
+        <span class="app-shell__version" aria-hidden="true">{{ APP_VERSION }}</span>
       </div>
     </header>
 
@@ -127,22 +124,29 @@ function viewKey(viewRoute: typeof route) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 5rem;
+  gap: 1.5rem;
+  height: 5.5rem;
   padding: 0 var(--ds-spacing-page);
   border-bottom: 1px solid var(--ds-color-outline);
-  position: relative;
-  z-index: 40;
+  background: var(--ds-color-background);
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  max-width: 100vw;
+  box-sizing: border-box;
+  z-index: 100;
 }
 
 .app-shell__brand-group {
   display: inline-flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 .app-shell__logo {
-  width: 36px;
-  height: 36px;
+  width: 52px;
+  height: 52px;
   object-fit: contain;
   display: block;
   flex-shrink: 0;
@@ -152,7 +156,7 @@ function viewKey(viewRoute: typeof route) {
   display: inline-flex;
   align-items: baseline;
   gap: 0.35em;
-  font-size: 24px;
+  font-size: 34px;
   font-weight: 600;
   letter-spacing: -0.01em;
 }
@@ -165,23 +169,16 @@ function viewKey(viewRoute: typeof route) {
   color: var(--ds-color-brand-yellow);
 }
 
-.app-shell__header-end {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-left: auto;
-}
-
 .app-shell__codename-block {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.2rem;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .app-shell__codename {
   display: block;
-  height: 1.5rem;
+  height: 2.2rem;
   width: auto;
   flex-shrink: 0;
   opacity: 0.4;
@@ -194,7 +191,7 @@ function viewKey(viewRoute: typeof route) {
 
 .app-shell__version {
   color: var(--ds-color-on-surface-variant);
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 500;
   line-height: 1;
   letter-spacing: 0.02em;
@@ -228,15 +225,56 @@ function viewKey(viewRoute: typeof route) {
 .app-shell__main {
   position: relative;
   z-index: 1;
-  min-height: calc(100vh - 5rem - var(--ds-dock-height));
+  padding-top: 5.5rem;
+  min-height: 100vh;
+  box-sizing: border-box;
   padding-bottom: var(--ds-dock-height);
 }
 
 /* ── Responsivo: telas pequenas (≤ 600px = breakpoint sm do Vuetify) ── */
 @media (max-width: 600px) {
   .app-shell__header {
-    height: 3.5rem;
-    padding: 0 var(--ds-spacing-2, 0.5rem);
+    height: 4.5rem;
+    padding: 0 var(--ds-spacing-2, 0.75rem);
+    gap: 0.75rem;
+  }
+
+  .app-shell__brand-group {
+    gap: 0.75rem;
+  }
+
+  .app-shell__logo {
+    width: 42px;
+    height: 42px;
+  }
+
+  .app-shell__brand {
+    font-size: 28px;
+    gap: 0.25em;
+    white-space: nowrap;
+  }
+
+  .app-shell__codename {
+    width: auto !important;
+    height: 1.6rem !important;
+  }
+
+  .app-shell__version {
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .app-shell__main {
+    padding-top: 4.5rem;
+    min-height: 100vh;
+  }
+}
+
+@media (max-width: 360px) {
+  .app-shell__header {
+    height: 4rem;
+    padding: 0 0.5rem;
+    gap: 0.5rem;
   }
 
   .app-shell__brand-group {
@@ -244,21 +282,25 @@ function viewKey(viewRoute: typeof route) {
   }
 
   .app-shell__logo {
-    width: 28px;
-    height: 28px;
+    width: 36px;
+    height: 36px;
   }
 
   .app-shell__brand {
-    font-size: 18px;
-    gap: 0.25em;
+    font-size: 24px;
   }
 
-  .app-shell__header-end {
-    gap: 0.5rem;
+  .app-shell__codename {
+    width: auto !important;
+    height: 1.4rem !important;
+  }
+
+  .app-shell__version {
+    font-size: 11px;
   }
 
   .app-shell__main {
-    min-height: calc(100vh - 3.5rem - var(--ds-dock-height));
+    padding-top: 4rem;
   }
 }
 </style>
