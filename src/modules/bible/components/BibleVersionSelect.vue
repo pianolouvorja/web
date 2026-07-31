@@ -140,7 +140,10 @@ onUnmounted(() => {
       :aria-label="t('bible.version')"
       @click="toggle"
     >
-      <span class="bible-version-select__value">{{ selectedLabel }}</span>
+      <span class="bible-version-select__value bible-version-select__value--desktop">{{ selectedLabel }}</span>
+      <span class="bible-version-select__value bible-version-select__value--mobile">
+        {{ selectedVersion ? selectedVersion.abbreviation : t('bible.selectVersion') }}
+      </span>
       <i
         class="ti ti-chevron-down bible-version-select__chevron"
         aria-hidden="true"
@@ -231,6 +234,19 @@ onUnmounted(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.bible-version-select__value--mobile {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .bible-version-select__value--desktop {
+    display: none;
+  }
+  .bible-version-select__value--mobile {
+    display: inline;
+  }
 }
 
 .bible-version-select__chevron {

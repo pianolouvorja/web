@@ -391,8 +391,19 @@ function isSelected(verseNumber: number): boolean {
   font-size: 1.05rem;
   line-height: 1.7;
 
-  @media (max-width: 600px) {
+  @media (max-width: 768px) {
     padding: 0.25rem 0 7rem;
+    overflow-y: visible !important;
+    height: auto !important;
+  }
+
+  // ≤430px: scroll interno independente — restaura o overflow-y: auto
+  // que o breakpoint 768px acima removeu com !important.
+  @media (max-width: 430px) {
+    overflow-y: auto !important;
+    height: auto;
+    flex: 1 1 auto;
+    min-height: 0;
   }
 }
 

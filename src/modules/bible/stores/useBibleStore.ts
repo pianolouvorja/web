@@ -282,16 +282,40 @@ export const useBibleStore = defineStore('bible', () => {
       const versionId = pickDefaultVersionId(loadedVersions, saved)
       selectedVersionId.value = versionId
 
-      // Nao selecionar livro/capitulo por padrao - usuario escolhe manualmente
-      selectedBookId.value = null
-      selectedChapter.value = null
+      // Carrega livro e capitulo das preferencias ou usa padrao (Genesis 1)
+      const savedBook = getUserPreference<number | null>(
+        USER_PREFERENCE_KEYS.bibleSelectedBook,
+        null,
+      )
+      const savedChapter = getUserPreference<number | null>(
+        USER_PREFERENCE_KEYS.bibleSelectedChapter,
+        null,
+      )
+
+      selectedBookId.value = savedBook ?? null
+      selectedChapter.value = savedChapter ?? null
+
+      // Forçar showNavPanel como true caso não haja livro ou capítulo selecionado
+      if (selectedBookId.value === null || selectedChapter.value === null) {
+        showNavPanel.value = true
+      }
+
+      if (selectedBookId.value !== null) {
+        const book = loadedBooks.find((item) => item.id === selectedBookId.value)
+        if (book) {
+          testamentFilter.value = resolveTestament(book.bookNumber)
+        }
+      }
       selectedVerses.value = []
       lastVerseAnchor.value = 1
       verses.value = {}
 
       isProjecting.value = isPopupModuleOpen('bible')
       if (isProjecting.value) startProjectionWatch()
-      // Nao carregar versiculos automaticamente - aguardar selecao do usuario
+
+      if (selectedBookId.value !== null && selectedChapter.value !== null) {
+        await refreshChapter()
+      }
     } catch (error) {
       console.error('[bible] falha ao iniciar módulo', error)
       setError('bible.errors.loadCatalogFailed')
@@ -317,8 +341,10 @@ export const useBibleStore = defineStore('bible', () => {
     if (!book) return
 
     selectedBookId.value = bookId
+    setUserPreference(USER_PREFERENCE_KEYS.bibleSelectedBook, bookId)
     testamentFilter.value = resolveTestament(book.bookNumber)
     selectedChapter.value = null
+    setUserPreference(USER_PREFERENCE_KEYS.bibleSelectedChapter, null)
     selectedVerses.value = []
     lastVerseAnchor.value = 1
 
@@ -334,6 +360,7 @@ export const useBibleStore = defineStore('bible', () => {
     if (selectedChapter.value === next) return
 
     selectedChapter.value = next
+    setUserPreference(USER_PREFERENCE_KEYS.bibleSelectedChapter, next)
     selectedVerses.value = []
     lastVerseAnchor.value = 1
     syncProjection()
@@ -409,7 +436,11 @@ export const useBibleStore = defineStore('bible', () => {
     if (Number.isFinite(last)) selectVerse(last)
   }
   async function goToAdjacentVerse(direction: -1 | 1) {
-    if (selectedVerses.value.length === 0) return
+    const isForward = direction > 0
+    if (selectedVerses.value.length === 0) {
+      isForward ? selectFirstValidVerse() : selectLastValidVerse()
+      return
+    }
 
     const current =
       direction < 0
@@ -425,7 +456,6 @@ export const useBibleStore = defineStore('bible', () => {
     const book = selectedBook.value
     if (!book) return
 
-    const isForward = direction > 0
     const currentChapter = selectedChapter.value
     if (currentChapter == null) return
 

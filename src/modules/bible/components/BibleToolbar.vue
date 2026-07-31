@@ -55,7 +55,7 @@ const browseIcon = computed(() =>
         aria-hidden="true"
       />
 
-      <div class="bible-toolbar__field">
+      <div v-if="locationLabel" class="bible-toolbar__field">
         <span class="bible-toolbar__label">{{ t('bible.location') }}</span>
         <span class="bible-toolbar__location">
           {{ locationLabel || t('bible.locationEmpty') }}
@@ -114,6 +114,11 @@ const browseIcon = computed(() =>
     width: 100%;
     flex-wrap: nowrap;
   }
+
+  @media (max-width: 600px) {
+    flex-wrap: wrap !important;
+    gap: 0.4rem !important;
+  }
 }
 
 .bible-toolbar__meta {
@@ -130,6 +135,10 @@ const browseIcon = computed(() =>
     flex: 1 1 auto;
     min-width: 0;
   }
+
+  @media (max-width: 600px) {
+    display: contents !important;
+  }
 }
 
 .bible-toolbar__field {
@@ -142,6 +151,17 @@ const browseIcon = computed(() =>
     flex-direction: row;
     align-items: center;
     gap: 0.35rem;
+  }
+
+  @media (max-width: 600px) {
+    order: 3 !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    justify-content: flex-end !important;
+  }
+
+  @media (max-width: 430px) {
+    display: none !important;
   }
 }
 
@@ -193,6 +213,10 @@ const browseIcon = computed(() =>
     gap: 0.4rem;
     flex-shrink: 0;
   }
+
+  @media (max-width: 600px) {
+    display: contents !important;
+  }
 }
 
 .bible-toolbar__search {
@@ -205,6 +229,18 @@ const browseIcon = computed(() =>
   @media (max-width: 768px) {
     max-width: 120px;
     flex: 0 1 auto;
+  }
+
+  @media (max-width: 600px) {
+    order: 4 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 0 0 100% !important;
+    margin-top: 0.25rem !important;
+  }
+
+  @media (max-width: 430px) {
+    display: none !important;
   }
 }
 
@@ -273,6 +309,11 @@ const browseIcon = computed(() =>
     justify-content: center;
   }
 
+  @media (max-width: 600px) {
+    order: 2 !important;
+    flex: 0 0 auto !important;
+  }
+
   &:hover {
     background: color-mix(in srgb, var(--ds-color-primary) 22%, transparent);
   }
@@ -290,6 +331,14 @@ const browseIcon = computed(() =>
 .bible-toolbar__browse-label {
   @media (max-width: 768px) {
     display: none;
+  }
+}
+
+:deep(.bible-version-select) {
+  @media (max-width: 600px) {
+    order: 1 !important;
+    flex: 0 1 auto !important;
+    min-width: 0 !important;
   }
 }
 

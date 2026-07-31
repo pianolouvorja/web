@@ -76,7 +76,10 @@ const navAllCollapsed = computed(() => isMobile.value && booksCollapsed.value &&
 </script>
 
 <template>
-  <section class="bible-view">
+  <section
+    class="bible-view"
+    :class="{ 'bible-view--has-selection': selectedBookId !== null && selectedChapter !== null }"
+  >
     <BibleToolbar
       :versions="versions"
       :selected-version-id="selectedVersionId"
@@ -202,6 +205,8 @@ const navAllCollapsed = computed(() => isMobile.value && booksCollapsed.value &&
   flex: 1 1 auto;
   min-height: 0;
   padding: 0.75rem var(--ds-spacing-page, 2rem) 0;
+  overflow-x: clip;
+  max-width: 100%;
 
   @media (max-width: 600px) {
     gap: 0.5rem;
@@ -234,8 +239,9 @@ const navAllCollapsed = computed(() => isMobile.value && booksCollapsed.value &&
       height: calc(100vh - 3.5rem - 5rem - var(--ds-dock-height, 4.5rem));
       overflow: hidden;
 
-      @media (max-width: 600px) {
-        height: calc(100vh - 3.5rem - 4rem - var(--ds-dock-height, 4.5rem));
+      @media (max-width: 768px) {
+        height: auto !important;
+        overflow: visible !important;
       }
     }
   }
@@ -263,10 +269,66 @@ const navAllCollapsed = computed(() => isMobile.value && booksCollapsed.value &&
   overflow: hidden;
   display: flex;
   flex-direction: column;
+
+  @media (max-width: 768px) {
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 0 !important;
+  }
 }
 
 .bible-view :deep(.bible-toolbar) {
   flex-shrink: 0;
+  position: sticky;
+  // top deve coincidir exatamente com a altura do header global
+  // para que o conteudo do nav-panel seja clipado ao passar por baixo
+  top: 5.5rem;
+  z-index: 50;
+  box-shadow: var(--ds-shadow-md);
+  // isopárpá stacking context: o backdrop-filter do próprio GlassCard cria um
+  // novo contexto. Precisamos do `isolation: isolate` para garantir que a toolbar
+  // se sobreponha aos irmãos (nav-panel, reader) que também têm backdrop-filter.
+  isolation: isolate;
+
+  @media (max-width: 600px) {
+    top: 4.5rem;
+  }
+
+  @media (max-width: 430px) {
+    top: 4rem;
+  }
+}
+
+// ═══ ≤430px: scroll isolado no reader, nav-panel fixo abaixo da toolbar ═══
+// O body não rola externamente; apenas .bible-reader__scroll tem overflow-y: auto.
+@media (max-width: 430px) {
+  .bible-view__body {
+    // viewport - header app (4rem) - toolbar bible - paddings - dock
+    height: calc(100vh - 4rem - 5rem - var(--ds-dock-height, 4.5rem)) !important;
+    overflow-y: hidden !important;
+    grid-template-rows: auto minmax(0, 1fr) !important;
+  }
+
+  .bible-view__nav {
+    margin-top: 0.5rem;
+    flex-shrink: 0;
+    // Altura maxima para o nav-panel: metade da altura disponivel.
+    // Garante scroll interno sem empurrar o reader para fora da viewport.
+    max-height: 45vh;
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  .bible-view__reader {
+    overflow: hidden !important;
+    min-height: 0 !important;
+    flex: 1 1 auto;
+  }
+}
+
+// Fundo mais opaco na toolbar para garantir clipping visual do nav-panel
+.bible-view :deep(.bible-toolbar) {
+  background: color-mix(in srgb, var(--ds-color-surface-elevated) 96%, transparent) !important;
 }
 
 .bible-view__state,
@@ -324,6 +386,14 @@ const navAllCollapsed = computed(() => isMobile.value && booksCollapsed.value &&
 </style>
 
 <style lang="scss">
+// Telas ≤430px: travar o body/viewport para que apenas o scroll interno do reader funcione.
+@media (max-width: 430px) {
+  body:has(.bible-view) {
+    overflow-y: hidden !important;
+    overscroll-behavior: none;
+  }
+}
+
 [data-mode='light'] .bible-view .ds-glass-card {
   background: color-mix(in srgb, #ffffff 82%, transparent);
   border-color: #e8ecf3;
