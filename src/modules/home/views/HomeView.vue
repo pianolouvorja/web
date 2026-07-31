@@ -57,7 +57,7 @@ const { formattedTime } = useHomeClock()
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: calc(100vh - var(--app-titlebar-height, 0px) - 5rem - var(--ds-dock-height));
+  min-height: calc(100vh - var(--app-titlebar-height, 0px) - 5rem - var(--ds-dock-height) - 2rem);
   padding: var(--ds-spacing-page);
 }
 
@@ -109,7 +109,7 @@ const { formattedTime } = useHomeClock()
 @media (max-width: 768px) {
   .home-view {
     padding: 1rem 1rem;
-    min-height: calc(100vh - 3.5rem - var(--ds-dock-height));
+    min-height: calc(100vh - 3.5rem - var(--ds-dock-height) - 2rem);
   }
 
   .home-view__content {
@@ -131,6 +131,14 @@ const { formattedTime } = useHomeClock()
   }
 }
 
+/* ── Responsivo: telas pequenas (≤ 430px) — logo proporcional ── */
+@media (max-width: 430px) {
+  .home-view__logo {
+    width: 7.5rem;
+    height: 7.5rem;
+  }
+}
+
 /* ── Responsivo: telas muito pequenas (≤ 360px) ── */
 @media (max-width: 360px) {
   .home-view {
@@ -138,8 +146,8 @@ const { formattedTime } = useHomeClock()
   }
 
   .home-view__logo {
-    width: 3.5rem;
-    height: 3.5rem;
+    width: 7.5rem;
+    height: 7.5rem;
   }
 
   .home-view__logo-wrap {

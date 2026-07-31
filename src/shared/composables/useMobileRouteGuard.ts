@@ -110,6 +110,9 @@ export function useMobileRouteGuard(options: MobileRouteGuardOptions): UseMobile
  * Versão simplificada para usar como guard global no router.
  * NÃO usa useDisplay() (que requer contexto de componente Vuetify).
  * Usa apenas isMobileRef (matchMedia) que funciona em qualquer contexto.
+ *
+ * Rotas com meta.desktopOnly === true são redirecionadas para '/' (home)
+ * quando acessadas em mobile/tablet (≤768px), inclusive via URL direta.
  */
 export function createMobileRouteGuard(defaultOptions?: Partial<MobileRouteGuardOptions>) {
   return (to: RouteLocationNormalized) => {
@@ -127,8 +130,8 @@ export function createMobileRouteGuard(defaultOptions?: Partial<MobileRouteGuard
 
     if (mobileWarningDismissed.value[routeKey]) return true
 
-    // Bloquear - o componente AppShell ou layout deve ouvir e mostrar dialog
-    // Disparamos um evento customizado para notificar
+    // Redirecionar para home em vez de apenas bloquear.
+    // Dispara evento para feedback visual (toast/snackbar) opcional.
     window.dispatchEvent(new CustomEvent('mobile-route-blocked', {
       detail: {
         routeKey,
@@ -137,6 +140,7 @@ export function createMobileRouteGuard(defaultOptions?: Partial<MobileRouteGuard
       },
     }))
 
-    return false
+    // Redirect para home — cobre acesso via URL direta e via navegação interna
+    return { name: 'home', replace: true }
   }
 }
