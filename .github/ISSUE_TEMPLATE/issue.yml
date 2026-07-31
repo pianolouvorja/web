@@ -1,0 +1,70 @@
+name: Issue
+description: Reporte um bug ou sugira uma melhoria
+labels: ["triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado por contribuir! Preencha os campos abaixo.
+
+  - type: dropdown
+    id: type
+    attributes:
+      label: Tipo
+      options:
+        - Bug
+        - Enhancement
+        - Nova feature
+    validations:
+      required: true
+
+  - type: dropdown
+    id: module
+    attributes:
+      label: Módulo
+      options:
+        - bible
+        - liturgy
+        - media
+        - albums
+        - utilities (clock/timer/countdown/random)
+        - settings
+        - ui/shared
+        - outro
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Descrição
+      description: Descreva o problema ou solicitação. Se for bug, inclua passos para reproduzir.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Comportamento esperado
+      description: O que deveria acontecer?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Comportamento atual
+      description: O que está acontecendo?
+    validations:
+      required: false
+
+  - type: dropdown
+    id: device
+    attributes:
+      label: Dispositivo
+      options:
+        - Desktop
+        - Mobile
+        - Ambos
+    validations:
+      required: true
