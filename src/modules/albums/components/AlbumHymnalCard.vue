@@ -147,4 +147,34 @@ const coverIcon = computed(() =>
   font-size: 14px;
   line-height: 20px;
 }
+
+@media (max-width: 1280px) {
+  .album-hymnal-card {
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .album-hymnal-card__open {
+    gap: 1rem;
+  }
+
+  .album-hymnal-card__cover {
+    width: 4rem;
+    height: 5rem;
+  }
+
+  .album-hymnal-card__fallback-icon {
+    font-size: 2rem;
+  }
+
+  .album-hymnal-card__name {
+    font-size: 16px;
+    line-height: 22px;
+  }
+
+  .album-hymnal-card__subtitle {
+    font-size: 13px;
+    line-height: 18px;
+  }
+}
 </style>

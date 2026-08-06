@@ -184,6 +184,8 @@ function handleSelectChapter(chapter: number) {
 .bible-nav-panel {
   display: flex;
   flex-direction: column;
+  height: 100%;
+  min-height: 0;
 }
 
 // ═══ DESKTOP ═══
@@ -193,6 +195,14 @@ function handleSelectChapter(chapter: number) {
   gap: 1.25rem;
   padding: 1.25rem;
   min-height: 0;
+  height: 100%;
+  box-sizing: border-box;
+
+  // 1024×768 e desktops médios: painel mais denso para caber versículos ao lado.
+  @media (max-width: 1280px) {
+    gap: 0.75rem;
+    padding: 0.75rem;
+  }
 }
 
 .bible-nav-panel__divider {

@@ -40,6 +40,11 @@ const { hardwareAccel, fullscreenMode } = useProjectionSettings()
   flex-direction: column;
   gap: 1rem;
   padding: 1.5rem;
+
+  @media (max-width: 1280px) {
+    padding: 1rem;
+    gap: 0.75rem;
+  }
 }
 
 .projection-options__row {

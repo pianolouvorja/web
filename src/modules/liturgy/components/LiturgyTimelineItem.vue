@@ -1283,6 +1283,13 @@ const rowHovered = ref(false)
   }
 }
 
+@media (max-width: 1280px) {
+  .liturgy-item__card {
+    gap: 0.5rem;
+    padding: 0.45rem 0.65rem;
+  }
+}
+
 @media (max-width: 600px) {
   .liturgy-item__card {
     flex-direction: column;
