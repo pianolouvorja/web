@@ -296,7 +296,7 @@ const navAllCollapsed = computed(() => isMobile.value && booksCollapsed.value &&
   position: sticky;
   // top deve coincidir exatamente com a altura do header global
   // para que o conteudo do nav-panel seja clipado ao passar por baixo
-  top: 5.5rem;
+  top: var(--ds-header-height, 5.5rem);
   z-index: 50;
   box-shadow: var(--ds-shadow-md);
   // isopárpá stacking context: o backdrop-filter do próprio GlassCard cria um

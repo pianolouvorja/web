@@ -82,6 +82,10 @@ const {
 .popup-screens {
   padding: 1.5rem;
 
+  @media (max-width: 1280px) {
+    padding: 1rem;
+  }
+
   @media (max-width: 600px) {
     display: none;
   }
@@ -92,12 +96,20 @@ const {
   align-items: center;
   gap: 0.75rem;
   margin-bottom: 1.5rem;
+
+  @media (max-width: 1280px) {
+    margin-bottom: 1rem;
+  }
 }
 
 .popup-screens__icon {
   color: var(--ds-color-primary);
   font-size: 28px;
   line-height: 1;
+
+  @media (max-width: 1280px) {
+    font-size: 20px;
+  }
 }
 
 .popup-screens__heading {

@@ -218,7 +218,9 @@ function onScreenControlsChanged() {
 <style scoped lang="scss">
 .countdown-view {
   display: flex;
-  min-height: calc(100vh - 5rem - var(--ds-dock-height, 5.5rem));
+  min-height: calc(
+    100vh - var(--ds-header-height, 5.5rem) - var(--ds-dock-height, 5.5rem)
+  );
   flex-direction: column;
   padding: var(--ds-spacing-page, 1.5rem);
   padding-bottom: calc(var(--ds-dock-height, 5.5rem) + 5rem);
@@ -439,6 +441,40 @@ function onScreenControlsChanged() {
 
   .ti {
     font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 1280px) {
+  .countdown-view {
+    padding: 1rem;
+    padding-bottom: calc(var(--ds-dock-height, 5.5rem) + 3.5rem);
+  }
+
+  .countdown-view__header {
+    gap: 0.75rem;
+    margin-bottom: 0.85rem;
+  }
+
+  .countdown-view__brand-icon {
+    width: 2.25rem;
+    height: 2.25rem;
+
+    .ti {
+      font-size: 1.15rem;
+    }
+  }
+
+  .countdown-view__title {
+    font-size: 1.15rem;
+  }
+
+  .countdown-view__widget {
+    min-height: 16rem;
+    max-height: min(100%, 24rem);
+  }
+
+  .countdown-view__preview {
+    padding: 0.65rem 1rem 0.5rem;
   }
 }
 

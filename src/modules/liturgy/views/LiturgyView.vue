@@ -323,8 +323,8 @@ function onScreenControlsChanged() {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  height: calc(100vh - 5rem - var(--ds-dock-height, 4.5rem));
-  max-height: calc(100vh - 5rem - var(--ds-dock-height, 4.5rem));
+  height: calc(100vh - var(--ds-header-height, 5rem) - var(--ds-dock-height, 4.5rem));
+  max-height: calc(100vh - var(--ds-header-height, 5rem) - var(--ds-dock-height, 4.5rem));
   padding: 2rem;
   padding-bottom: 1.5rem;
   overflow: hidden;

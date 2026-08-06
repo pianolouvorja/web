@@ -125,7 +125,7 @@ function viewKey(viewRoute: typeof route) {
   align-items: center;
   justify-content: space-between;
   gap: 1.5rem;
-  height: 5.5rem;
+  height: var(--ds-header-height, 5.5rem);
   padding: 0 var(--ds-spacing-page);
   border-bottom: 1px solid var(--ds-color-outline);
   background: var(--ds-color-background);
@@ -225,16 +225,51 @@ function viewKey(viewRoute: typeof route) {
 .app-shell__main {
   position: relative;
   z-index: 1;
-  padding-top: 5.5rem;
+  padding-top: var(--ds-header-height, 5.5rem);
   min-height: 100vh;
   box-sizing: border-box;
   padding-bottom: var(--ds-dock-height);
 }
 
+/* Desktop médio / 1024×768: chrome mais compacto */
+@media (max-width: 1280px) {
+  .app-shell__header {
+    gap: 1rem;
+  }
+
+  .app-shell__brand-group {
+    gap: 0.75rem;
+  }
+
+  .app-shell__logo {
+    width: 44px;
+    height: 44px;
+  }
+
+  .app-shell__brand {
+    font-size: 28px;
+  }
+
+  .app-shell__codename {
+    height: 1.75rem;
+  }
+
+  .app-shell__version {
+    font-size: 13px;
+  }
+
+  .app-shell__account .ti {
+    font-size: 26px;
+  }
+
+  .app-shell__codename-block {
+    gap: 0.5rem;
+  }
+}
+
 /* ── Responsivo: telas pequenas (≤ 600px = breakpoint sm do Vuetify) ── */
 @media (max-width: 600px) {
   .app-shell__header {
-    height: 4.5rem;
     padding: 0 var(--ds-spacing-2, 0.75rem);
     gap: 0.75rem;
   }
@@ -263,16 +298,10 @@ function viewKey(viewRoute: typeof route) {
     font-size: 12px;
     white-space: nowrap;
   }
-
-  .app-shell__main {
-    padding-top: 4.5rem;
-    min-height: 100vh;
-  }
 }
 
 @media (max-width: 360px) {
   .app-shell__header {
-    height: 4rem;
     padding: 0 0.5rem;
     gap: 0.5rem;
   }
@@ -297,10 +326,6 @@ function viewKey(viewRoute: typeof route) {
 
   .app-shell__version {
     font-size: 11px;
-  }
-
-  .app-shell__main {
-    padding-top: 4rem;
   }
 }
 </style>
