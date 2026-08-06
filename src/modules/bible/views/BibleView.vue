@@ -208,6 +208,12 @@ const navAllCollapsed = computed(() => isMobile.value && booksCollapsed.value &&
   overflow-x: clip;
   max-width: 100%;
 
+  // Desktop médio / projetor 1024×768: menos gap e padding vertical.
+  @media (max-width: 1280px) {
+    gap: 0.65rem;
+    padding-top: 0.5rem;
+  }
+
   @media (max-width: 600px) {
     gap: 0.5rem;
     padding: 0.5rem 0.5rem 0;
@@ -225,10 +231,15 @@ const navAllCollapsed = computed(() => isMobile.value && booksCollapsed.value &&
     grid-template-columns: minmax(0, 1fr);
   }
 
-  // Mobile (≤1280px): layout em coluna.
+  // Desktop médio (ex.: 1024×768): mantém nav | reader lado a lado, com gap menor.
+  @media (max-width: 1280px) {
+    gap: 0.75rem;
+  }
+
+  // Tablet/mobile (≤960px = md): layout em coluna.
   // Quando nav-panel aberto: tudo flui naturalmente (auto auto), barra do browser rola.
   // Quando nav colapsado: reader ocupa resto da tela com scroll proprio.
-  @media (max-width: 1280px) {
+  @media (max-width: 960px) {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto auto;
 
@@ -253,8 +264,11 @@ const navAllCollapsed = computed(() => isMobile.value && booksCollapsed.value &&
 
 .bible-view__nav {
   min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 
-  @media (max-width: 1280px) {
+  @media (max-width: 960px) {
     flex-shrink: 0;
   }
 

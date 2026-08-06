@@ -93,7 +93,9 @@ const { t } = useI18n()
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 0;
   flex: 1 1 60%;
+  overflow: hidden;
   container-type: inline-size;
   container-name: bible-books;
 }
@@ -103,6 +105,10 @@ const { t } = useI18n()
   margin-bottom: 1rem;
   flex-shrink: 0;
   padding: 2px;
+
+  @media (max-width: 1280px) {
+    margin-bottom: 0.55rem;
+  }
 }
 
 .bible-books__search-icon {
@@ -130,6 +136,11 @@ const { t } = useI18n()
     border-color 160ms ease,
     box-shadow 160ms ease;
 
+  @media (max-width: 1280px) {
+    padding: 0.4rem 0.6rem 0.4rem 2.1rem;
+    font-size: 0.8rem;
+  }
+
   &:focus {
     border-color: color-mix(in srgb, var(--ds-color-primary) 70%, transparent);
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--ds-color-primary) 35%, transparent);
@@ -144,6 +155,11 @@ const { t } = useI18n()
   gap: 0.75rem;
   margin-bottom: 1rem;
   flex-shrink: 0;
+
+  @media (max-width: 1280px) {
+    margin-bottom: 0.55rem;
+    gap: 0.5rem;
+  }
 }
 
 .bible-books__title {
@@ -153,6 +169,10 @@ const { t } = useI18n()
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--ds-color-primary-soft);
+
+  @media (max-width: 1280px) {
+    font-size: 0.8rem;
+  }
 }
 
 .bible-books__tabs {
@@ -172,6 +192,11 @@ const { t } = useI18n()
   font-weight: 600;
   padding: 0.35rem 0.85rem;
   cursor: pointer;
+
+  @media (max-width: 1280px) {
+    font-size: 0.72rem;
+    padding: 0.25rem 0.6rem;
+  }
   transition:
     background-color 200ms ease,
     color 200ms ease;
@@ -199,6 +224,13 @@ const { t } = useI18n()
   gap: 0.5rem;
   padding-right: 0.25rem;
   align-content: start;
+  overflow-y: auto;
+  min-height: 0;
+  flex: 1 1 auto;
+
+  @media (max-width: 1280px) {
+    gap: 0.35rem;
+  }
 
   &::-webkit-scrollbar {
     width: 6px;
@@ -210,6 +242,8 @@ const { t } = useI18n()
   }
 }
 
+// Só ativa 8 colunas em nav bem largo (desktop wide). Em 1024×768 o nav
+// lado a lado fica < 40rem e permanece em 4 colunas (densidade do print 2).
 @container bible-books (min-width: 40rem) {
   .bible-books__grid {
     grid-template-columns: repeat(8, minmax(0, 1fr));
@@ -237,6 +271,11 @@ const { t } = useI18n()
   padding: 0.35rem;
   text-align: center;
   cursor: pointer;
+
+  @media (max-width: 1280px) {
+    padding: 0.2rem;
+    gap: 0.05rem;
+  }
   transition:
     transform 180ms ease,
     box-shadow 180ms ease,
@@ -338,6 +377,10 @@ const { t } = useI18n()
   font-size: 1.05rem;
   font-weight: 700;
   line-height: 1.1;
+
+  @media (max-width: 1280px) {
+    font-size: 0.85rem;
+  }
 }
 
 .bible-books__name {
@@ -347,6 +390,10 @@ const { t } = useI18n()
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
+
+  @media (max-width: 1280px) {
+    font-size: 8px;
+  }
   white-space: nowrap;
 }
 </style>
