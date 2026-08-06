@@ -225,6 +225,30 @@ const { t } = useI18n()
   .random-history {
     width: 100%;
     max-height: none;
+    padding: 0.85rem;
+  }
+
+  .random-history__head {
+    margin-bottom: 0.85rem;
+  }
+
+  .random-history__item {
+    gap: 0.5rem;
+    margin-bottom: 0.35rem;
+    padding: 0.5rem;
+  }
+
+  .random-history__empty {
+    min-height: 8rem;
+    gap: 0.35rem;
+
+    .ti {
+      font-size: 1.75rem;
+    }
+  }
+
+  .random-history__clear {
+    margin-top: 0.85rem;
   }
 }
 </style>

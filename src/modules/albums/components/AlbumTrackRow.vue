@@ -273,6 +273,14 @@ const { t } = useI18n()
   justify-self: end;
 }
 
+@media (max-width: 1280px) {
+  .album-track-row {
+    min-height: 3.5rem;
+    padding: 0.5rem 0.75rem;
+    gap: 0.55rem;
+  }
+}
+
 @media (max-width: 600px) {
   .album-track-row {
     grid-template-columns: 3rem minmax(0, 1fr);

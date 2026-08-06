@@ -484,6 +484,33 @@ function onFileChange(event: Event) {
   .random-available {
     width: 100%;
     max-height: none;
+    padding: 0.85rem;
+  }
+
+  .random-available__head {
+    margin-bottom: 0.75rem;
+  }
+
+  .random-available__form,
+  .random-available__numbers {
+    gap: 0.55rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .random-available__input {
+    height: 2.35rem;
+  }
+
+  .random-available__item {
+    padding: 0.5rem;
+  }
+
+  .random-available__empty {
+    min-height: 7rem;
+
+    .ti {
+      font-size: 1.75rem;
+    }
   }
 }
 </style>

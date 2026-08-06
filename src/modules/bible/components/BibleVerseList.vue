@@ -214,6 +214,11 @@ function isSelected(verseNumber: number): boolean {
   background: var(--ds-color-surface-container);
   border-bottom: 1px solid var(--ds-color-outline-variant);
 
+  @media (max-width: 1280px) {
+    padding: 0.75rem 1rem 0.5rem;
+    gap: 0.4rem 0.5rem;
+  }
+
   @media (max-width: 600px) {
     padding: 0.75rem 1rem 0.5rem;
     gap: 0.5rem;
@@ -227,6 +232,10 @@ function isSelected(verseNumber: number): boolean {
   font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--ds-color-primary-soft);
+
+  @media (max-width: 1280px) {
+    font-size: 1.1rem;
+  }
 
   @media (max-width: 600px) {
     flex: 1 1 auto;
@@ -435,6 +444,12 @@ function isSelected(verseNumber: number): boolean {
     opacity 160ms ease,
     background-color 160ms ease,
     border-color 160ms ease;
+
+  @media (max-width: 1280px) {
+    gap: 0.75rem;
+    padding: 0.4rem 0.35rem;
+    font-size: 0.92rem;
+  }
 
   @media (max-width: 600px) {
     padding-inline: 1rem;

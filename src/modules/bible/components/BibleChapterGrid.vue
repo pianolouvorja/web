@@ -58,11 +58,18 @@ const { t } = useI18n()
   flex-direction: column;
   flex: 0 0 14rem;
   min-width: 0;
+  min-height: 0;
+  overflow: hidden;
   container-type: inline-size;
   container-name: bible-chapters;
 
+  @media (max-width: 1280px) {
+    flex: 0 0 11.5rem;
+  }
+
   @media (max-width: 960px) {
     flex: 1 1 auto;
+    overflow: visible;
   }
 
   @media (max-width: 600px) {
@@ -76,6 +83,10 @@ const { t } = useI18n()
   margin-bottom: 1rem;
   flex-shrink: 0;
   padding: 2px;
+
+  @media (max-width: 1280px) {
+    margin-bottom: 0.55rem;
+  }
 }
 
 .bible-chapters__search-icon {
@@ -103,6 +114,11 @@ const { t } = useI18n()
     border-color 160ms ease,
     box-shadow 160ms ease;
 
+  @media (max-width: 1280px) {
+    padding: 0.4rem 0.6rem 0.4rem 2.1rem;
+    font-size: 0.8rem;
+  }
+
   &:focus {
     border-color: color-mix(in srgb, var(--ds-color-primary) 70%, transparent);
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--ds-color-primary) 35%, transparent);
@@ -118,6 +134,11 @@ const { t } = useI18n()
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--ds-color-primary-soft);
+
+  @media (max-width: 1280px) {
+    margin-bottom: 0.55rem;
+    font-size: 0.8rem;
+  }
 }
 
 .bible-chapters__grid {
@@ -126,6 +147,13 @@ const { t } = useI18n()
   gap: 0.5rem;
   padding-right: 0.15rem;
   align-content: start;
+  overflow-y: auto;
+  min-height: 0;
+  flex: 1 1 auto;
+
+  @media (max-width: 1280px) {
+    gap: 0.3rem;
+  }
 
   @container bible-chapters (min-width: 12rem) {
     grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -161,6 +189,11 @@ const { t } = useI18n()
     border-color 160ms ease,
     box-shadow 160ms ease,
     transform 150ms ease;
+
+  @media (max-width: 1280px) {
+    font-size: 0.9rem;
+    border-radius: var(--ds-radius-md, 0.5rem 0 0.5rem 0);
+  }
 
   @media (max-width: 600px) {
     font-size: 0.95rem;

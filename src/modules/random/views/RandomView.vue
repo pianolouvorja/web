@@ -215,7 +215,9 @@ async function onImportFile(file: File) {
 <style scoped lang="scss">
 .random-view {
   display: flex;
-  min-height: calc(100vh - 5rem - var(--ds-dock-height, 5.5rem));
+  min-height: calc(
+    100vh - var(--ds-header-height, 5.5rem) - var(--ds-dock-height, 5.5rem)
+  );
   flex-direction: column;
   align-items: center;
   padding: var(--ds-spacing-page, 1.5rem);
@@ -368,12 +370,33 @@ async function onImportFile(file: File) {
 }
 
 @media (max-width: 1280px) {
+  .random-view {
+    padding: 1rem;
+    padding-bottom: calc(var(--ds-dock-height, 5.5rem) + 3.5rem);
+  }
+
   .random-view__header {
     flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
   }
 
   .random-view__brand {
     flex-wrap: wrap;
+    gap: 0.65rem;
+  }
+
+  .random-view__brand-icon {
+    width: 2.25rem;
+    height: 2.25rem;
+
+    .ti {
+      font-size: 1.15rem;
+    }
+  }
+
+  .random-view__title {
+    font-size: 1.15rem;
   }
 
   .random-view__modes {
@@ -384,7 +407,7 @@ async function onImportFile(file: File) {
     flex-direction: column;
     align-items: stretch;
     justify-content: flex-start;
-    gap: 1.5rem;
+    gap: 1rem;
   }
 
   .random-view__stage {

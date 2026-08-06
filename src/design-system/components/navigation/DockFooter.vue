@@ -58,6 +58,10 @@ function onSelect(key: string) {
   background: var(--ds-color-surface);
   transition: background-color var(--ds-motion-duration, 280ms) ease;
 
+  @media (max-width: 1280px) {
+    gap: clamp(0.25rem, calc(100vw / 40), 1.5rem);
+  }
+
   @media (max-width: 600px) {
     gap: 0;
     justify-content: space-around;
@@ -111,6 +115,10 @@ function onSelect(key: string) {
 .ds-dock__icon {
   font-size: 28px;
   line-height: 1;
+
+  @media (max-width: 1280px) {
+    font-size: 22px;
+  }
 }
 
 .ds-dock__label {
@@ -122,6 +130,11 @@ function onSelect(key: string) {
   text-align: center;
   white-space: normal;
   text-transform: capitalize;
+
+  @media (max-width: 1280px) {
+    font-size: 10px;
+    max-width: 6rem;
+  }
 
   @media (max-width: 600px) {
     font-size: 9px;
