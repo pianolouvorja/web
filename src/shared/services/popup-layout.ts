@@ -20,6 +20,8 @@ export type PopupLayoutMap = Record<string, PopupBounds>
 
 const POPUP_WIDTH = 800
 const POPUP_HEIGHT = 600
+const CONTROL_WIDTH = 960
+const CONTROL_HEIGHT = 540
 const POPUP_BASE_LEFT = 80
 const POPUP_BASE_TOP = 40
 const POPUP_OFFSET_X = 60
@@ -30,6 +32,9 @@ const RESTORE_DELAYS_MS = [0, 50, 150, 300, 600, 1000, 2000]
 export function getPopupSlotId(index: number): string {
   return `PopupWindow${index}`
 }
+
+/** Id de layout persistido da janela de controle da liturgia. */
+export const LITURGY_CONTROL_LAYOUT_ID = 'LiturgyWebControl'
 
 export function parseSlotIndex(slotId: string | null | undefined): number | null {
   const match = /^PopupWindow(\d+)$/.exec(slotId || '')
@@ -99,9 +104,29 @@ export function resolveBounds(index: number): PopupBounds {
 }
 
 export function resolveBoundsForSlot(slotId: string): PopupBounds | null {
+  if (slotId === LITURGY_CONTROL_LAYOUT_ID) {
+    return resolveControlBounds()
+  }
   const index = parseSlotIndex(slotId)
   if (!index) return null
   return getLayoutEntry(slotId) || getDefaultBounds(index)
+}
+
+export function getDefaultControlBounds(): PopupBounds {
+  const width = CONTROL_WIDTH
+  const height = CONTROL_HEIGHT
+  const availWidth = window.screen?.availWidth ?? width
+  const availHeight = window.screen?.availHeight ?? height
+  return {
+    left: Math.max(0, Math.round((availWidth - width) / 2)),
+    top: Math.max(0, Math.round((availHeight - height) / 2)),
+    width,
+    height,
+  }
+}
+
+export function resolveControlBounds(): PopupBounds {
+  return getLayoutEntry(LITURGY_CONTROL_LAYOUT_ID) || getDefaultControlBounds()
 }
 
 function readScreenOrigin(scr: Screen): { left: number; top: number } {
@@ -225,6 +250,12 @@ export async function applyBounds(
 export function getOpenFeatures(index: number): string {
   const bounds = resolveBounds(index)
   return `width=${bounds.width},height=${bounds.height}`
+}
+
+/** Features da janela de controle da liturgia (≈ Electron 960×540). */
+export function getControlOpenFeatures(): string {
+  const bounds = resolveControlBounds()
+  return `width=${bounds.width},height=${bounds.height},left=${bounds.left},top=${bounds.top},menubar=no,toolbar=no,location=no,status=no`
 }
 
 export function scheduleRestoreOnWindow(

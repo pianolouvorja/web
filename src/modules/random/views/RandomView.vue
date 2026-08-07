@@ -46,7 +46,6 @@ const {
   closeConfig,
   toggleProjection,
   clearProjection,
-  refreshProjectionState,
 } = useRandomFeature()
 
 function goBack() {
@@ -55,10 +54,6 @@ function goBack() {
 
 function onToggleProjection() {
   toggleProjection()
-}
-
-function onScreenControlsChanged() {
-  refreshProjectionState()
 }
 
 function onResetAll() {
@@ -178,7 +173,6 @@ async function onImportFile(file: File) {
           preview
           @draw="startDraw"
           @open-config="openConfig"
-          @screen-controls-changed="onScreenControlsChanged"
         />
       </div>
 

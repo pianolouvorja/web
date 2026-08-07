@@ -1,8 +1,10 @@
 import { BROWSER_STORAGE_KEYS } from '@shared/constants/storage-keys'
 import {
   captureCurrentBounds,
+  getControlOpenFeatures,
   getOpenFeatures,
   getPopupSlotId,
+  LITURGY_CONTROL_LAYOUT_ID,
   parseSlotIndex,
   requestWindowManagementPermission,
   resolveBoundsForSlot,
@@ -22,6 +24,7 @@ import {
 } from './popup-registry'
 
 export const POPUP_STATE_CHANNEL = 'louvorja-popup-state'
+export const LITURGY_CONTROL_WINDOW_NAME = 'LiturgyWebControl'
 
 export type PopupSyncPayload = {
   param: string
@@ -29,21 +32,71 @@ export type PopupSyncPayload = {
 }
 
 export type PopupActionPayload = {
-  action: 'report-bounds' | 'restore-bounds'
+  action: 'report-bounds' | 'restore-bounds' | 'close-screens'
 }
 
-function buildPopupUrl(slot: number, moduleId?: string): string {
+let controlWindowRef: PopupWindowRef | null = null
+let closeScreensBridgeInstalled = false
+
+function broadcastPopupAction(action: PopupActionPayload['action']): void {
+  try {
+    const channel = new BroadcastChannel(POPUP_STATE_CHANNEL)
+    channel.postMessage({ action } satisfies PopupActionPayload)
+    channel.close()
+  } catch {
+    // BroadcastChannel indisponível
+  }
+}
+
+/** Fecha refs locais de telas sem reabrir nem usar window.open('', name). */
+function closeLocalScreenRefs(): void {
+  getPopupRefs().forEach((popup) => {
+    if (!popup || popup.closed) return
+    try {
+      const bounds = captureCurrentBounds(popup)
+      const slot = popup.__popupSlot
+      if (bounds && slot) saveSlotBounds(getPopupSlotId(slot), bounds)
+    } catch {
+      // ignore
+    }
+    try {
+      popup.close()
+    } catch {
+      // ignore
+    }
+  })
+  persistPopups([])
+}
+
+function buildPopupUrl(
+  slot: number,
+  moduleId?: string,
+  role: 'screen' | 'control' = 'screen',
+): string {
   const base = import.meta.env.BASE_URL ?? '/'
   const normalizedBase = base.endsWith('/') ? base : `${base}/`
-  const params = new URLSearchParams({ slot: String(slot) })
+  const params = new URLSearchParams({
+    slot: String(slot),
+    role,
+  })
   const module = moduleId || getActiveModule()
   if (module) params.set('module', module)
   return `${normalizedBase}popup?${params.toString()}`
 }
 
+function buildControlUrl(moduleId: string): string {
+  const base = import.meta.env.BASE_URL ?? '/'
+  const normalizedBase = base.endsWith('/') ? base : `${base}/`
+  const params = new URLSearchParams({
+    module: moduleId,
+    role: 'control',
+  })
+  return `${normalizedBase}popup?${params.toString()}`
+}
+
 function openPopupWindow(slot: number, moduleId?: string): PopupWindowRef | null {
   const win = window.open(
-    buildPopupUrl(slot, moduleId),
+    buildPopupUrl(slot, moduleId, 'screen'),
     getPopupSlotId(slot),
     getOpenFeatures(slot),
   ) as PopupWindowRef | null
@@ -96,6 +149,9 @@ function syncStateTo(popup: PopupWindowRef | null | undefined): void {
 
 function syncStateToAll(popups: PopupWindowRef[] = getPopupRefs()): void {
   popups.forEach(syncStateTo)
+  if (controlWindowRef && !controlWindowRef.closed) {
+    syncStateTo(controlWindowRef)
+  }
   broadcastState({ param: 'popup_module', value: getActiveModule() })
 }
 
@@ -139,9 +195,12 @@ function saveOpenPopupLayouts(): void {
   })
 }
 
-function ensurePopups(moduleId?: string): PopupWindowRef[] {
+function ensurePopups(
+  moduleId?: string,
+  slotOverride?: number[],
+): PopupWindowRef[] {
   const availableCount = getPopupCount()
-  const targetSlots = getTargetPopupSlots().filter(
+  const targetSlots = (slotOverride ?? getTargetPopupSlots()).filter(
     (slot) => slot >= 1 && slot <= availableCount,
   )
   let popups = getPopupRefs()
@@ -217,15 +276,80 @@ export function hasLivePopups(): boolean {
   return getPopupRefs().length > 0
 }
 
-export async function openPopupModule(moduleId: string): Promise<boolean> {
-  await requestWindowManagementPermission()
+export function hasScreenPopups(): boolean {
+  return getPopupRefs().length > 0
+}
 
+export function isLiturgyControlOpen(): boolean {
+  return Boolean(controlWindowRef && !controlWindowRef.closed)
+}
+
+/**
+ * Abre a janela de controle da liturgia (960×540), separada dos slots de tela.
+ * Sync — sem await — para preservar o gesto do usuário.
+ */
+export function openLiturgyControlWindow(moduleId = 'liturgy-web'): boolean {
+  setActiveModule(moduleId)
+
+  if (controlWindowRef && !controlWindowRef.closed) {
+    try {
+      controlWindowRef.focus()
+      controlWindowRef.location.href = buildControlUrl(moduleId)
+    } catch {
+      // ignore navigation errors
+    }
+    scheduleSync()
+    return true
+  }
+
+  const win = window.open(
+    buildControlUrl(moduleId),
+    LITURGY_CONTROL_WINDOW_NAME,
+    getControlOpenFeatures(),
+  ) as PopupWindowRef | null
+
+  if (!win) {
+    if (!hasLivePopups()) setActiveModule('')
+    return false
+  }
+
+  controlWindowRef = win
+  const saved = resolveBoundsForSlot(LITURGY_CONTROL_LAYOUT_ID)
+  if (saved) scheduleRestoreOnWindow(win, saved)
+  scheduleSync()
+  return true
+}
+
+/** Fecha apenas as telas de projeção; mantém a janela de controle. */
+export function closeScreenPopups(): void {
+  saveOpenPopupLayouts()
+  // Nunca usar window.open('', slotId): de outra janela (ex.: controle) isso
+  // cria abas/janelas about:blank em vez de achar as telas do opener original.
+  closeLocalScreenRefs()
+  broadcastPopupAction('close-screens')
+}
+
+export function closeLiturgyControlWindow(): void {
+  if (controlWindowRef && !controlWindowRef.closed) {
+    const bounds = captureCurrentBounds(controlWindowRef)
+    if (bounds) saveSlotBounds(LITURGY_CONTROL_LAYOUT_ID, bounds)
+    controlWindowRef.close()
+  }
+  controlWindowRef = null
+}
+
+export async function openPopupModule(
+  moduleId: string,
+  options?: { slots?: number[] },
+): Promise<boolean> {
   // Define o módulo antes de abrir, para a popup ler no boot (URL + storage).
   setActiveModule(moduleId)
 
-  const popups = ensurePopups(moduleId)
+  // Critical: window.open precisa ocorrer ainda no gesto do usuário.
+  // NÃO await antes de ensurePopups — browsers bloqueiam popup após await.
+  const popups = ensurePopups(moduleId, options?.slots)
   if (popups.length === 0) {
-    setActiveModule('')
+    if (!isLiturgyControlOpen()) setActiveModule('')
     return false
   }
 
@@ -238,26 +362,32 @@ export async function openPopupModule(moduleId: string): Promise<boolean> {
   })
 
   scheduleSync(popups)
+
+  // Permissão / multi-monitor: best-effort depois da abertura.
+  void requestWindowManagementPermission().then(() => {
+    popups.forEach((popup) => {
+      if (!popup || popup.closed) return
+      const slot = popup.__popupSlot
+      if (!slot) return
+      const entry = resolveBoundsForSlot(getPopupSlotId(slot))
+      if (entry) scheduleRestoreOnWindow(popup, entry)
+    })
+  })
+
   return true
 }
 
 export async function exitPopupModule(): Promise<void> {
   saveOpenPopupLayouts()
+  closeScreenPopups()
+  closeLiturgyControlWindow()
   setActiveModule('')
   scheduleSync()
 }
 
 export async function closeAllPopups(): Promise<void> {
-  getPopupRefs().forEach((popup, index) => {
-    const bounds = captureCurrentBounds(popup)
-    if (bounds) {
-      saveSlotBounds(getPopupSlotId(tagPopupSlot(popup, index + 1)), bounds)
-    }
-    if (popup && !popup.closed) {
-      popup.close()
-    }
-  })
-  persistPopups([])
+  closeScreenPopups()
+  closeLiturgyControlWindow()
   setActiveModule('')
 }
 
@@ -293,5 +423,23 @@ export function installPopupOpenerBridge(): void {
     if (data?.action === 'popup-bounds' && data.slot && data.bounds) {
       handlePopupBoundsMessage(data.slot, data.bounds)
     }
+
+    if (data?.action === 'close-screens') {
+      closeLocalScreenRefs()
+    }
   })
+
+  if (!closeScreensBridgeInstalled) {
+    closeScreensBridgeInstalled = true
+    try {
+      const channel = new BroadcastChannel(POPUP_STATE_CHANNEL)
+      channel.addEventListener('message', (event: MessageEvent<PopupActionPayload>) => {
+        if (event.data?.action !== 'close-screens') return
+        // Outra janela pediu para limpar/fechar telas (ex.: botão no controle).
+        closeLocalScreenRefs()
+      })
+    } catch {
+      closeScreensBridgeInstalled = false
+    }
+  }
 }

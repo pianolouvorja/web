@@ -3,7 +3,6 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
 import { GlassCard } from '@design-system/index'
-import PopupScreenControls from '@shared/components/PopupScreenControls.vue'
 
 import ClockConfigDialog from '../components/ClockConfigDialog.vue'
 import ClockPreview from '../components/ClockPreview.vue'
@@ -27,7 +26,6 @@ const {
   closeConfig,
   toggleProjection,
   clearProjection,
-  refreshProjectionState,
 } = useClockFeature()
 
 function goBack() {
@@ -36,10 +34,6 @@ function goBack() {
 
 function onToggleProjection() {
   toggleProjection()
-}
-
-function onScreenControlsChanged() {
-  refreshProjectionState()
 }
 </script>
 
@@ -90,10 +84,6 @@ function onScreenControlsChanged() {
                 aria-hidden="true"
               />
             </button>
-          </div>
-
-          <div class="clock-view__tool-group clock-view__tool-group--right">
-            <PopupScreenControls @changed="onScreenControlsChanged" />
           </div>
         </div>
 

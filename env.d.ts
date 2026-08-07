@@ -20,6 +20,44 @@ declare global {
 
   interface Window {
     getScreenDetails?: () => Promise<ScreenDetails>
+    YT?: {
+      Player: new (
+        elementId: string | HTMLElement,
+        options: {
+          videoId?: string
+          playerVars?: Record<string, string | number>
+          events?: {
+            onReady?: (event: { target: YT.Player }) => void
+            onStateChange?: (event: { data: number; target: YT.Player }) => void
+          }
+        },
+      ) => YT.Player
+      PlayerState: {
+        ENDED: number
+        PLAYING: number
+        PAUSED: number
+        BUFFERING: number
+        CUED: number
+      }
+    }
+    onYouTubeIframeAPIReady?: () => void
+  }
+
+  namespace YT {
+    interface Player {
+      playVideo: () => void
+      pauseVideo: () => void
+      seekTo: (seconds: number, allowSeekAhead: boolean) => void
+      getCurrentTime: () => number
+      getDuration: () => number
+      getPlayerState: () => number
+      isMuted: () => boolean
+      mute: () => void
+      unMute: () => void
+      setVolume: (volume: number) => void
+      getVolume: () => number
+      destroy: () => void
+    }
   }
 }
 

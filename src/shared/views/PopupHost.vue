@@ -7,6 +7,7 @@ import { getBrowserItem } from '@shared/services/browser-storage'
 import {
   captureCurrentBounds,
   getPopupSlotId,
+  LITURGY_CONTROL_LAYOUT_ID,
   parseSlotIndex,
   requestWindowManagementPermission,
   resolveBoundsForSlot,
@@ -24,13 +25,24 @@ const moduleId = ref('')
 let layoutInterval: ReturnType<typeof setInterval> | null = null
 let channel: BroadcastChannel | null = null
 
+const popupRole = computed(() => {
+  const role = String(route.query.role ?? '')
+  if (role === 'control' || role === 'screen') return role
+  if (window.name === 'LiturgyWebControl') return 'control'
+  return 'screen'
+})
+
+const isControlPopup = computed(() => popupRole.value === 'control')
+
 const slotIndex = computed(() => {
+  if (isControlPopup.value) return 0
   const fromQuery = Number.parseInt(String(route.query.slot ?? ''), 10)
   if (!Number.isNaN(fromQuery) && fromQuery > 0) return fromQuery
   return parseSlotIndex(window.name)
 })
 
 const slotId = computed(() => {
+  if (isControlPopup.value) return LITURGY_CONTROL_LAYOUT_ID
   if (slotIndex.value) return getPopupSlotId(slotIndex.value)
   return window.name || ''
 })
@@ -112,6 +124,16 @@ function reportBounds() {
   }
 }
 
+function closeThisScreenIfNeeded() {
+  if (isControlPopup.value) return
+  try {
+    reportBounds()
+  } catch {
+    // ignore
+  }
+  window.close()
+}
+
 function handleMessage(event: MessageEvent) {
   if (event.origin !== window.location.origin) return
 
@@ -123,6 +145,11 @@ function handleMessage(event: MessageEvent) {
     | null
 
   if (!data || typeof data === 'string') return
+
+  if ('action' in data && data.action === 'close-screens') {
+    closeThisScreenIfNeeded()
+    return
+  }
 
   if ('action' in data && data.action === 'report-bounds') {
     reportBounds()
@@ -139,9 +166,18 @@ function handleMessage(event: MessageEvent) {
   }
 }
 
-function onChannelMessage(event: MessageEvent<PopupSyncPayload>) {
-  if (event.data?.param === 'popup_module') {
-    applyModule(event.data.value)
+function onChannelMessage(
+  event: MessageEvent<PopupSyncPayload | PopupActionPayload>,
+) {
+  const data = event.data
+  if (!data || typeof data !== 'object') return
+
+  if ('action' in data && data.action === 'close-screens') {
+    closeThisScreenIfNeeded()
+    return
+  }
+  if ('param' in data && data.param === 'popup_module') {
+    applyModule(data.value)
   }
 }
 
@@ -200,7 +236,10 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="popup-host">
+  <div
+    class="popup-host"
+    :class="{ 'popup-host--control': isControlPopup }"
+  >
     <component
       :is="activeView"
       v-if="activeView"
@@ -215,5 +254,9 @@ onUnmounted(() => {
   overflow: hidden;
   background: #000;
   color: #fff;
+}
+
+.popup-host--control {
+  background: #0c0c0e;
 }
 </style>

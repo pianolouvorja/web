@@ -5,6 +5,7 @@ import type { Router } from 'vue-router'
 import type { MediaPlaybackMode } from '@modules/media/types/media'
 import {
   exitPopupModule,
+  isLiturgyControlOpen,
   isPopupModuleOpen,
 } from '@shared/services/popup-windows'
 
@@ -34,7 +35,10 @@ import {
   saveLiturgyState,
   todayWeekday,
 } from '../services/liturgy-preferences'
-import { clearLiturgyWebRuntime } from '../services/liturgy-web-runtime'
+import {
+  clearLiturgyWebRuntime,
+  readLiturgyWebRuntimeFromStorage,
+} from '../services/liturgy-web-runtime'
 import {
   DEFAULT_LITURGY_ITEM_DRAFT,
   DEFAULT_MOMENT_DURATION_MS,
@@ -784,7 +788,11 @@ export const useLiturgyStore = defineStore('liturgy', () => {
       sessionStartedAt.value = Date.now()
     }
 
-    const liturgyOpen = isPopupModuleOpen('liturgy-web')
+    const liturgyOpen =
+      isPopupModuleOpen('liturgy-web') ||
+      isLiturgyControlOpen() ||
+      readLiturgyWebRuntimeFromStorage().projectingScreens ||
+      readLiturgyWebRuntimeFromStorage().active
 
     if (item.type === 'site') {
       if (liturgyOpen && siteProjectionItemId.value === item.id) {
@@ -828,11 +836,27 @@ export const useLiturgyStore = defineStore('liturgy', () => {
     lastActionMessageKey.value = result.messageKey ?? null
   }
 
+  /** Encerra projeção web da liturgia (header global / sync). */
+  async function clearWebProjection() {
+    clearLiturgyWebRuntime()
+    await exitPopupModule()
+    siteProjectionItemId.value = null
+    videoProjectionItemId.value = null
+    lastActionMessageKey.value = null
+  }
+
   /**
    * Mantém o botão da liturgia sincronizado com os popups abertos.
    */
   async function syncSiteProjectionState() {
-    if (!isPopupModuleOpen('liturgy-web')) {
+    const runtime = readLiturgyWebRuntimeFromStorage()
+    const sessionAlive =
+      isPopupModuleOpen('liturgy-web') ||
+      isLiturgyControlOpen() ||
+      runtime.active ||
+      runtime.projectingScreens
+
+    if (!sessionAlive) {
       if (siteProjectionItemId.value != null) {
         siteProjectionItemId.value = null
       }
@@ -1063,6 +1087,7 @@ export const useLiturgyStore = defineStore('liturgy', () => {
     selectItem,
     playMusicMode,
     playItemOnScreens,
+    clearWebProjection,
     syncSiteProjectionState,
     openCustomDialog,
     closeCustomDialog,

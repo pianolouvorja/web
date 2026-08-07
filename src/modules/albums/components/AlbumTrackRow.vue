@@ -2,7 +2,6 @@
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import PopupCountSelector from '@shared/components/PopupCountSelector.vue'
 import MusicTrackActions from '@shared/components/MusicTrackActions.vue'
 import type { AlbumTrack } from '../types/albums'
 
@@ -83,7 +82,6 @@ const { t } = useI18n()
     </span>
 
     <div class="album-track-row__actions">
-      <PopupCountSelector compact />
       <MusicTrackActions
         :music-id="track.musicId"
         :track-name="track.name"
