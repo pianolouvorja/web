@@ -27,10 +27,6 @@ const activeKey = computed(() => {
   return typeof navKey === 'string' ? navKey : 'home'
 })
 
-/** Na liturgia o FAB de mídia fica na própria view (padrão Bíblia). */
-const showMediaChrome = computed(() => activeKey.value !== 'liturgy')
-
-
 /** Items ocultos no dock em mobile (issue #3 — Ezequias 24/07/2026).
  * Settings permanece por questões cosméticas. */
 const DOCK_HIDDEN_ON_MOBILE = new Set<string>(['liturgy', 'utilities'])
@@ -105,7 +101,7 @@ function viewKey(viewRoute: typeof route) {
       </RouterView>
     </main>
 
-    <MediaChrome v-if="showMediaChrome" />
+    <MediaChrome />
 
     <DockFooter
       :items="navItems"
