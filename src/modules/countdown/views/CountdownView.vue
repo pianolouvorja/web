@@ -3,7 +3,6 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
 import { GlassCard } from '@design-system/index'
-import PopupScreenControls from '@shared/components/PopupScreenControls.vue'
 
 import CountdownConfigDialog from '../components/CountdownConfigDialog.vue'
 import CountdownDurationInput from '../components/CountdownDurationInput.vue'
@@ -37,7 +36,6 @@ const {
   clearSavedMarks,
   toggleProjection,
   clearProjection,
-  refreshProjectionState,
 } = useCountdownFeature()
 
 function goBack() {
@@ -46,10 +44,6 @@ function goBack() {
 
 function onToggleProjection() {
   toggleProjection()
-}
-
-function onScreenControlsChanged() {
-  refreshProjectionState()
 }
 </script>
 
@@ -101,10 +95,6 @@ function onScreenControlsChanged() {
                   aria-hidden="true"
                 />
               </button>
-            </div>
-
-            <div class="countdown-view__tool-group countdown-view__tool-group--right">
-              <PopupScreenControls @changed="onScreenControlsChanged" />
             </div>
           </div>
 

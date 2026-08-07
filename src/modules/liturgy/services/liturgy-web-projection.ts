@@ -1,13 +1,19 @@
 import {
+  closeLiturgyControlWindow,
+  closeScreenPopups,
   exitPopupModule,
+  openLiturgyControlWindow,
   openPopupModule,
 } from '@shared/services/popup-windows'
+import { getTargetPopupSlots } from '@shared/services/projection-preferences'
 
 import {
   clearLiturgyWebRuntime,
   isBrowsableMediaUrl,
   parseLiturgyWebTarget,
   publishLiturgyWebRuntime,
+  readLiturgyWebRuntimeFromStorage,
+  setLiturgyProjectingScreens,
   type LiturgyWebKind,
 } from './liturgy-web-runtime'
 
@@ -22,8 +28,10 @@ async function openLiturgyPopup(
   kind: LiturgyWebKind,
   url: string,
   title: string,
-  options?: { videoId?: string; urls?: string[] },
+  options?: { videoId?: string; urls?: string[]; withScreens?: boolean },
 ): Promise<boolean> {
+  const withScreens = options?.withScreens ?? true
+
   publishLiturgyWebRuntime({
     active: true,
     url,
@@ -32,8 +40,22 @@ async function openLiturgyPopup(
     kind,
     videoId: options?.videoId ?? '',
     startedAt: Date.now(),
+    projectingScreens: withScreens,
   })
-  return openPopupModule(LITURGY_WEB_MODULE_ID)
+
+  // Sempre abre o controle dedicado (≈ Electron sourceWindow).
+  const controlOk = openLiturgyControlWindow(LITURGY_WEB_MODULE_ID)
+  if (!controlOk) return false
+
+  if (!withScreens) {
+    closeScreenPopups()
+    setLiturgyProjectingScreens(false)
+    return true
+  }
+
+  const screensOk = await openPopupModule(LITURGY_WEB_MODULE_ID)
+  setLiturgyProjectingScreens(screensOk)
+  return controlOk
 }
 
 /**
@@ -58,6 +80,7 @@ export async function openLiturgyWebOnConfiguredScreens(
 
   return openLiturgyPopup(kind, target.url, label, {
     videoId: target.videoId,
+    withScreens: options.withScreens ?? true,
   })
 }
 
@@ -115,13 +138,13 @@ export async function playLiturgyWebOnConfiguredScreens(
 async function openLiturgyLocalVideo(
   filePath: string,
   title = '', // NOSONAR
-  _withScreens: boolean,
+  withScreens: boolean,
 ): Promise<boolean> {
   const path = filePath.trim()
   if (!isBrowsableMediaUrl(path)) return false
 
   const label = title.trim() || path.split(/[\\/]/).pop() || path
-  return openLiturgyPopup('video', path, label)
+  return openLiturgyPopup('video', path, label, { withScreens })
 }
 
 export async function openLiturgyLocalVideoControl(
@@ -141,7 +164,7 @@ export async function playLiturgyLocalVideoOnScreens(
 async function openLiturgyLocalImages(
   filePaths: string[],
   title = '', // NOSONAR
-  _withScreens: boolean,
+  withScreens: boolean,
 ): Promise<boolean> {
   const paths = filePaths
     .map((entry) => entry.trim())
@@ -149,7 +172,10 @@ async function openLiturgyLocalImages(
   if (paths.length === 0) return false
 
   const label = title.trim() || paths[0]?.split(/[\\/]/).pop() || 'Imagens'
-  return openLiturgyPopup('image', paths[0]!, label, { urls: paths })
+  return openLiturgyPopup('image', paths[0]!, label, {
+    urls: paths,
+    withScreens,
+  })
 }
 
 export async function openLiturgyLocalImageControl(
@@ -169,13 +195,13 @@ export async function playLiturgyLocalImageOnScreens(
 async function openLiturgyLocalPdf(
   filePath: string,
   title = '', // NOSONAR
-  _withScreens: boolean,
+  withScreens: boolean,
 ): Promise<boolean> {
   const path = filePath.trim()
   if (!isBrowsableMediaUrl(path)) return false
 
   const label = title.trim() || path.split(/[\\/]/).pop() || 'PDF'
-  return openLiturgyPopup('pdf', path, label)
+  return openLiturgyPopup('pdf', path, label, { withScreens })
 }
 
 export async function openLiturgyLocalPdfControl(
@@ -215,8 +241,29 @@ export async function playLiturgyLocalPresentationOnScreens(
   return openLiturgyLocalPresentation(filePath, title, true)
 }
 
+/** Liga/desliga telas a partir da barra do controle (gesto do usuário na popup). */
+export async function toggleLiturgyScreensFromControl(): Promise<boolean> {
+  const runtime = readLiturgyWebRuntimeFromStorage()
+  if (!runtime.active) return false
+
+  if (runtime.projectingScreens) {
+    closeScreenPopups()
+    setLiturgyProjectingScreens(false)
+    return false
+  }
+
+  const slots = getTargetPopupSlots()
+  const opened = await openPopupModule(LITURGY_WEB_MODULE_ID, {
+    slots: slots.length ? slots : undefined,
+  })
+  setLiturgyProjectingScreens(opened)
+  return opened
+}
+
 /** Fecha popups de liturgia e limpa o runtime. */
 export async function closeLiturgyWebProjection(): Promise<void> {
   clearLiturgyWebRuntime()
+  closeScreenPopups()
+  closeLiturgyControlWindow()
   await exitPopupModule()
 }

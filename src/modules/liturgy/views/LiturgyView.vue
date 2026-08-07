@@ -3,7 +3,6 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import AlbumLyricDialog from '@modules/albums/components/AlbumLyricDialog.vue'
-import PopupScreenControls from '@shared/components/PopupScreenControls.vue'
 
 import LiturgyCloneDialog from '../components/LiturgyCloneDialog.vue'
 import LiturgyCustomBar from '../components/LiturgyCustomBar.vue'
@@ -99,15 +98,10 @@ const {
   closeLyric,
   setItemDraft,
   setMusicSearchQuery,
-  refreshProjectionState,
 } = useLiturgy()
 
 /** Exibe avisos da liturgia e do player (ex.: áudio indisponível). */
 const liturgyAlertKey = computed(() => lastActionMessageKey.value || null)
-
-function onScreenControlsChanged() {
-  refreshProjectionState()
-}
 </script>
 
 <template>
@@ -131,9 +125,6 @@ function onScreenControlsChanged() {
           <span class="liturgy-view__datetime">
             {{ headerDateTime() }}
           </span>
-        </div>
-        <div class="liturgy-view__screens">
-          <PopupScreenControls @changed="onScreenControlsChanged" />
         </div>
       </div>
     </header>
@@ -363,16 +354,6 @@ function onScreenControlsChanged() {
   display: flex;
   align-items: center;
   gap: 1rem;
-}
-
-.liturgy-view__screens {
-  display: inline-flex;
-  align-items: center;
-
-  @media (max-width: 600px) {
-    display: none;
-  }
-  flex-shrink: 0;
 }
 
 .liturgy-view__meta-text {
