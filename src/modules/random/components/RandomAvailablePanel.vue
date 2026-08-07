@@ -213,41 +213,46 @@ function onFileChange(event: Event) {
 <style scoped lang="scss">
 .random-available {
   display: flex;
-  width: 18rem;
+  width: 100%;
   max-width: 100%;
-  max-height: min(70vh, 36rem);
+  min-height: 0;
   flex-direction: column;
   overflow: hidden;
-  padding: 1.25rem;
+  padding: 0.9rem 1rem;
   border: 1px solid color-mix(in srgb, var(--ds-color-on-surface) 10%, transparent);
-  border-radius: 1.5rem;
+  border-radius: 1rem;
   background: color-mix(in srgb, var(--ds-color-surface-elevated) 72%, transparent);
   backdrop-filter: blur(16px);
   box-sizing: border-box;
+
+  @media (max-width: 600px) {
+    padding: 0.75rem;
+    border-radius: 0.85rem;
+  }
 }
 
 .random-available__head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1rem;
+  margin-bottom: 0.65rem;
 }
 
 .random-available__title {
   margin: 0;
   color: var(--ds-color-primary);
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
 .random-available__badge {
-  padding: 0.15rem 0.5rem;
+  padding: 0.1rem 0.45rem;
   border-radius: 9999px;
   background: color-mix(in srgb, var(--ds-color-primary) 20%, transparent);
   color: var(--ds-color-primary);
-  font-size: 0.6875rem;
+  font-size: 0.65rem;
   font-weight: 600;
 }
 
@@ -257,8 +262,8 @@ function onFileChange(event: Event) {
   width: 100%;
   min-width: 0;
   flex-direction: column;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
+  gap: 0.5rem;
+  margin-bottom: 0.65rem;
 }
 
 .random-available__input-wrap {
@@ -267,17 +272,17 @@ function onFileChange(event: Event) {
 
 .random-available__input {
   width: 100%;
-  height: 2.75rem;
-  padding: 0 2.5rem 0 1rem;
+  height: 2.35rem;
+  padding: 0 2.25rem 0 0.85rem;
   border: 0;
-  border-radius: 0.75rem;
+  border-radius: 0.6rem;
   background: color-mix(
     in srgb,
     var(--ds-color-on-surface) 6%,
     var(--ds-color-surface-container, var(--ds-color-surface))
   );
   color: var(--ds-color-on-surface);
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   box-sizing: border-box;
 
   &::placeholder {
@@ -292,7 +297,7 @@ function onFileChange(event: Event) {
 .random-available__add {
   position: absolute;
   top: 50%;
-  right: 0.65rem;
+  right: 0.55rem;
   display: inline-flex;
   border: 0;
   background: transparent;
@@ -301,23 +306,23 @@ function onFileChange(event: Event) {
   transform: translateY(-50%);
 
   .ti {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
   }
 }
 
 .random-available__import,
 .random-available__generate {
   display: inline-flex;
-  height: 2.35rem;
+  height: 2.05rem;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
+  gap: 0.35rem;
   border: 1px solid color-mix(in srgb, var(--ds-color-primary) 22%, transparent);
-  border-radius: 0.75rem;
+  border-radius: 0.6rem;
   background: transparent;
   color: var(--ds-color-primary);
   cursor: pointer;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 600;
   transition: background-color 160ms ease;
 
@@ -326,7 +331,7 @@ function onFileChange(event: Event) {
   }
 
   .ti {
-    font-size: 1rem;
+    font-size: 0.95rem;
   }
 }
 
@@ -348,34 +353,34 @@ function onFileChange(event: Event) {
   display: flex;
   width: 100%;
   min-width: 0;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .random-available__field {
   display: flex;
   flex: 1 1 0;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.2rem;
   min-width: 0;
   color: var(--ds-color-on-surface-variant);
-  font-size: 0.6875rem;
+  font-size: 0.65rem;
   font-weight: 600;
 
   input {
     width: 100%;
     min-width: 0;
     max-width: 100%;
-    height: 2.5rem;
-    padding: 0 0.65rem;
+    height: 2.2rem;
+    padding: 0 0.55rem;
     border: 0;
-    border-radius: 0.75rem;
+    border-radius: 0.6rem;
     background: color-mix(
       in srgb,
       var(--ds-color-on-surface) 6%,
       var(--ds-color-surface-container, var(--ds-color-surface))
     );
     color: var(--ds-color-on-surface);
-    font-size: 0.875rem;
+    font-size: 0.8125rem;
     box-sizing: border-box;
 
     &:focus {
@@ -387,21 +392,20 @@ function onFileChange(event: Event) {
 .random-available__error {
   margin: 0;
   color: var(--ds-color-error, #ffb4ab);
-  font-size: 0.75rem;
+  font-size: 0.7rem;
 }
 
 .random-available__list-wrap {
-  flex: 1;
-  min-height: 10rem;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow: hidden;
-  mask-image: linear-gradient(to bottom, transparent, black 8%, black 92%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, black 6%, black 94%, transparent);
 }
 
 .random-available__list {
   height: 100%;
-  max-height: 16rem;
   margin: 0;
-  padding: 0.5rem 0.25rem;
+  padding: 0.35rem 0.15rem;
   overflow-y: auto;
   list-style: none;
 }
@@ -410,14 +414,14 @@ function onFileChange(event: Event) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
-  margin-bottom: 0.4rem;
-  padding: 0.7rem 0.75rem;
+  gap: 0.4rem;
+  margin-bottom: 0.3rem;
+  padding: 0.5rem 0.6rem;
   border: 1px solid color-mix(in srgb, var(--ds-color-on-surface) 8%, transparent);
-  border-radius: 0.5rem;
+  border-radius: 0.45rem;
   background: color-mix(in srgb, var(--ds-color-on-surface) 5%, transparent);
   color: var(--ds-color-on-surface);
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
 
   &--drawn {
     opacity: 0.35;
@@ -439,51 +443,44 @@ function onFileChange(event: Event) {
   }
 
   .ti {
-    font-size: 1rem;
+    font-size: 0.95rem;
   }
 }
 
 .random-available__empty {
   display: flex;
   height: 100%;
-  min-height: 10rem;
+  min-height: 6rem;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
   opacity: 0.45;
   color: var(--ds-color-on-surface-variant);
   text-align: center;
 
   .ti {
-    font-size: 2rem;
+    font-size: 1.65rem;
   }
 
   p {
     margin: 0;
-    font-size: 0.875rem;
+    font-size: 0.8rem;
   }
 }
 
 .random-available__clear {
-  margin-top: 1rem;
+  margin-top: 0.65rem;
   border: 0;
   background: transparent;
   color: var(--ds-color-on-surface-variant);
   cursor: pointer;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 500;
   transition: color 160ms ease;
 
   &:hover {
     color: var(--ds-color-error, #ffb4ab);
-  }
-}
-
-@media (max-width: 1280px) {
-  .random-available {
-    width: 100%;
-    max-height: none;
   }
 }
 </style>

@@ -215,11 +215,28 @@ async function onImportFile(file: File) {
 <style scoped lang="scss">
 .random-view {
   display: flex;
-  min-height: calc(100vh - 5rem - var(--ds-dock-height, 5.5rem));
+  box-sizing: border-box;
+  flex: 1 1 auto;
   flex-direction: column;
   align-items: center;
-  padding: var(--ds-spacing-page, 1.5rem);
-  padding-bottom: calc(var(--ds-dock-height, 5.5rem) + 5rem);
+  height: calc(100vh - 5rem - var(--ds-dock-height, 5.5rem));
+  max-height: calc(100vh - 5rem - var(--ds-dock-height, 5.5rem));
+  min-height: 0;
+  max-width: 100%;
+  padding: 0.75rem var(--ds-spacing-page, 2rem) 0.5rem;
+  overflow: hidden;
+
+  @media (max-width: 960px) {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+    padding-bottom: calc(var(--ds-dock-height, 5.5rem) + 5rem);
+  }
+
+  @media (max-width: 600px) {
+    padding: 0.5rem 0.5rem 0;
+    padding-bottom: calc(var(--ds-dock-height, 5.5rem) + 5rem);
+  }
 }
 
 .random-view__header {
@@ -228,14 +245,20 @@ async function onImportFile(file: File) {
   max-width: 80rem;
   flex-shrink: 0;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.25rem;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+
+  @media (max-width: 600px) {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
 }
 
 .random-view__back {
   display: inline-flex;
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 2.25rem;
+  height: 2.25rem;
   align-items: center;
   justify-content: center;
   border: 0;
@@ -250,7 +273,7 @@ async function onImportFile(file: File) {
   }
 
   .ti {
-    font-size: 1.25rem;
+    font-size: 1.15rem;
   }
 }
 
@@ -259,13 +282,17 @@ async function onImportFile(file: File) {
   flex: 1;
   min-width: 0;
   align-items: center;
-  gap: 0.85rem;
+  gap: 0.65rem;
+
+  @media (max-width: 960px) {
+    flex-wrap: wrap;
+  }
 }
 
 .random-view__brand-icon {
   display: flex;
-  width: 2.75rem;
-  height: 2.75rem;
+  width: 2.35rem;
+  height: 2.35rem;
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
@@ -274,35 +301,43 @@ async function onImportFile(file: File) {
   color: var(--ds-color-primary);
 
   .ti {
-    font-size: 1.35rem;
+    font-size: 1.2rem;
   }
 }
 
 .random-view__title {
   margin: 0;
   color: var(--ds-color-on-surface);
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 600;
   line-height: 1;
+
+  @media (max-width: 600px) {
+    font-size: 1.1rem;
+  }
 }
 
 .random-view__modes {
   display: inline-flex;
-  margin-left: 0.5rem;
+  margin-left: 0.35rem;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--ds-color-on-surface) 10%, transparent);
-  border-radius: 0.65rem;
+  border-radius: 0.55rem;
   background: color-mix(in srgb, var(--ds-color-on-surface) 4%, transparent);
+
+  @media (max-width: 960px) {
+    margin-left: 0;
+  }
 }
 
 .random-view__mode {
-  height: 2.15rem;
-  padding: 0 0.9rem;
+  height: 1.9rem;
+  padding: 0 0.75rem;
   border: 0;
   background: transparent;
   color: var(--ds-color-on-surface-variant);
   cursor: pointer;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 700;
 
   &--active {
@@ -313,44 +348,58 @@ async function onImportFile(file: File) {
 
 .random-view__reset {
   display: inline-flex;
-  height: 2.35rem;
+  height: 2rem;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0 0.95rem;
+  gap: 0.3rem;
+  padding: 0 0.75rem;
   border: 1px solid color-mix(in srgb, var(--ds-color-error, #ffb4ab) 30%, transparent);
   border-radius: var(--ds-radius-md, 0.5rem);
   background: color-mix(in srgb, var(--ds-color-error, #ffb4ab) 14%, transparent);
   color: var(--ds-color-error, #ffb4ab);
   cursor: pointer;
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   font-weight: 700;
 
   .ti {
-    font-size: 1.05rem;
+    font-size: 0.95rem;
   }
 }
 
 .random-view__content {
   position: relative;
-  display: flex;
+  display: grid;
   width: 100%;
   max-width: 80rem;
-  flex: 1;
-  align-items: center;
-  justify-content: space-between;
-  gap: clamp(1.5rem, 3vw, 3rem);
+  flex: 1 1 auto;
+  grid-template-columns: minmax(14rem, 17rem) minmax(0, 1fr) minmax(14rem, 17rem);
+  align-items: stretch;
+  gap: 1rem;
   min-height: 0;
   overflow: visible;
+
+  @media (max-width: 1280px) {
+    grid-template-columns: minmax(13rem, 15.5rem) minmax(0, 1fr) minmax(13rem, 15.5rem);
+    gap: 0.75rem;
+  }
 }
 
 .random-view__panel {
   position: relative;
   z-index: 1;
-  flex: 0 0 auto;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
 
   &--available,
   &--history {
     transform: none;
+  }
+
+  :deep(.random-available),
+  :deep(.random-history) {
+    width: 100%;
+    height: 100%;
+    max-height: none;
   }
 }
 
@@ -358,39 +407,44 @@ async function onImportFile(file: File) {
   position: relative;
   z-index: 20;
   display: flex;
-  flex: 1 1 auto;
   align-items: center;
   justify-content: center;
-  min-width: 18rem;
-  max-width: 28rem;
-  margin-inline: auto;
+  min-width: 0;
   overflow: visible;
 }
 
-@media (max-width: 1280px) {
-  .random-view__header {
-    flex-wrap: wrap;
-  }
-
-  .random-view__brand {
-    flex-wrap: wrap;
-  }
-
-  .random-view__modes {
-    margin-left: 0;
-  }
-
+/* Tablet / estreito: empilha (stage no topo), densidade maior */
+@media (max-width: 960px) {
   .random-view__content {
+    display: flex;
     flex-direction: column;
     align-items: stretch;
     justify-content: flex-start;
-    gap: 1.5rem;
+    gap: 0.75rem;
   }
 
   .random-view__stage {
-    max-width: none;
-    min-width: 0;
     order: -1;
+  }
+
+  .random-view__panel {
+    :deep(.random-available),
+    :deep(.random-history) {
+      max-height: min(42vh, 22rem);
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .random-view__content {
+    gap: 0.5rem;
+  }
+
+  .random-view__panel {
+    :deep(.random-available),
+    :deep(.random-history) {
+      max-height: min(48vh, 20rem);
+    }
   }
 }
 </style>
