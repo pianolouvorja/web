@@ -2,7 +2,6 @@
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import PopupCountSelector from '@shared/components/PopupCountSelector.vue'
 import MusicTrackActions from '@shared/components/MusicTrackActions.vue'
 import type { AlbumSearchHit } from '../types/albums'
 
@@ -50,7 +49,6 @@ const rowHovered = ref(false)
     </span>
 
     <div class="album-search-hit__actions">
-      <PopupCountSelector compact />
       <MusicTrackActions
         :music-id="hit.musicId"
         :track-name="hit.name"

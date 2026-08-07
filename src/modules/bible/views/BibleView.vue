@@ -46,7 +46,6 @@ const {
   toggleNavPanel,
   toggleProjection,
   clearProjectionWindow,
-  refreshProjectionState,
   refresh,
 } = useBibleReader()
 
@@ -56,10 +55,6 @@ function onProject() {
 
 function onClearProjection() {
   void clearProjectionWindow()
-}
-
-function onScreenControlsChanged() {
-  refreshProjectionState()
 }
 
 function onPreviousVerse() {
@@ -171,7 +166,6 @@ const navAllCollapsed = computed(() => isMobile.value && booksCollapsed.value &&
         @previous-verse="onPreviousVerse"
         @next-verse="onNextVerse"
         @clear-projection="clearSelection"
-        @screen-controls-changed="onScreenControlsChanged"
       />
       <div
         v-else-if="selectedBookId !== null"

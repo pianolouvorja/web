@@ -8,8 +8,6 @@ import {
 import { useI18n } from 'vue-i18n'
 import { useDisplay } from 'vuetify'
 
-import PopupScreenControls from '@shared/components/PopupScreenControls.vue'
-
 import type { RandomDisplayConfig, RandomRuntimeState } from '../types/random'
 
 const PARTICLE_COUNT = 20
@@ -47,7 +45,6 @@ const props = withDefaults(
 const emit = defineEmits<{
   draw: []
   openConfig: []
-  screenControlsChanged: []
 }>()
 
 const { t } = useI18n()
@@ -169,10 +166,6 @@ onUnmounted(() => {
             aria-hidden="true"
           />
         </button>
-      </div>
-
-      <div class="random-stage__tool-group random-stage__tool-group--right">
-        <PopupScreenControls @changed="emit('screenControlsChanged')" />
       </div>
     </div>
 

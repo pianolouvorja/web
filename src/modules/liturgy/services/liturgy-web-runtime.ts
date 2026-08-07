@@ -1,6 +1,8 @@
 export const LITURGY_WEB_RUNTIME_CHANNEL = 'louvorja-liturgy-web-runtime'
 export const LITURGY_WEB_RUNTIME_STORAGE_KEY = 'louvorja-liturgy-web-runtime-state'
 export const LITURGY_YT_SYNC_CHANNEL = 'louvorja-liturgy-yt-sync'
+export const LITURGY_SITE_SYNC_CHANNEL = 'louvorja-liturgy-site-sync'
+export const LITURGY_PROJECTING_STORAGE_KEY = 'louvorja-liturgy-projecting-screens'
 
 export type LiturgyWebKind =
   | 'youtube'
@@ -20,12 +22,24 @@ export type LiturgyWebProjectionRuntime = {
   videoId: string
   /** Epoch ms — todas as telas alinham o início do vídeo a este instante. */
   startedAt: number
+  /** Telas de projeção abertas (além do controle). */
+  projectingScreens: boolean
 }
 
 export type LiturgyYtSyncPayload = {
   videoId: string
   currentTime: number
   isPaused: boolean
+  volume: number
+  muted: boolean
+  updatedAt: number
+}
+
+export type LiturgySiteSyncPayload = {
+  url: string
+  scrollX: number
+  scrollY: number
+  reloadToken: number
   updatedAt: number
 }
 
@@ -37,6 +51,7 @@ export const DEFAULT_LITURGY_WEB_RUNTIME: LiturgyWebProjectionRuntime = {
   kind: 'site',
   videoId: '',
   startedAt: 0,
+  projectingScreens: false,
 }
 
 function asString(value: unknown, fallback = ''): string {
@@ -173,6 +188,7 @@ export function normalizeLiturgyWebRuntime(
     kind,
     videoId: asString(source.videoId).trim(),
     startedAt: asNumber(source.startedAt, 0),
+    projectingScreens: source.projectingScreens === true,
   }
 }
 
@@ -202,12 +218,36 @@ export function publishLiturgyWebRuntime(
   }
 
   try {
+    localStorage.setItem(
+      LITURGY_PROJECTING_STORAGE_KEY,
+      runtime.projectingScreens ? '1' : '0',
+    )
+  } catch {
+    // ignore
+  }
+
+  try {
     const channel = new BroadcastChannel(LITURGY_WEB_RUNTIME_CHANNEL)
     channel.postMessage(runtime)
     channel.close()
   } catch {
     // BroadcastChannel indisponível
   }
+}
+
+export function patchLiturgyWebRuntime(
+  patch: Partial<LiturgyWebProjectionRuntime>,
+): LiturgyWebProjectionRuntime {
+  const next = {
+    ...readLiturgyWebRuntimeFromStorage(),
+    ...patch,
+  }
+  publishLiturgyWebRuntime(next)
+  return next
+}
+
+export function setLiturgyProjectingScreens(projecting: boolean): void {
+  patchLiturgyWebRuntime({ projectingScreens: projecting })
 }
 
 export function clearLiturgyWebRuntime(): void {
@@ -221,5 +261,44 @@ export function publishLiturgyYtSync(payload: LiturgyYtSyncPayload): void {
     channel.close()
   } catch {
     // BroadcastChannel indisponível
+  }
+}
+
+export function publishLiturgySiteSync(payload: LiturgySiteSyncPayload): void {
+  try {
+    const channel = new BroadcastChannel(LITURGY_SITE_SYNC_CHANNEL)
+    channel.postMessage(payload)
+    channel.close()
+  } catch {
+    // BroadcastChannel indisponível
+  }
+}
+
+export function normalizeLiturgyYtSync(raw: unknown): LiturgyYtSyncPayload | null {
+  if (!raw || typeof raw !== 'object') return null
+  const source = raw as Record<string, unknown>
+  return {
+    videoId: asString(source.videoId),
+    currentTime: asNumber(source.currentTime, 0),
+    isPaused: source.isPaused === true,
+    volume: Math.min(1, Math.max(0, asNumber(source.volume, 1))),
+    muted: source.muted === true,
+    updatedAt: asNumber(source.updatedAt, Date.now()),
+  }
+}
+
+export function normalizeLiturgySiteSync(
+  raw: unknown,
+): LiturgySiteSyncPayload | null {
+  if (!raw || typeof raw !== 'object') return null
+  const source = raw as Record<string, unknown>
+  const url = asString(source.url).trim()
+  if (!url) return null
+  return {
+    url,
+    scrollX: asNumber(source.scrollX, 0),
+    scrollY: asNumber(source.scrollY, 0),
+    reloadToken: asNumber(source.reloadToken, 0),
+    updatedAt: asNumber(source.updatedAt, Date.now()),
   }
 }

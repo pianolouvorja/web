@@ -3,7 +3,6 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
 import { GlassCard } from '@design-system/index'
-import PopupScreenControls from '@shared/components/PopupScreenControls.vue'
 
 import TimerConfigDialog from '../components/TimerConfigDialog.vue'
 import TimerPreview from '../components/TimerPreview.vue'
@@ -34,7 +33,6 @@ const {
   clearSavedMarks,
   toggleProjection,
   clearProjection,
-  refreshProjectionState,
 } = useTimerFeature()
 
 function goBack() {
@@ -43,10 +41,6 @@ function goBack() {
 
 function onToggleProjection() {
   toggleProjection()
-}
-
-function onScreenControlsChanged() {
-  refreshProjectionState()
 }
 </script>
 
@@ -98,10 +92,6 @@ function onScreenControlsChanged() {
                   aria-hidden="true"
                 />
               </button>
-            </div>
-
-            <div class="timer-view__tool-group timer-view__tool-group--right">
-              <PopupScreenControls @changed="onScreenControlsChanged" />
             </div>
           </div>
 

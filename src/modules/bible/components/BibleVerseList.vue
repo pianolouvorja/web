@@ -3,7 +3,6 @@ import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { GlassCard } from '@design-system/index'
-import PopupScreenControls from '@shared/components/PopupScreenControls.vue'
 
 import type { BibleSelection } from '../types/bible'
 
@@ -25,7 +24,6 @@ const emit = defineEmits<{
   nextVerse: []
   clearProjection: []
   copy: []
-  screenControlsChanged: []
 }>()
 
 const { t } = useI18n()
@@ -140,10 +138,6 @@ function isSelected(verseNumber: number): boolean {
           :aria-label="t('bible.searchVerse')"
           @input="emit('update:verseSearchQuery', ($event.target as HTMLInputElement).value)"
         >
-      </div>
-
-      <div class="bible-reader__screens">
-        <PopupScreenControls @changed="emit('screenControlsChanged')" />
       </div>
     </header>
 
@@ -266,16 +260,6 @@ function isSelected(verseNumber: number): boolean {
 
   @media (max-width: 600px) {
     gap: 0.25rem;
-  }
-}
-
-.bible-reader__screens {
-  display: inline-flex;
-  align-items: center;
-  flex-shrink: 0;
-
-  @media (max-width: 768px) {
-    display: none;
   }
 }
 

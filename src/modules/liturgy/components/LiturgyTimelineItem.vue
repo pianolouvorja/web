@@ -3,7 +3,6 @@ import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import MusicTrackActions from '@shared/components/MusicTrackActions.vue'
-import PopupCountSelector from '@shared/components/PopupCountSelector.vue'
 
 import { getItemTypeIcon, isExecutableItem } from '../services/liturgy-item-helpers'
 import type { LiturgyItem } from '../types/liturgy'
@@ -377,10 +376,6 @@ const rowHovered = ref(false)
               aria-hidden="true"
             />
           </button>
-          <PopupCountSelector
-            v-if="!isCategory && (isSiteItem || isVideoRemote || isMusicItem)"
-            compact
-          />
           <MusicTrackActions
             v-if="isMusicItem && item.musicId != null"
             :music-id="item.musicId"
