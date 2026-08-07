@@ -284,7 +284,7 @@ onUnmounted(() => {
   justify-content: center;
   width: 100%;
   min-width: 0;
-  padding: 1rem;
+  padding: 0.5rem 0.35rem;
   overflow: visible;
 }
 
@@ -295,7 +295,7 @@ onUnmounted(() => {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.65rem;
   padding: 0;
   pointer-events: none;
 }
@@ -303,7 +303,7 @@ onUnmounted(() => {
 .random-stage__tool-group {
   display: inline-flex;
   align-items: center;
-  gap: 0.55rem;
+  gap: 0.4rem;
   pointer-events: auto;
 
   &--right {
@@ -313,8 +313,8 @@ onUnmounted(() => {
 
 .random-stage__tool {
   display: inline-flex;
-  width: 2.25rem;
-  height: 2.25rem;
+  width: 2rem;
+  height: 2rem;
   align-items: center;
   justify-content: center;
   border: 0;
@@ -332,7 +332,7 @@ onUnmounted(() => {
   }
 
   .ti {
-    font-size: 1.1rem;
+    font-size: 1rem;
   }
 }
 
@@ -342,9 +342,19 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: min(20rem, 55vw);
-  height: min(20rem, 55vw);
+  width: min(16.5rem, 42vw);
+  height: min(16.5rem, 42vw);
   overflow: visible;
+
+  @media (max-width: 960px) {
+    width: min(14.5rem, 52vw);
+    height: min(14.5rem, 52vw);
+  }
+
+  @media (max-width: 600px) {
+    width: min(13rem, 62vw);
+    height: min(13rem, 62vw);
+  }
 }
 
 .random-stage__orbit {
@@ -358,14 +368,14 @@ onUnmounted(() => {
   animation: random-orbital 20s linear infinite;
 
   &--outer {
-    width: min(26rem, 70vw);
-    height: min(26rem, 70vw);
+    width: min(21rem, 54vw);
+    height: min(21rem, 54vw);
     border: 2px dashed color-mix(in srgb, var(--ds-color-primary) 12%, transparent);
   }
 
   &--inner {
-    width: min(22rem, 60vw);
-    height: min(22rem, 60vw);
+    width: min(18rem, 48vw);
+    height: min(18rem, 48vw);
     border: 1px solid color-mix(in srgb, var(--ds-color-primary) 20%, transparent);
     animation-direction: reverse;
     animation-duration: 15s;
@@ -386,8 +396,8 @@ onUnmounted(() => {
   background: color-mix(in srgb, var(--ds-color-surface-elevated) 72%, transparent);
   backdrop-filter: blur(16px);
   box-shadow:
-    0 0 80px 20px color-mix(in srgb, var(--ds-color-primary) 15%, transparent),
-    inset 0 0 40px color-mix(in srgb, var(--ds-color-primary) 10%, transparent);
+    0 0 56px 14px color-mix(in srgb, var(--ds-color-primary) 15%, transparent),
+    inset 0 0 28px color-mix(in srgb, var(--ds-color-primary) 10%, transparent);
 }
 
 .random-stage__particles {
@@ -427,13 +437,13 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.35rem;
   text-align: center;
 }
 
 .random-stage__winner-label {
   color: var(--ds-color-primary);
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.2em;
   text-transform: uppercase;
@@ -441,7 +451,7 @@ onUnmounted(() => {
 
 .random-stage__display {
   margin: 0;
-  font-size: clamp(1.5rem, 3.2vw, 2.25rem);
+  font-size: clamp(1.25rem, 2.6vw, 1.85rem);
   font-weight: 800;
   line-height: 1.15;
   overflow-wrap: break-word;
@@ -456,22 +466,22 @@ onUnmounted(() => {
 
 .random-stage__idle-icon {
   color: color-mix(in srgb, var(--ds-color-primary) 40%, transparent);
-  font-size: 3.5rem;
+  font-size: 2.5rem;
 }
 
 .random-stage__idle-text {
   margin: 0;
-  max-width: 11rem;
+  max-width: 10rem;
   color: var(--ds-color-on-surface-variant);
-  font-size: 0.875rem;
-  line-height: 1.4;
+  font-size: 0.8rem;
+  line-height: 1.35;
 }
 
 .random-stage__draw {
   position: relative;
   z-index: 2;
   display: flex;
-  margin-top: 2.5rem;
+  margin-top: 1.25rem;
   flex-direction: column;
   align-items: center;
   border: 0;
@@ -498,25 +508,25 @@ onUnmounted(() => {
 
 .random-stage__draw-circle {
   display: inline-flex;
-  width: 5.5rem;
-  height: 5.5rem;
+  width: 4.5rem;
+  height: 4.5rem;
   align-items: center;
   justify-content: center;
   border-radius: 9999px;
   background: var(--ds-color-primary-container, #2196f3);
   color: var(--ds-color-on-primary-container, #002c4f);
-  box-shadow: 0 0 40px color-mix(in srgb, #2196f3 40%, transparent);
+  box-shadow: 0 0 32px color-mix(in srgb, #2196f3 40%, transparent);
   transition: transform 180ms ease;
 
   .ti {
-    font-size: 2.25rem;
+    font-size: 1.85rem;
   }
 }
 
 .random-stage__draw-label {
-  margin-top: 0.85rem;
+  margin-top: 0.55rem;
   color: var(--ds-color-primary);
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -525,9 +535,9 @@ onUnmounted(() => {
 .random-stage__hint {
   position: relative;
   z-index: 2;
-  margin: 0.85rem 0 0;
+  margin: 0.55rem 0 0;
   color: color-mix(in srgb, var(--ds-color-on-surface-variant) 80%, transparent);
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 500;
 }
 
@@ -536,17 +546,17 @@ onUnmounted(() => {
   z-index: 2;
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  margin: 1.25rem 0 0;
-  padding: 0.35rem 0.85rem;
+  gap: 0.35rem;
+  margin: 0.75rem 0 0;
+  padding: 0.3rem 0.7rem;
   border-radius: 9999px;
   background: color-mix(in srgb, var(--ds-color-primary) 22%, transparent);
   color: var(--ds-color-primary);
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 600;
 
   .ti {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
   }
 }
 
