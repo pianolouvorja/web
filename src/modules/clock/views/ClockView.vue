@@ -140,7 +140,9 @@ function onScreenControlsChanged() {
 <style scoped lang="scss">
 .clock-view {
   display: flex;
-  min-height: calc(100vh - 5rem - var(--ds-dock-height, 5.5rem));
+  min-height: calc(
+    100vh - var(--ds-header-height, 5.5rem) - var(--ds-dock-height, 5.5rem)
+  );
   flex-direction: column;
   padding: var(--ds-spacing-page, 1.5rem);
   padding-bottom: calc(var(--ds-dock-height, 5.5rem) + 5rem);
@@ -295,6 +297,39 @@ function onScreenControlsChanged() {
 
   .ti {
     font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 1280px) {
+  .clock-view {
+    padding: 1rem;
+    padding-bottom: calc(var(--ds-dock-height, 5.5rem) + 3.5rem);
+  }
+
+  .clock-view__header {
+    gap: 0.75rem;
+    margin-bottom: 0.85rem;
+  }
+
+  .clock-view__brand-icon {
+    width: 2.25rem;
+    height: 2.25rem;
+
+    .ti {
+      font-size: 1.15rem;
+    }
+  }
+
+  .clock-view__title {
+    font-size: 1.15rem;
+  }
+
+  .clock-view__widget {
+    max-height: min(100%, 20rem);
+  }
+
+  .clock-view__preview {
+    padding: 1rem;
   }
 }
 </style>

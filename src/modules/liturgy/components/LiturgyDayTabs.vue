@@ -113,6 +113,25 @@ function onWheel(event: WheelEvent) {
   background: color-mix(in srgb, var(--ds-color-on-surface) 12%, transparent);
 }
 
+@media (max-width: 1280px) {
+  .liturgy-day-tabs {
+    gap: 0.3rem;
+    padding-bottom: 0.25rem;
+    margin-bottom: 0;
+  }
+
+  .liturgy-day-tabs__chip {
+    min-height: 1.85rem;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.75rem;
+  }
+
+  .liturgy-day-tabs__divider {
+    margin: 0 0.2rem;
+    height: 0.85rem;
+  }
+}
+
 @media (max-width: 600px) {
   .liturgy-day-tabs {
     gap: 0.3rem;

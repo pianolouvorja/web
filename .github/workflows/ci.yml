@@ -1,13 +1,15 @@
-# CI + Deploy — LouvorJA Web
+# CI — LouvorJA Web
 # PR/push: lint, type-check, build, quality gate
-# Push staging → ambiente staging | Push main → produção
-name: CI & Deploy
+# Deploy fica a cargo da hospedagem (branches staging/main)
+# Manual: Actions → CI → Run workflow
+name: CI
 
 on:
   pull_request:
     branches: [staging, main]
   push:
     branches: [staging, main]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -50,12 +52,6 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
-      - name: Upload dist
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist
-          path: dist/
-          retention-days: 1
 
   quality-gate:
     name: Quality Gate
@@ -73,73 +69,3 @@ jobs:
             exit 1
           fi
           echo "Quality Gate PASSOU"
-
-  deploy-staging:
-    name: Deploy Staging
-    runs-on: ubuntu-latest
-    needs: [quality-gate]
-    # success() garante sequência: só roda após o Quality Gate passar
-    if: success() && github.event_name == 'push' && github.ref == 'refs/heads/staging'
-    concurrency:
-      group: deploy-staging
-      cancel-in-progress: true
-    steps:
-      - name: Download dist
-        uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: dist/
-
-      - name: Deploy via SSH (rsync)
-        uses: easingthemes/ssh-deploy@v5.1.0
-        with:
-          SOURCE: "dist/"
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
-          REMOTE_HOST: ${{ secrets.SSH_DEPLOY_HOST }}
-          REMOTE_USER: ${{ secrets.SSH_DEPLOY_USER }}
-          REMOTE_PORT: ${{ secrets.SSH_DEPLOY_PORT }}
-          TARGET: ${{ secrets.SSH_DEPLOY_TARGET_STAGING }}
-          ARGS: "-rlgoDzvc --delete"
-          EXCLUDE: "/.git/, /node_modules/"
-          SCRIPT_BEFORE: |
-            whoami
-            pwd
-            ls -lsha
-          SCRIPT_AFTER: |
-            echo "$RSYNC_STDOUT"
-            echo "Staging deploy finalized → staging.pianolouvorja.com.br"
-
-  deploy-production:
-    name: Deploy Production
-    runs-on: ubuntu-latest
-    needs: [quality-gate]
-    # success() garante sequência: só roda após o Quality Gate passar
-    if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
-    concurrency:
-      group: deploy-production
-      cancel-in-progress: false
-    steps:
-      - name: Download dist
-        uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: dist/
-
-      - name: Deploy via SSH (rsync)
-        uses: easingthemes/ssh-deploy@v5.1.0
-        with:
-          SOURCE: "dist/"
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
-          REMOTE_HOST: ${{ secrets.SSH_DEPLOY_HOST }}
-          REMOTE_USER: ${{ secrets.SSH_DEPLOY_USER }}
-          REMOTE_PORT: ${{ secrets.SSH_DEPLOY_PORT }}
-          TARGET: ${{ secrets.SSH_DEPLOY_TARGET_PRODUCTION }}
-          ARGS: "-rlgoDzvc --delete"
-          EXCLUDE: "/.git/, /node_modules/"
-          SCRIPT_BEFORE: |
-            whoami
-            pwd
-            ls -lsha
-          SCRIPT_AFTER: |
-            echo "$RSYNC_STDOUT"
-            echo "Production deploy finalized → app.pianolouvorja.com.br"
