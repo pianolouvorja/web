@@ -2,6 +2,7 @@
   "name": "louvorja-piano-web",
   "version": "1.16.0",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "version:major": "npm version major -m \"chore: versão %s\"",
