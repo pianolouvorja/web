@@ -9,5 +9,5 @@ const { isAccepted } = useEula()
 
 <template>
   <EulaDialog v-if="!isAccepted" />
-  <RouterView v-show="isAccepted" />
+  <RouterView v-if="isAccepted" />
 </template>

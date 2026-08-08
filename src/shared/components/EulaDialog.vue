@@ -14,6 +14,8 @@ const { accept, decline, currentVersion } = useEula()
 
 const textArea = ref<HTMLElement | null>(null)
 const hasScrolledToBottom = ref(false)
+const showConfirm = ref(false)
+const hasExited = ref(false)
 
 function onScroll() {
   const el = textArea.value
@@ -28,13 +30,40 @@ function onAccept() {
   accept()
 }
 
-function onDecline() {
+function onDeclineClick() {
+  showConfirm.value = true
+}
+
+function onConfirmDecline() {
   decline()
+  showConfirm.value = false
+  hasExited.value = true
+}
+
+function onConfirmCancel() {
+  showConfirm.value = false
 }
 </script>
 
 <template>
-  <div class="eula-dialog" role="dialog" aria-modal="true" aria-labelledby="eula-title">
+  <!-- Tela de saida: usuario recusou definitivamente -->
+  <div v-if="hasExited" class="eula-exit" role="alert">
+    <GlassCard class="eula-exit__card">
+      <div class="eula-exit__icon" aria-hidden="true">
+        <i class="ti ti-shield-x" />
+      </div>
+      <p class="eula-exit__text">{{ t('eula.exitMessage') }}</p>
+    </GlassCard>
+  </div>
+
+  <!-- Dialog EULA principal -->
+  <div
+    v-else
+    class="eula-dialog"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="eula-title"
+  >
     <GlassCard class="eula-dialog__card" elevated>
       <div class="eula-dialog__header">
         <div class="eula-dialog__icon" aria-hidden="true">
@@ -54,7 +83,7 @@ function onDecline() {
         ref="textArea"
         class="eula-dialog__text-area"
         role="region"
-        aria-label="Texto completo da licenca"
+        aria-label="Texto completo da licença"
         tabindex="0"
         @scroll="onScroll"
       >
@@ -75,7 +104,7 @@ function onDecline() {
           variant="outlined"
           size="large"
           class="eula-dialog__btn-decline"
-          @click="onDecline"
+          @click="onDeclineClick"
         >
           {{ t('eula.decline') }}
         </VBtn>
@@ -92,6 +121,37 @@ function onDecline() {
       </div>
     </GlassCard>
   </div>
+
+  <!-- Dialog de confirmacao ao recusar -->
+  <Teleport to="body">
+    <div
+      v-if="showConfirm"
+      class="eula-confirm-overlay"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="eula-confirm-title"
+    >
+      <GlassCard class="eula-confirm__card">
+        <h2 id="eula-confirm-title" class="eula-confirm__title">
+          {{ t('eula.confirmTitle') }}
+        </h2>
+        <p class="eula-confirm__message">{{ t('eula.confirmMessage') }}</p>
+        <div class="eula-confirm__actions">
+          <VBtn variant="text" size="large" @click="onConfirmCancel">
+            {{ t('eula.confirmNo') }}
+          </VBtn>
+          <VBtn
+            variant="flat"
+            size="large"
+            class="eula-confirm__btn-yes"
+            @click="onConfirmDecline"
+          >
+            {{ t('eula.confirmYes') }}
+          </VBtn>
+        </div>
+      </GlassCard>
+    </div>
+  </Teleport>
 </template>
 
 <style scoped lang="scss">
@@ -242,6 +302,99 @@ function onDecline() {
 .eula-dialog__btn-accept {
   flex: 1;
   min-width: 0;
+}
+
+/* Confirmacao dupla */
+.eula-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ds-spacing-4, 1rem);
+  background: color-mix(in srgb, #000 60%, transparent);
+  backdrop-filter: blur(2px);
+  z-index: 3000;
+  animation: eulaFadeIn 150ms ease;
+}
+
+.eula-confirm__card {
+  width: 100%;
+  max-width: 26rem;
+  padding: 1.75rem;
+  text-align: center;
+}
+
+.eula-confirm__title {
+  margin: 0 0 0.75rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--ds-color-on-surface);
+}
+
+.eula-confirm__message {
+  margin: 0 0 1.5rem;
+  font-size: 0.875rem;
+  color: var(--ds-color-on-surface-variant);
+  line-height: 1.5;
+}
+
+.eula-confirm__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  @media (min-width: 480px) {
+    flex-direction: row-reverse;
+    justify-content: center;
+  }
+}
+
+.eula-confirm__btn-yes {
+  background: #d32f2f !important;
+  color: #fff !important;
+}
+
+/* Tela de saida */
+.eula-exit {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ds-spacing-4, 1rem);
+  background: var(--ds-color-surface);
+  z-index: 2000;
+}
+
+.eula-exit__card {
+  width: 100%;
+  max-width: 28rem;
+  padding: 2.5rem 2rem;
+  text-align: center;
+}
+
+.eula-exit__icon {
+  width: 4rem;
+  height: 4rem;
+  margin: 0 auto 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, #d32f2f 12%, transparent);
+  color: #d32f2f;
+
+  .ti {
+    font-size: 2rem;
+  }
+}
+
+.eula-exit__text {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--ds-color-on-surface-variant);
+  line-height: 1.6;
 }
 </style>
 
