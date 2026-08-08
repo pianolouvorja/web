@@ -12,14 +12,12 @@ import { useEula } from '@shared/composables/useEula'
 const { t } = useI18n()
 const { accept, decline, currentVersion } = useEula()
 
-const textArea = ref<HTMLElement | null>(null)
 const hasScrolledToBottom = ref(false)
 const showConfirm = ref(false)
 const hasExited = ref(false)
 
-function onScroll() {
-  const el = textArea.value
-  if (!el) return
+function onScroll(e: Event) {
+  const el = e.target as HTMLElement
   const isBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 4
   if (isBottom) {
     hasScrolledToBottom.value = true
@@ -80,7 +78,6 @@ function onConfirmCancel() {
       </div>
 
       <div
-        ref="textArea"
         class="eula-dialog__text-area"
         role="region"
         aria-label="Texto completo da licença"
@@ -250,6 +247,7 @@ function onConfirmCancel() {
 
 .eula-dialog__text-content {
   margin: 0;
+  padding: 0 0.5rem;
   font-family: inherit;
   font-size: 0.8125rem;
   line-height: 1.7;

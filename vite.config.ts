@@ -121,7 +121,32 @@ export default defineConfig(({ mode }) => {
     test: {
       globals: true,
       environment: 'jsdom',
-      include: ['src/**/__tests__/**/*.test.ts'],
+      include: [
+        'src/**/__tests__/**/*.test.ts',
+        'src/__tests__/**/*.test.ts',
+      ],
+      coverage: {
+        provider: 'v8',
+        reporter: ['text', 'text-summary', 'html', 'lcov'],
+        include: [
+          'src/App.vue',
+          'src/shared/composables/useEula.ts',
+          'src/shared/components/EulaDialog.vue',
+        ],
+        exclude: [
+          'src/locales/**',
+          'docs/**',
+          '**/__tests__/**',
+          '**/*.test.ts',
+          'e2e/**',
+        ],
+        thresholds: {
+          statements: 100,
+          branches: 100,
+          functions: 100,
+          lines: 100,
+        },
+      },
     },
   }
 })

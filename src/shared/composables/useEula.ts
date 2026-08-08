@@ -7,14 +7,26 @@ const storageKey = `eula_accepted_v${EULA_VERSION}`
 function readStored(): boolean {
   try {
     return localStorage.getItem(storageKey) === 'true'
-  } catch {
+  } catch (_e) {
     return false
   }
 }
 
-export function useEula() {
-  const accepted = ref(readStored())
+// Estado global (singleton) — todas as instâncias de useEula() compartilham
+// o mesmo ref. Sem isso, cada componente recebe uma instância nova e o
+// aceite num não propaga para o outro.
+const accepted = ref(readStored())
 
+/**
+ * Reseta o estado do EULA para o valor atual do localStorage.
+ * Usado em testes para isolar cada caso.
+ * @internal
+ */
+export function _resetEulaState(): void {
+  accepted.value = readStored()
+}
+
+export function useEula() {
   const isAccepted = computed(() => accepted.value)
 
   const currentVersion = EULA_VERSION
@@ -24,7 +36,7 @@ export function useEula() {
     try {
       localStorage.setItem(storageKey, 'true')
     } catch {
-      // localStorage indisponivel (modo privado, etc.)
+      // localStorage indisponível (modo privado, etc.)
     }
   }
 
