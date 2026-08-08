@@ -22,6 +22,8 @@ export const USER_PREFERENCE_KEYS = {
   /** Preferências de projeção (letra + popups); alinhado ao Electron. */
   projectionSettings: 'projection.settings',
   homeLocation: 'home.location',
+  /** Zoom da UI do operador (fator 0.7–1.5). */
+  uiZoom: 'ui.zoom',
   mediaUseInternalPlayer: 'media_use_internal_player',
   mediaAutoProjectVideo: 'media_auto_project_video',
   mediaPauseOnMinimize: 'media_pause_on_minimize',
