@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import path from 'node:path'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath, URL } from 'node:url'
@@ -114,8 +115,13 @@ export default defineConfig(({ mode }) => {
         '@themes': path.resolve(__dirname, './src/design-system/themes'),
         '@assets': path.resolve(__dirname, './src/assets'),
         '@styles': path.resolve(__dirname, './src/styles'),
-        '@locales': path.resolve(__dirname, './src/locales'),
+        '@locales': fileURLToPath(new URL('./src/locales', import.meta.url)),
       },
+    },
+    test: {
+      globals: true,
+      environment: 'jsdom',
+      include: ['src/**/__tests__/**/*.test.ts'],
     },
   }
 })

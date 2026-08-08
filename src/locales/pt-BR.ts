@@ -30,4 +30,12 @@ export default {
     openScreens: 'Abrir telas de projeção',
     clearScreen: 'Limpar tela de projeção',
   },
+  eula: {
+    title: 'Licença de Uso do Software',
+    intro: 'Antes de continuar, leia e aceite os termos da licença de uso (EULA) do LouvorJA - PIANO.',
+    accept: 'Aceito os termos',
+    decline: 'Não aceito',
+    viewFull: 'Ver EULA completo',
+    version: 'Versão',
+  },
 }
