@@ -30,4 +30,9 @@ export default {
     openScreens: 'Abrir telas de projeção',
     clearScreen: 'Limpar tela de projeção',
   },
+  uiZoom: {
+    label: 'Zoom da página',
+    zoomIn: 'Aumentar zoom',
+    zoomOut: 'Diminuir zoom',
+  },
 }
