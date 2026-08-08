@@ -139,7 +139,7 @@ Fica eleito o foro da Comarca de Sao Paulo / SP para dirimir quaisquer controver
 Para duvidas, sugestoes ou notificacoes relacionadas a este EULA:
 
 - GitHub: https://github.com/pianolouvorja/app
-- Email: Atraves de issue no repositorio oficial
+- Email: app@pianolouvorja.com.br
 
 
 Aviso Legal: Este EULA e fornecido como documento de referencia e nao substitui aconselhamento juridico profissional. Para questoes criticas, consulte um advogado inscrito na OAB.

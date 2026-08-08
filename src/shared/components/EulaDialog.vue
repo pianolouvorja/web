@@ -84,6 +84,7 @@ function onDecline() {
           variant="tonal"
           size="large"
           class="eula-dialog__btn-accept"
+          :disabled="!hasScrolledToBottom"
           @click="onAccept"
         >
           {{ t('eula.accept') }}

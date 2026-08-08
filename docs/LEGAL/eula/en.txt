@@ -139,7 +139,7 @@ The courts of the Comarca de Sao Paulo / SP are elected to settle any disputes a
 For questions, suggestions, or notifications related to this EULA:
 
 - GitHub: https://github.com/pianolouvorja/app
-- Email: Via issue on the official repository
+- Email: app@pianolouvorja.com.br
 
 
 Legal Disclaimer: This EULA is provided as a reference document and does not replace professional legal advice. For critical matters, consult a lawyer.
