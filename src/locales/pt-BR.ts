@@ -35,7 +35,7 @@ export default {
     intro: 'Antes de continuar, leia e aceite os termos da licença de uso (EULA) do LouvorJA - PIANO.',
     accept: 'Aceito os termos',
     decline: 'Não aceito',
-    viewFull: 'Ver EULA completo',
+    scrollHint: 'Role para baixo para ler todo o termo',
     version: 'Versão',
   },
 }
