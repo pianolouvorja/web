@@ -19,7 +19,7 @@ const { t } = useI18n()
 .module-placeholder {
   display: flex;
   min-height: calc(
-    100vh - var(--ds-header-height, 5.5rem) - var(--ds-dock-height)
+    (100 * var(--ui-vh)) - var(--ds-header-height, 5.5rem) - var(--ds-dock-height)
   );
   flex-direction: column;
   align-items: center;

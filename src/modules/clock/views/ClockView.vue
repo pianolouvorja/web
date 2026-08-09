@@ -131,7 +131,7 @@ function onToggleProjection() {
 .clock-view {
   display: flex;
   min-height: calc(
-    100vh - var(--ds-header-height, 5.5rem) - var(--ds-dock-height, 5.5rem)
+    (100 * var(--ui-vh)) - var(--ds-header-height, 5.5rem) - var(--ds-dock-height, 5.5rem)
   );
   flex-direction: column;
   padding: var(--ds-spacing-page, 1.5rem);
