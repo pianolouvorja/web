@@ -492,7 +492,7 @@ function viewKey(viewRoute: typeof route) {
   position: relative;
   z-index: 1;
   padding-top: var(--ds-header-height, 5.5rem);
-  min-height: 100vh;
+  min-height: calc(100 * var(--ui-vh));
   box-sizing: border-box;
   padding-bottom: var(--ds-dock-height);
 }
