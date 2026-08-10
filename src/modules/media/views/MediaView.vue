@@ -515,6 +515,7 @@ function onStageClick() {
   display: flex;
   justify-content: center;
   pointer-events: none;
+  overflow: visible;
 
   > * {
     pointer-events: auto;
@@ -528,6 +529,7 @@ function onStageClick() {
   gap: 0.45rem;
   width: max-content;
   max-width: calc(100% - 2rem);
+  overflow: visible;
 }
 
 .media-window__empty,
