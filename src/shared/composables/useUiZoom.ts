@@ -1,5 +1,6 @@
 import { computed, onMounted, ref } from 'vue'
 
+import { breakpoints } from '@design-system/tokens/breakpoints'
 import { USER_PREFERENCE_KEYS } from '@shared/constants/storage-keys'
 import {
   getUserPreference,
@@ -18,6 +19,12 @@ const ZOOM_DEFAULT = 1
  */
 const ZOOM_LEVEL_RATIO = 1.2
 const ZOOM_LEVEL_STEP = 0.5
+
+/**
+ * Alinha com Vuetify `smAndDown` (width < md): mesmo critério do dock
+ * (Liturgia/Utilitários) e dos controles de projeção / multi-telas.
+ */
+const MOBILE_MAX_WIDTH = breakpoints.md - 1
 
 /**
  * Chromium às vezes devolve ~1.01 (101%) no nível 0.
@@ -54,6 +61,22 @@ function isProjectionPopupLocation(): boolean {
   return href.includes('#/popup') || path.includes('/popup') || href.includes('/popup?')
 }
 
+const mobileMediaQuery =
+  typeof window !== 'undefined'
+    ? window.matchMedia(`(max-width: ${MOBILE_MAX_WIDTH}px)`)
+    : null
+
+const isMobileViewport = ref(mobileMediaQuery?.matches ?? false)
+
+function onMobileViewportChange(event: MediaQueryListEvent) {
+  isMobileViewport.value = event.matches
+  syncZoomToViewport()
+}
+
+function isZoomDisabled(): boolean {
+  return isProjectionPopupLocation() || isMobileViewport.value
+}
+
 function readStoredZoom(): number {
   const stored = getUserPreference<unknown>(USER_PREFERENCE_KEYS.uiZoom)
   if (typeof stored === 'number' && Number.isFinite(stored)) {
@@ -69,6 +92,7 @@ function readStoredZoom(): number {
 const zoom = ref(readStoredZoom())
 
 let shortcutInstalled = false
+let mobileListenerInstalled = false
 
 function clearCssZoom(): void {
   if (typeof document === 'undefined') return
@@ -94,7 +118,22 @@ function applyZoom(value: number): number {
   return next
 }
 
+/** Mobile/popup: zera CSS; desktop: reaplica o fator persistido. */
+function syncZoomToViewport(): void {
+  if (isZoomDisabled()) {
+    clearCssZoom()
+    zoom.value = ZOOM_DEFAULT
+    return
+  }
+  applyZoom(readStoredZoom())
+}
+
 function setZoom(value: number): number {
+  if (isZoomDisabled()) {
+    clearCssZoom()
+    zoom.value = ZOOM_DEFAULT
+    return ZOOM_DEFAULT
+  }
   const applied = applyZoom(value)
   persistZoom(applied)
   return applied
@@ -106,16 +145,19 @@ function stepZoomLevel(delta: number): number {
 }
 
 function zoomIn(): void {
+  if (isZoomDisabled()) return
   if (zoom.value >= ZOOM_MAX - 1e-9) return
   stepZoomLevel(ZOOM_LEVEL_STEP)
 }
 
 function zoomOut(): void {
+  if (isZoomDisabled()) return
   if (zoom.value <= ZOOM_MIN + 1e-9) return
   stepZoomLevel(-ZOOM_LEVEL_STEP)
 }
 
 function resetZoom(): void {
+  if (isZoomDisabled()) return
   setZoom(ZOOM_DEFAULT)
 }
 
@@ -124,7 +166,7 @@ function isZoomModifier(event: KeyboardEvent): boolean {
 }
 
 function onZoomShortcut(event: KeyboardEvent): void {
-  if (isProjectionPopupLocation()) return
+  if (isZoomDisabled()) return
   if (!isZoomModifier(event)) return
 
   const key = event.key
@@ -159,25 +201,32 @@ function installZoomShortcuts(): void {
   shortcutInstalled = true
 }
 
+function installMobileViewportListener(): void {
+  if (!mobileMediaQuery || mobileListenerInstalled) return
+  mobileMediaQuery.addEventListener('change', onMobileViewportChange)
+  mobileListenerInstalled = true
+}
+
 /** Aplica o zoom persistido (chamar no boot). */
 export function initUiZoom(): void {
-  if (isProjectionPopupLocation()) {
-    clearCssZoom()
-    return
-  }
-  applyZoom(zoom.value)
+  installMobileViewportListener()
   installZoomShortcuts()
+  syncZoomToViewport()
 }
 
 export function useUiZoom() {
   const zoomPercent = computed(() => formatZoomPercent(zoom.value))
-  const canZoomIn = computed(() => zoom.value < ZOOM_MAX - 1e-9)
-  const canZoomOut = computed(() => zoom.value > ZOOM_MIN + 1e-9)
+  const canZoomIn = computed(
+    () => !isZoomDisabled() && zoom.value < ZOOM_MAX - 1e-9,
+  )
+  const canZoomOut = computed(
+    () => !isZoomDisabled() && zoom.value > ZOOM_MIN + 1e-9,
+  )
 
   onMounted(() => {
-    if (isProjectionPopupLocation()) return
-    applyZoom(zoom.value)
+    installMobileViewportListener()
     installZoomShortcuts()
+    syncZoomToViewport()
   })
 
   return {
