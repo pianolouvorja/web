@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useDisplay } from 'vuetify'
 
 import PopupScreenControls from '@shared/components/PopupScreenControls.vue'
 
@@ -34,8 +35,12 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const { smAndDown } = useDisplay()
 const modeMenuOpen = ref(false)
 const volumeOpen = ref(false)
+
+/** Projeção, multi-telas e lista de slides: desktop only (mesmo critério do dock). */
+const showDesktopOnlyActions = computed(() => !smAndDown.value)
 
 const modeIcon = computed(() => {
   if (props.mode === 'instrumental') return 'ti-piano'
@@ -222,24 +227,27 @@ function selectMode(mode: MediaPlaybackMode) {
         </div>
       </div>
 
-      <PopupScreenControls />
+      <template v-if="showDesktopOnlyActions">
+        <PopupScreenControls />
+
+        <button
+          type="button"
+          class="media-player-pill__icon-btn"
+          :class="{ 'is-on': projecting }"
+          :aria-label="projecting ? t('media.clearProjection') : t('media.project')"
+          :title="projecting ? t('media.clearProjection') : t('media.project')"
+          @click="emit('toggleProjection')"
+        >
+          <i
+            class="ti"
+            :class="projecting ? 'ti-player-stop' : 'ti-presentation'"
+            aria-hidden="true"
+          />
+        </button>
+      </template>
 
       <button
-        type="button"
-        class="media-player-pill__icon-btn"
-        :class="{ 'is-on': projecting }"
-        :aria-label="projecting ? t('media.clearProjection') : t('media.project')"
-        :title="projecting ? t('media.clearProjection') : t('media.project')"
-        @click="emit('toggleProjection')"
-      >
-        <i
-          class="ti"
-          :class="projecting ? 'ti-player-stop' : 'ti-presentation'"
-          aria-hidden="true"
-        />
-      </button>
-
-      <button
+        v-if="showDesktopOnlyActions"
         type="button"
         class="media-player-pill__icon-btn"
         :aria-label="t('media.fullscreen')"
@@ -253,6 +261,7 @@ function selectMode(mode: MediaPlaybackMode) {
       </button>
 
       <button
+        v-if="showDesktopOnlyActions"
         type="button"
         class="media-player-pill__icon-btn"
         :class="{ 'is-on': playlistOpen }"
