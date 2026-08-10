@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
+import { breakpoints } from '@design-system/tokens/breakpoints'
 import {
   exitPopupModule,
   isPopupModuleOpen,
@@ -46,6 +47,12 @@ import type {
   MediaSession,
 } from '../types/media'
 import { DEFAULT_MEDIA_PROJECTION } from '../types/media'
+
+/** Alinha com Vuetify `smAndDown` (width < md): sem projeção no mobile. */
+function isMobileOperatorViewport(): boolean {
+  if (typeof window === 'undefined') return false
+  return window.matchMedia(`(max-width: ${breakpoints.md - 1}px)`).matches
+}
 
 export const useMediaStore = defineStore('media', () => {
   const session = ref<MediaSession | null>(null)
@@ -387,7 +394,7 @@ export const useMediaStore = defineStore('media', () => {
       slideTimesSec,
     }
 
-    showPlaylist.value = true
+    showPlaylist.value = !isMobileOperatorViewport()
     slideIndex.value = 0
     currentTimeSec.value = 0
     durationSec.value = 0
@@ -411,7 +418,7 @@ export const useMediaStore = defineStore('media', () => {
     await refreshResolvedSlideImage()
     void maybeStartOndemandDownload(musicId)
 
-    if (params.project || !minimized.value) {
+    if (!isMobileOperatorViewport() && (params.project || !minimized.value)) {
       await startProjection()
     }
 
@@ -747,6 +754,7 @@ export const useMediaStore = defineStore('media', () => {
   }
 
   async function startProjection(): Promise<boolean> {
+    if (isMobileOperatorViewport()) return false
     if (!session.value) return false
     const opened = await openPopupModule('media')
     isProjecting.value = opened

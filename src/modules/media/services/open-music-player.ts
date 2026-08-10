@@ -1,3 +1,5 @@
+import { breakpoints } from '@design-system/tokens/breakpoints'
+
 import { useMediaStore } from '../stores/useMediaStore'
 import type { MediaOpenResult, MediaPlaybackMode } from '../types/media'
 
@@ -7,6 +9,12 @@ export type OpenMusicPlayerParams = {
   albumId?: number | null
   /** Quando omitido, projeta apenas em `no_audio` (contrato Álbuns). */
   project?: boolean
+}
+
+/** Alinha com Vuetify `smAndDown`: mobile não usa projeção. */
+function isMobileOperatorViewport(): boolean {
+  if (typeof window === 'undefined') return false
+  return window.matchMedia(`(max-width: ${breakpoints.md - 1}px)`).matches
 }
 
 /**
@@ -22,7 +30,10 @@ export async function openMusicPlayer(
   }
 
   const mode = params.mode
-  const shouldProject = params.project ?? mode === 'no_audio'
+  const mobile = isMobileOperatorViewport()
+  const shouldProject = mobile
+    ? false
+    : (params.project ?? mode === 'no_audio')
   const mediaStore = useMediaStore()
 
   const result = await mediaStore.open({
