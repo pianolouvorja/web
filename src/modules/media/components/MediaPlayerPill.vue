@@ -58,6 +58,16 @@ function onVolumeInput(event: Event) {
   emit('update:volume', Number(target.value) / 100)
 }
 
+function toggleVolumeMenu() {
+  volumeOpen.value = !volumeOpen.value
+  if (volumeOpen.value) modeMenuOpen.value = false
+}
+
+function toggleModeMenu() {
+  modeMenuOpen.value = !modeMenuOpen.value
+  if (modeMenuOpen.value) volumeOpen.value = false
+}
+
 function selectMode(mode: MediaPlaybackMode) {
   modeMenuOpen.value = false
   emit('update:mode', mode)
@@ -145,7 +155,7 @@ function selectMode(mode: MediaPlaybackMode) {
           class="media-player-pill__icon-btn"
           :aria-label="t('media.volume')"
           :title="t('media.volume')"
-          @click="volumeOpen = !volumeOpen"
+          @click="toggleVolumeMenu"
         >
           <i
             class="ti ti-volume"
@@ -174,7 +184,7 @@ function selectMode(mode: MediaPlaybackMode) {
           class="media-player-pill__icon-btn"
           :aria-label="t('media.audioType')"
           :title="t('media.audioType')"
-          @click="modeMenuOpen = !modeMenuOpen"
+          @click="toggleModeMenu"
         >
           <i
             class="ti"
@@ -280,6 +290,7 @@ function selectMode(mode: MediaPlaybackMode) {
 
 <style scoped lang="scss">
 .media-player-pill {
+  position: relative;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -479,11 +490,36 @@ function selectMode(mode: MediaPlaybackMode) {
   .media-player-pill {
     border-radius: 1.25rem 0 1.25rem 0;
     width: min(100%, calc(100vw - 1.5rem));
+    overflow: visible;
   }
 
   .media-player-pill__info {
     max-width: 100%;
     width: 100%;
+  }
+
+  /*
+   * Em 362–960px os botões podem ficar à esquerda ou à direita.
+   * Ancora o popup no pill inteiro para não cortar em nenhuma borda.
+   */
+  .media-player-pill__menu-wrap {
+    position: static;
+  }
+
+  .media-player-pill__volume-pop,
+  .media-player-pill__mode-pop {
+    left: 0.65rem;
+    right: 0.65rem;
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    z-index: 8;
+  }
+
+  .media-player-pill__volume-pop {
+    display: flex;
+    align-items: center;
+    min-height: 2.75rem;
   }
 }
 </style>
