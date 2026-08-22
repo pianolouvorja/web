@@ -18,6 +18,7 @@ import { useRandomStore } from '@modules/random/stores/useRandomStore'
 import { useTimerStore } from '@modules/timer/stores/useTimerStore'
 import { mainNavRoutes } from '@shared/constants/navigation'
 import PopupScreenControls from '@shared/components/PopupScreenControls.vue'
+import UiZoomControls from '@shared/components/UiZoomControls.vue'
 import logoUrl from '@assets/brand/logo-louvor-ja.svg'
 import CodenameLogo from '@assets/brand/CodenameLogo.vue'
 import { APP_VERSION } from '@shared/constants/app'
@@ -273,7 +274,8 @@ function viewKey(viewRoute: typeof route) {
         </span>
       </div>
       <div class="app-shell__header-end">
-        <!-- Projeção + multi-telas: desktop only (≤600px oculto) -->
+        <!-- Zoom + projeção + multi-telas: desktop only (mesmo critério smAndDown do dock) -->
+        <UiZoomControls v-if="!smAndDown" />
         <div
           v-if="!smAndDown"
           class="app-shell__projection"
@@ -490,7 +492,7 @@ function viewKey(viewRoute: typeof route) {
   position: relative;
   z-index: 1;
   padding-top: var(--ds-header-height, 5.5rem);
-  min-height: 100vh;
+  min-height: calc(100 * var(--ui-vh));
   box-sizing: border-box;
   padding-bottom: var(--ds-dock-height);
 }

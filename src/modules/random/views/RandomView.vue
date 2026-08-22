@@ -214,10 +214,10 @@ async function onImportFile(file: File) {
   flex-direction: column;
   align-items: center;
   height: calc(
-    100vh - var(--ds-header-height, 5.5rem) - var(--ds-dock-height, 5.5rem)
+    (100 * var(--ui-vh)) - var(--ds-header-height, 5.5rem) - var(--ds-dock-height, 5.5rem)
   );
   max-height: calc(
-    100vh - var(--ds-header-height, 5.5rem) - var(--ds-dock-height, 5.5rem)
+    (100 * var(--ui-vh)) - var(--ds-header-height, 5.5rem) - var(--ds-dock-height, 5.5rem)
   );
   min-height: 0;
   max-width: 100%;

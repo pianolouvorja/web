@@ -58,7 +58,7 @@ const { formattedTime } = useHomeClock()
   align-items: center;
   justify-content: center;
   min-height: calc(
-    100vh - var(--app-titlebar-height, 0px) - var(--ds-header-height, 5.5rem) -
+    (100 * var(--ui-vh)) - var(--app-titlebar-height, 0px) - var(--ds-header-height, 5.5rem) -
       var(--ds-dock-height) - 2rem
   );
   padding: var(--ds-spacing-page);
@@ -132,7 +132,7 @@ const { formattedTime } = useHomeClock()
 @media (max-width: 768px) {
   .home-view {
     padding: 1rem 1rem;
-    min-height: calc(100vh - 3.5rem - var(--ds-dock-height) - 2rem);
+    min-height: calc((100 * var(--ui-vh)) - 3.5rem - var(--ds-dock-height) - 2rem);
   }
 
   .home-view__content {

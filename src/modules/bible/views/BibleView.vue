@@ -241,7 +241,7 @@ const navAllCollapsed = computed(() => isMobile.value && booksCollapsed.value &&
     // Altura = viewport - header app - toolbar bible - paddings - dock.
     &--nav-collapsed {
       grid-template-rows: auto minmax(0, 1fr);
-      height: calc(100vh - 3.5rem - 5rem - var(--ds-dock-height, 4.5rem));
+      height: calc((100 * var(--ui-vh)) - 3.5rem - 5rem - var(--ds-dock-height, 4.5rem));
       overflow: hidden;
 
       @media (max-width: 768px) {
@@ -312,7 +312,7 @@ const navAllCollapsed = computed(() => isMobile.value && booksCollapsed.value &&
 @media (max-width: 430px) {
   .bible-view__body {
     // viewport - header app (4rem) - toolbar bible - paddings - dock
-    height: calc(100vh - 4rem - 5rem - var(--ds-dock-height, 4.5rem)) !important;
+    height: calc((100 * var(--ui-vh)) - 4rem - 5rem - var(--ds-dock-height, 4.5rem)) !important;
     overflow-y: hidden !important;
     grid-template-rows: auto minmax(0, 1fr) !important;
   }

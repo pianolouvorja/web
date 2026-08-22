@@ -2,6 +2,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
+import { useDisplay } from 'vuetify'
 
 import MediaCloseDialog from '../components/MediaCloseDialog.vue'
 import MediaPlayerPill from '../components/MediaPlayerPill.vue'
@@ -12,7 +13,9 @@ import type { MediaPlaybackMode } from '../types/media'
 
 const { t } = useI18n()
 const router = useRouter()
+const { smAndDown } = useDisplay()
 const stageRoot = ref<HTMLElement | null>(null)
+const isFullscreen = ref(false)
 
 const {
   session,
@@ -50,6 +53,7 @@ const {
   cancelClose,
   close,
   clearError,
+  clearProjection,
   syncProjectionFlag,
 } = useMediaPlayer()
 
@@ -59,6 +63,9 @@ const stageImage = computed(
   () => resolvedSlideImageUrl.value ?? currentSlide.value?.imageUrl ?? null,
 )
 const isCover = computed(() => Boolean(currentSlide.value?.isCover))
+
+/** Lista de slides só no desktop (mesmo critério smAndDown do dock). */
+const playlistVisible = computed(() => showPlaylist.value && !smAndDown.value)
 
 const playlist = computed(() =>
   (session.value?.slides ?? []).map((slide, index) => ({
@@ -71,15 +78,67 @@ const playlist = computed(() =>
   })),
 )
 
+function syncFullscreenFlag(): void {
+  isFullscreen.value = Boolean(document.fullscreenElement)
+}
+
+async function enterFullscreen(): Promise<void> {
+  const el = stageRoot.value
+  if (!el || document.fullscreenElement) return
+  try {
+    await el.requestFullscreen()
+  } catch {
+    // Navegadores podem exigir gesto do usuário; o botão de tela cheia permanece.
+  }
+}
+
+async function exitFullscreenIfNeeded(): Promise<void> {
+  if (!document.fullscreenElement) return
+  try {
+    await document.exitFullscreen()
+  } catch {
+    // ignore
+  }
+}
+
+function applyMobilePlayerDefaults(): void {
+  if (!smAndDown.value) {
+    setPlaylistOpen(true)
+    return
+  }
+  setPlaylistOpen(false)
+  if (isProjecting.value) {
+    clearProjection()
+  }
+  void enterFullscreen()
+}
+
 onMounted(() => {
   document.documentElement.classList.add('media-player-open')
+  document.addEventListener('fullscreenchange', syncFullscreenFlag)
+  syncFullscreenFlag()
   maximize()
-  setPlaylistOpen(true)
   syncProjectionFlag()
+  applyMobilePlayerDefaults()
 })
 
 onUnmounted(() => {
+  document.removeEventListener('fullscreenchange', syncFullscreenFlag)
   document.documentElement.classList.remove('media-player-open')
+  void exitFullscreenIfNeeded()
+  // Dock / back / qualquer saída da rota: mesmo efeito do botão minimizar
+  if (hasSession.value) {
+    minimize()
+  }
+})
+
+watch(smAndDown, (mobile) => {
+  if (mobile) {
+    setPlaylistOpen(false)
+    if (isProjecting.value) clearProjection()
+    return
+  }
+  setPlaylistOpen(true)
 })
 
 /** Volta para a rota de origem (Liturgia, Álbuns, etc.), sem forçar Álbuns. */
@@ -98,11 +157,13 @@ watch(hasSession, (active) => {
 })
 
 async function onMinimize() {
+  await exitFullscreenIfNeeded()
   minimize()
   leaveMediaRoute()
 }
 
 function onConfirmClose() {
+  void exitFullscreenIfNeeded()
   close()
 }
 
@@ -119,6 +180,12 @@ async function onToggleFullscreen() {
   }
   await el.requestFullscreen()
 }
+
+/** No mobile, toque no palco abre tela cheia (mesmo recurso do botão maximize). */
+function onStageClick() {
+  if (!smAndDown.value || document.fullscreenElement) return
+  void enterFullscreen()
+}
 </script>
 
 <template>
@@ -126,7 +193,7 @@ async function onToggleFullscreen() {
     ref="stageRoot"
     class="media-window"
   >
-    <header class="media-window__toolbar">
+    <header class="media-window__toolbar media-window__toolbar--start">
       <button
         type="button"
         class="media-window__tool-btn"
@@ -148,6 +215,22 @@ async function onToggleFullscreen() {
       >
         <i
           class="ti ti-x"
+          aria-hidden="true"
+        />
+      </button>
+    </header>
+
+    <header class="media-window__toolbar media-window__toolbar--end">
+      <button
+        type="button"
+        class="media-window__tool-btn"
+        :aria-label="t('media.fullscreen')"
+        :title="t('media.fullscreen')"
+        @click="onToggleFullscreen"
+      >
+        <i
+          class="ti"
+          :class="isFullscreen ? 'ti-minimize' : 'ti-maximize'"
           aria-hidden="true"
         />
       </button>
@@ -177,9 +260,12 @@ async function onToggleFullscreen() {
     <div
       v-else
       class="media-window__body"
-      :class="{ 'media-window__body--playlist': showPlaylist }"
+      :class="{ 'media-window__body--playlist': playlistVisible }"
     >
-      <div class="media-window__stage">
+      <div
+        class="media-window__stage"
+        @click="onStageClick"
+      >
         <MediaSlideStage
           :lyric="stageLyric"
           :title="stageTitle"
@@ -189,7 +275,7 @@ async function onToggleFullscreen() {
       </div>
 
       <aside
-        v-if="showPlaylist"
+        v-if="playlistVisible"
         class="media-window__playlist"
       >
         <h2 class="media-window__playlist-title">
@@ -234,7 +320,7 @@ async function onToggleFullscreen() {
             :progress-ratio="progressRatio"
             :volume="volume"
             :projecting="isProjecting"
-            :playlist-open="showPlaylist"
+            :playlist-open="playlistVisible"
             @toggle-play="togglePlay"
             @previous-slide="previousSlide"
             @next-slide="nextSlide"
@@ -262,11 +348,11 @@ async function onToggleFullscreen() {
   position: relative;
   box-sizing: border-box;
   height: calc(
-    100vh - var(--app-titlebar-height, 0px) - var(--ds-header-height, 5.5rem) -
+    (100 * var(--ui-vh)) - var(--app-titlebar-height, 0px) - var(--ds-header-height, 5.5rem) -
       var(--ds-dock-height) - 1.75rem
   );
   max-height: calc(
-    100vh - var(--app-titlebar-height, 0px) - var(--ds-header-height, 5.5rem) -
+    (100 * var(--ui-vh)) - var(--app-titlebar-height, 0px) - var(--ds-header-height, 5.5rem) -
       var(--ds-dock-height) - 1.75rem
   );
   margin: 0.75rem var(--ds-spacing-page, 2rem) 1rem;
@@ -284,7 +370,6 @@ async function onToggleFullscreen() {
 .media-window__toolbar {
   position: absolute;
   top: 0.75rem;
-  left: 0.75rem;
   z-index: 30;
   display: inline-flex;
   gap: 0.35rem;
@@ -292,6 +377,14 @@ async function onToggleFullscreen() {
   border-radius: var(--ds-radius-lg, 16px 0 16px 0);
   background: rgb(30 30 30 / 0.75);
   border: 1px solid rgb(255 255 255 / 0.12);
+
+  &--start {
+    left: 0.75rem;
+  }
+
+  &--end {
+    right: 0.75rem;
+  }
 }
 
 .media-window__tool-btn {
@@ -422,6 +515,7 @@ async function onToggleFullscreen() {
   display: flex;
   justify-content: center;
   pointer-events: none;
+  overflow: visible;
 
   > * {
     pointer-events: auto;
@@ -435,6 +529,7 @@ async function onToggleFullscreen() {
   gap: 0.45rem;
   width: max-content;
   max-width: calc(100% - 2rem);
+  overflow: visible;
 }
 
 .media-window__empty,
@@ -460,11 +555,11 @@ async function onToggleFullscreen() {
 @media (max-width: 1280px) {
   .media-window {
     height: calc(
-      100vh - var(--app-titlebar-height, 0px) - var(--ds-header-height, 5.5rem) -
+      (100 * var(--ui-vh)) - var(--app-titlebar-height, 0px) - var(--ds-header-height, 5.5rem) -
         var(--ds-dock-height) - 1rem
     );
     max-height: calc(
-      100vh - var(--app-titlebar-height, 0px) - var(--ds-header-height, 5.5rem) -
+      (100 * var(--ui-vh)) - var(--app-titlebar-height, 0px) - var(--ds-header-height, 5.5rem) -
         var(--ds-dock-height) - 1rem
     );
     margin: 0.5rem 1rem 0.65rem;
@@ -487,12 +582,6 @@ async function onToggleFullscreen() {
 @media (max-width: 960px) {
   .media-window__body--playlist {
     grid-template-columns: 1fr;
-    grid-template-rows: minmax(0, 1fr) 12rem;
-  }
-
-  .media-window__playlist {
-    border-left: none;
-    border-top: 1px solid rgb(255 255 255 / 0.08);
   }
 }
 </style>
