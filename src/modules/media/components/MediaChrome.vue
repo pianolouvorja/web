@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
+import { useDisplay } from 'vuetify'
 
 import { useMediaPlayer } from '../composables/useMediaPlayer'
 import MediaProjectFab from './MediaProjectFab.vue'
@@ -9,6 +10,7 @@ import MediaStatusPreview from './MediaStatusPreview.vue'
 
 const { t } = useI18n()
 const router = useRouter()
+const { smAndDown } = useDisplay()
 
 const {
   hasSession,
@@ -24,6 +26,8 @@ const {
 } = useMediaPlayer()
 
 const visible = computed(() => hasSession.value && minimized.value)
+/** FAB de projeção: desktop only (mesmo critério smAndDown do dock). */
+const showProjectionFab = computed(() => !smAndDown.value)
 
 async function onProject() {
   await toggleProjection()
@@ -82,6 +86,7 @@ async function onToggleAudio() {
       </button>
 
       <MediaProjectFab
+        v-if="showProjectionFab"
         :projecting="isProjecting"
         @project="onProject"
         @clear="onClear"
