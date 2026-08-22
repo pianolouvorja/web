@@ -30,9 +30,17 @@ export default {
     openScreens: 'Abrir telas de projeção',
     clearScreen: 'Limpar tela de projeção',
   },
-  uiZoom: {
-    label: 'Zoom da página',
-    zoomIn: 'Aumentar zoom',
-    zoomOut: 'Diminuir zoom',
+  eula: {
+    title: 'Licença de Uso do Software',
+    intro: 'Antes de continuar, leia e aceite os termos da licença de uso (EULA) do LouvorJA - PIANO.',
+    accept: 'Aceito os termos',
+    decline: 'Não aceito',
+    scrollHint: 'Role para baixo para ler todo o termo',
+    version: 'Versão',
+    confirmTitle: 'Tem certeza?',
+    confirmMessage: 'Se você não aceitar os termos, não poderá utilizar o aplicativo. Deseja realmente recusar?',
+    confirmYes: 'Sim, recusar',
+    confirmNo: 'Voltar',
+    exitMessage: 'Você não aceitou os termos do EULA. O aplicativo não pode ser utilizado. Você pode fechar esta página.',
   },
 }
