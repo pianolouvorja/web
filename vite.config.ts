@@ -61,6 +61,7 @@ export default defineConfig(({ mode }) => {
           description: 'LouvorJA - PIANO — versão web para gerenciamento de culto',
           start_url: base,
           display: 'standalone',
+          lang: 'pt-BR',
           background_color: '#000000',
           theme_color: '#000000',
           icons: [
