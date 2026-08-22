@@ -1,6 +1,6 @@
 {
-  "version": "1.17.0",
-  "changelog": "## Novidades\n- feat: EULA no PWA\n- fix: encoding UTF-8",
-  "date": "2026-08-08",
+  "version": "1.18.0",
+  "changelog": "## Novidades\n- feat: verificação de atualização no PWA\n- feat: aceite de EULA\n- fix: idioma pt-BR no manifesto PWA",
+  "date": "2026-08-21",
   "platform": "web"
 }
