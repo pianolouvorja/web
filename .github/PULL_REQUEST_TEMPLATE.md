@@ -1,29 +1,30 @@
-## Descrição
+## Resumo
 
-<!-- Resumo do que este PR faz e por quê. -->
+<!-- O que mudou e por quê? -->
 
-## Issue relacionada
+## Tipo
 
-<!-- Closes #N (substitua N pelo número da issue) -->
+- [ ] Correção
+- [ ] Feature
+- [ ] Refactor
+- [ ] Documentação
+- [ ] CI / infraestrutura
+- [ ] Segurança
+
+## Validação
+
+- [ ] Testes relevantes passam
+- [ ] Analyze/lint/typecheck passam
+- [ ] Build relevante passa
+- [ ] Fluxo manual foi testado quando há UI
+- [ ] Sem segredo, credencial ou dado pessoal no diff
+
+## Evidência
+
+<!-- Screenshots, logs, vídeo, ou N/A. -->
+
+## Risco / rollback
+
+<!-- Impacto, compatibilidade e como reverter; ou N/A. -->
 
 Closes #
-
-## Tipo de mudança
-
-- [ ] Bug fix (mudança que corrige um problema)
-- [ ] Nova feature (mudança que adiciona funcionalidade)
-- [ ] Enhancement (melhoria em funcionalidade existente)
-- [ ] Refactor (mudança interna sem alteração de comportamento)
-- [ ] Breaking change (mudança que quebra compatibilidade)
-
-## Checklist
-
-- [ ] Código segue os padrões do projeto (CLAUDE.md)
-- [ ] Build passa (`pnpm run build`)
-- [ ] Responsividade verificada (mobile + desktop)
-- [ ] Sem console.log / código morto
-- [ ] Branch baseada em `staging`
-
-## Notas adicionais
-
-<!-- Qualquer contexto extra para o reviewer. Screenshots se aplicável. -->
