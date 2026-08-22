@@ -274,8 +274,8 @@ function viewKey(viewRoute: typeof route) {
         </span>
       </div>
       <div class="app-shell__header-end">
-        <UiZoomControls />
-        <!-- Projeção + multi-telas: desktop only (≤600px oculto) -->
+        <!-- Zoom + projeção + multi-telas: desktop only (mesmo critério smAndDown do dock) -->
+        <UiZoomControls v-if="!smAndDown" />
         <div
           v-if="!smAndDown"
           class="app-shell__projection"
@@ -492,7 +492,7 @@ function viewKey(viewRoute: typeof route) {
   position: relative;
   z-index: 1;
   padding-top: var(--ds-header-height, 5.5rem);
-  min-height: 100vh;
+  min-height: calc(100 * var(--ui-vh));
   box-sizing: border-box;
   padding-bottom: var(--ds-dock-height);
 }

@@ -1,0 +1,26 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "_comment": "Stryker mutation testing config — measure test quality by injecting bugs",
+  "packageManager": "npm",
+  "reporters": ["html", "clear-text", "progress"],
+  "testRunner": "command",
+  "commandRunner": {
+    "command": "npx vitest run --config vitest.stryker.config.ts"
+  },
+  "coverageAnalysis": "off",
+  "mutate": [
+    "src/shared/composables/useEula.ts"
+  ],
+  "thresholds": {
+    "high": 100,
+    "low": 100,
+    "break": 100
+  },
+  "timeoutMS": 30000,
+  "concurrency": 2,
+  "ignorePatterns": [
+    "**/node_modules/**",
+    "e2e/**",
+    "site/**"
+  ]
+}
