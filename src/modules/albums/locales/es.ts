@@ -14,7 +14,7 @@ export default {
       number: '#',
       title: 'Título / Colección',
       duration: 'Duración',
-      actions: 'Acciones',
+      actions: 'Acciones'
     },
     trackCount: '{count} pistas',
     loading: 'Cargando…',
@@ -22,7 +22,7 @@ export default {
     dismiss: 'Descartar',
     lyric: {
       title: 'Letra',
-      close: 'Cerrar letra',
+      close: 'Cerrar letra'
     },
     messages: {
       catalogEmpty: 'No se encontró ninguna colección en el catálogo local.',
@@ -33,7 +33,19 @@ export default {
       tracksFailed: 'No se pudieron cargar las pistas.',
       searchEmpty: 'No se encontró ninguna canción.',
       lyricMissing: 'Letra no disponible para esta pista.',
-      projectionFailed: 'No se pudo abrir la proyección en las pantallas configuradas.',
+      projectionFailed: 'No se pudo abrir la proyección en las pantallas configuradas.'
     },
-  },
+    categories: {
+      hymnals: 'Himnarios Oficiales',
+      hymnalsSubtitle: 'Colecciones litúrgicas completas para uso sin conexión.',
+      youthAlbums: 'CDs Jóvenes & Colecciones',
+      albumsSubtitle: 'Álbumes anuales y producciones especiales.',
+      defaultSubtitle: 'Álbumes y producciones especiales.'
+    },
+    hymnal: {
+      edition1996Name: 'Himnario Adventista - Edición 1996',
+      officialSubtitle: '{count} himnos con partituras y letras',
+      edition1996Subtitle: 'Histórico - {count} himnos tradicionales'
+    }
+  }
 }

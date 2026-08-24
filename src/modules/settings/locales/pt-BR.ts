@@ -6,21 +6,21 @@ export default {
       hint: 'Conecte o app do celular (Web Link nas Configurações do app) e informe o endereço exibido no QR aqui.',
       connect: 'Conectar',
       disconnect: 'Desconectar',
-      connected: 'Conectado — o celular controla esta tela',
+      connected: 'Conectado — o celular controla esta tela'
     },
     sectionTitle: {
       appearance: 'Configurações de Aparência',
       general: 'Configurações Gerais',
       media: 'Mídia & Player',
       projection: 'Projeção & Telas',
-      remote: 'Controle Remoto',
+      remote: 'Controle Remoto'
     },
     tabs: {
       appearance: 'Aparência',
       general: 'Geral',
       media: 'Mídia & Player',
       projection: 'Projeção & Telas',
-      remote: 'Controle Remoto',
+      remote: 'Controle Remoto'
     },
     appearance: {
       experienceTitle: 'Experiência Visual',
@@ -40,18 +40,14 @@ export default {
       interactionSoft: 'Suave',
       interactionMist: 'Névoa',
       preview: 'Pré-visualização',
-      previewHint:
-        'Este é um exemplo de como sua interface será exibida em apresentações.',
+      previewHint: 'Este é um exemplo de como sua interface será exibida em apresentações.',
       tipTitle: 'Dica de Performance',
-      tipDark:
-        'O Modo Escuro reduz o consumo de energia em monitores OLED e diminui a fadiga ocular em ambientes de culto.',
-      tipLight:
-        'O Modo Claro oferece melhor legibilidade em ambientes muito iluminados durante cultos diurnos.',
+      tipDark: 'O Modo Escuro reduz o consumo de energia em monitores OLED e diminui a fadiga ocular em ambientes de culto.',
+      tipLight: 'O Modo Claro oferece melhor legibilidade em ambientes muito iluminados durante cultos diurnos.'
     },
     projection: {
       popupScreens: 'Telas de Projeção',
-      popupScreensDesc:
-        'Quantidade de telas disponíveis para projeção (como monitores estendidos). Nos módulos, escolha quais delas recebem o conteúdo.',
+      popupScreensDesc: 'Quantidade de telas disponíveis para projeção (como monitores estendidos). Nos módulos, escolha quais delas recebem o conteúdo.',
       popupCountLabel: 'Número de telas',
       decreaseScreens: 'Diminuir número de telas',
       increaseScreens: 'Aumentar número de telas',
@@ -77,15 +73,19 @@ export default {
         backgroundImage: 'Imagem de fundo',
         selectImage: 'Clique para selecionar uma imagem',
         removeImage: 'Remover imagem',
-        changeImage: 'Trocar imagem',
+        changeImage: 'Trocar imagem'
       },
       errors: {
-        backgroundImage: 'Não foi possível carregar a imagem de fundo.',
-      },
+        backgroundImage: 'Não foi possível carregar a imagem de fundo.'
+      }
     },
     placeholder: {
       general: 'Preferências gerais do aplicativo em breve.',
-      media: 'Configurações de áudio, vídeo e player em breve.',
+      media: 'Configurações de áudio, vídeo e player em breve.'
     },
-  },
+    general: {
+      languageTitle: 'Idioma',
+      languageHint: 'Escolha o idioma da interface do aplicativo.'
+    }
+  }
 }

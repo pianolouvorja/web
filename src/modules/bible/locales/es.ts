@@ -34,7 +34,12 @@ export default {
     dismiss: 'Descartar',
     errors: {
       loadCatalogFailed: 'No se pudieron cargar los libros y versiones de la Biblia.',
-      loadChapterFailed: 'No se pudo cargar el capítulo seleccionado.',
+      loadChapterFailed: 'No se pudo cargar el capítulo seleccionado.'
     },
-  },
+    chapter: 'Capítulo',
+    previousChapter: 'Versículo anterior',
+    nextChapter: 'Próximo versículo',
+    selectBookAndChapter: 'Seleccione un libro y capítulo para comenzar',
+    selectChapterPrompt: 'Seleccione un capítulo'
+  }
 }

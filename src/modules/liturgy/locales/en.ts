@@ -19,24 +19,22 @@ export default {
     scheduled: {
       import: 'Import scheduled items',
       imported: 'Imported {count} scheduled items',
-      notPorted: 'LouvorJA Delphi file recognized ({name}), but this feature is not ported yet — coming in a future version.',
+      notPorted: 'LouvorJA Delphi file recognized ({name}), but this feature is not ported yet — coming in a future version.'
     },
     clearLiturgy: 'Clear liturgy',
     lockDeletions: 'Lock editing and deletions',
     unlockDeletions: 'Unlock editing and deletions',
     editItem: 'Edit item',
     emptyList: 'Empty liturgy',
-    emptyListHint:
-      'First add a Category/Divider using the button above, then you can add sub-items.',
-    emptyListCloneLocked:
-      'After creating your first liturgy, you can clone it to other days.',
+    emptyListHint: 'First add a Category/Divider using the button above, then you can add sub-items.',
+    emptyListCloneLocked: 'After creating your first liturgy, you can clone it to other days.',
     emptyListCloneReady: '--- or clone a liturgy using the button below!',
     clone: {
       action: 'Clone Liturgy',
       title: 'Clone Liturgy',
       hint: 'Choose a day or a custom liturgy with items to copy to the current day.',
       source: 'Source',
-      emptySources: 'No liturgy available to clone',
+      emptySources: 'No liturgy available to clone'
     },
     noPreview: 'Select an item to preview',
     noPreviewHint: 'Click an item in the list to see the preview here.',
@@ -57,18 +55,17 @@ export default {
       pickStart: 'Set start',
       pickEnd: 'Set end',
       startCountdown: 'Start countdown',
-      stopCountdown: 'Stop countdown',
+      stopCountdown: 'Stop countdown'
     },
     team: {
       title: 'Team Roster',
       empty: 'No team members assigned to this service.',
       manage: 'Manage Team',
-      comingSoon: 'Team management coming soon.',
+      comingSoon: 'Team management coming soon.'
     },
     broadcastNote: {
       title: 'General Day Notes',
-      placeholder:
-        'Notes, announcements, general reminders for the sound tech team',
+      placeholder: 'Notes, announcements, general reminders for the sound tech team'
     },
     days: {
       sunday: 'Sunday',
@@ -78,7 +75,7 @@ export default {
       thursday: 'Thursday',
       friday: 'Friday',
       saturday: 'Saturday',
-      custom: 'Custom',
+      custom: 'Custom'
     },
     daysShort: {
       sunday: 'Sun',
@@ -88,7 +85,7 @@ export default {
       thursday: 'Thu',
       friday: 'Fri',
       saturday: 'Sat',
-      custom: 'Custom',
+      custom: 'Custom'
     },
     types: {
       category: 'Category/Divider',
@@ -104,11 +101,10 @@ export default {
       other_files: 'Others',
       online_video: 'YouTube/Vimeo/Others',
       site: 'Websites/Social Media',
-      verse: 'Verse',
+      verse: 'Verse'
     },
     typeDescriptions: {
-      category:
-        'Categories serve as visual dividers between liturgy sections.',
+      category: 'Categories serve as visual dividers between liturgy sections.',
       music: 'Musical moment of the service',
       annotation: 'Free text for the team',
       notice: 'Announcements and notices',
@@ -121,7 +117,7 @@ export default {
       other_files: 'Other local files',
       online_video: 'Online video (YouTube, Vimeo and others)',
       site: 'Websites and social media',
-      verse: 'Bible verse',
+      verse: 'Bible verse'
     },
     dialog: {
       title: 'New Moment',
@@ -134,8 +130,7 @@ export default {
       durationDecrease: 'Decrease duration',
       durationIncrease: 'Increase duration',
       momentName: 'Complementary Descriptive Title',
-      momentNamePlaceholder:
-        'e.g.: Welcome, Opening Prayer, Offertory, Announcements',
+      momentNamePlaceholder: 'e.g.: Welcome, Opening Prayer, Offertory, Announcements',
       complementaryTitle: 'Complementary Descriptive Title',
       complementaryTitlePlaceholder: 'e.g.: Leading, Music Message',
       categoryMomentName: 'Program moment name',
@@ -151,8 +146,8 @@ export default {
         default: 'Default',
         internal: 'Internal Media',
         external: 'External/Link Media',
-        legacy: 'Legacy',
-      },
+        legacy: 'Legacy'
+      }
     },
     fields: {
       name: 'Name',
@@ -180,10 +175,10 @@ export default {
       musicMode: 'Mode',
       musicModeAudio: 'Audio',
       musicModeInstrumental: 'Instrumental',
+      fileSelectedLabel: 'File {index}'
     },
     namePlaceholders: {
-      category:
-        'e.g.: Opening Leading, Service Start, Welcome, Sabbath School, Divine Service, etc...',
+      category: 'e.g.: Opening Leading, Service Start, Welcome, Sabbath School, Divine Service, etc...',
       music: 'e.g.: Leading, Music Message',
       annotation: 'e.g.: Note for the team',
       notice: 'e.g.: Church announcements',
@@ -196,7 +191,7 @@ export default {
       other_files: 'e.g.: Auxiliary file',
       online_video: 'e.g.: Hymn on YouTube',
       site: 'e.g.: Church page',
-      verse: 'Reference or title',
+      verse: 'Reference or title'
     },
     actions: {
       save: 'Save',
@@ -238,34 +233,31 @@ export default {
       collapseCategory: 'Collapse category',
       expandCategory: 'Expand category',
       addSubItem: 'Add sub-item',
-      reorder: 'Drag to reorder',
+      reorder: 'Drag to reorder'
     },
     messages: {
       confirmDelete: 'Do you want to remove this item from the liturgy?',
-      confirmDeleteCategory:
-        'Do you want to remove this category/divider and all related items?',
+      confirmDeleteCategory: 'Do you want to remove this category/divider and all related items?',
       confirmClear: 'Do you want to clear the entire liturgy for this day?',
-      confirmDeleteCustom: 'Do you want to remove the "{name}" liturgy?',
+      confirmDeleteCustom: 'Do you want to remove the \'{name}\' liturgy?',
       itemAdded: 'Item added successfully.',
       liturgySaved: 'Liturgy saved successfully.',
       mediaDesktopOnly: 'Provide the media file path.',
       videoSelectFile: 'Select file',
       catalogEmpty: 'No songs found in the local catalog.',
-      customRequired:
-        'Create or select a custom liturgy before adding items.',
+      customRequired: 'Create or select a custom liturgy before adding items.',
       booksEmpty: 'No Bible books available. Complete initialization.',
       urlMissing: 'Provide a valid link for this item.',
       urlInvalid: 'The provided link is not valid for projection.',
-      projectionFailed:
-        'Could not open projection on the configured screens.',
-      presentationOfficeMissing:
-        'To project PPT/PPTX, install LibreOffice (or set LIBREOFFICE_PATH).',
+      projectionFailed: 'Could not open projection on the configured screens.',
+      presentationOfficeMissing: 'To project PPT/PPTX, install LibreOffice (or set LIBREOFFICE_PATH).',
+      presentationWebUnsupported: 'PPT/PPTX presentations are not supported in the browser.'
     },
     custom: {
       title: 'Custom liturgies',
       new: 'New custom liturgy',
       namePlaceholder: 'Liturgy name (e.g.: Youth Service 12/07)',
-      empty: 'No custom liturgy. Create one to get started.',
-    },
-  },
+      empty: 'No custom liturgy. Create one to get started.'
+    }
+  }
 }

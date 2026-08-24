@@ -8,10 +8,12 @@ import { getUserPreference, setUserPreference } from '@shared/services/user-pref
 
 const { t, locale } = useI18n()
 
+// EN/ES ocultos por hora — tradução incompleta; reabilitar quando
+// o paridade de chaves estiver 100% (ver spec 2026-08-24-paridade-app-web).
 const locales = [
   { value: 'pt-BR', label: 'Português (Brasil)' },
-  { value: 'en', label: 'English' },
-  { value: 'es', label: 'Español' },
+  // { value: 'en', label: 'English' },
+  // { value: 'es', label: 'Español' },
 ] as const
 
 const currentLanguage = ref(

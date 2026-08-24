@@ -34,7 +34,12 @@ export default {
     dismiss: 'Dismiss',
     errors: {
       loadCatalogFailed: 'Could not load Bible books and versions.',
-      loadChapterFailed: 'Could not load the selected chapter.',
+      loadChapterFailed: 'Could not load the selected chapter.'
     },
-  },
+    chapter: 'Chapter',
+    previousChapter: 'Previous verse',
+    nextChapter: 'Next verse',
+    selectBookAndChapter: 'Select a book and chapter to start',
+    selectChapterPrompt: 'Select a chapter'
+  }
 }

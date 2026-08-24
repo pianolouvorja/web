@@ -7,14 +7,14 @@ export default {
       media: 'Medios & Reproductor',
       projection: 'Proyección & Pantallas',
       remote: 'Control Remoto',
-      remoteP2p: 'Control P2P',
+      remoteP2p: 'Control P2P'
     },
     tabs: {
       appearance: 'Apariencia',
       general: 'General',
       media: 'Medios & Reproductor',
       projection: 'Proyección & Pantallas',
-      remote: 'Control Remoto',
+      remote: 'Control Remoto'
     },
     appearance: {
       changeTheme: 'Cambiar tema',
@@ -34,18 +34,15 @@ export default {
       interactionSoft: 'Suave',
       interactionMist: 'Niebla',
       preview: 'Vista previa',
-      previewHint:
-        'Este es un ejemplo de cómo se mostrará su interfaz durante las presentaciones.',
+      previewHint: 'Este es un ejemplo de cómo se mostrará su interfaz durante las presentaciones.',
       tipTitle: 'Consejo de Rendimiento',
-      tipDark:
-        'El Modo Oscuro reduce el consumo de energía en pantallas OLED y disminuye la fatiga visual en entornos de culto.',
-      tipLight:
-        'El Modo Claro ofrece mejor legibilidad en entornos muy iluminados durante cultos diurnos.',
+      tipDark: 'El Modo Oscuro reduce el consumo de energía en pantallas OLED y disminuye la fatiga visual en entornos de culto.',
+      tipLight: 'El Modo Claro ofrece mejor legibilidad en entornos muy iluminados durante cultos diurnos.'
     },
     placeholder: {
       general: 'Preferencias generales de la aplicación próximamente.',
       media: 'Configuraciones de audio, video y reproductor próximamente.',
-      projection: 'Configuraciones de proyección y pantallas próximamente.',
+      projection: 'Configuraciones de proyección y pantallas próximamente.'
     },
     projection: {
       monitors: {
@@ -55,21 +52,19 @@ export default {
         extended: 'Extendido',
         empty: 'Ningún monitor detectado.',
         hint: 'Arrastre los monitores para reorganizar su posición física.',
-        resetLayout: 'Restablecer disposición',
+        resetLayout: 'Restablecer disposición'
       },
       slides: {
         title: 'Diapositivas de Canciones',
         multiScreens: 'Múltiples Pantallas',
         projectOn: 'Proyectar en las siguientes pantallas:',
-        noExtended:
-          'Ningún monitor extendido (secundario) detectado en el sistema.',
+        noExtended: 'Ningún monitor extendido (secundario) detectado en el sistema.'
       },
       mainScreen: {
         title: 'Pantalla Principal',
         openFullscreen: 'Abrir canción en pantalla completa en la pantalla principal',
-        disablePrimaryWhenExtended:
-          'Desactivar pantalla principal cuando haya un monitor extendido',
-        autoMinimizePlayer: 'Minimizar el reproductor automáticamente',
+        disablePrimaryWhenExtended: 'Desactivar pantalla principal cuando haya un monitor extendido',
+        autoMinimizePlayer: 'Minimizar el reproductor automáticamente'
       },
       lyrics: {
         title: 'Personalización de la Letra',
@@ -91,15 +86,21 @@ export default {
         backgroundImage: 'Imagen de fondo',
         selectImage: 'Haga clic para seleccionar una imagen',
         removeImage: 'Eliminar imagen',
-        changeImage: 'Cambiar imagen',
+        changeImage: 'Cambiar imagen'
       },
       errors: {
         loadDisplays: 'No se pudieron cargar los monitores.',
         identify: 'No se pudieron identificar los monitores.',
-        identifyDesktopOnly:
-          'La identificación de monitores solo está disponible en la aplicación de escritorio.',
-        backgroundImage: 'No se pudo cargar la imagen de fondo.',
+        identifyDesktopOnly: 'La identificación de monitores solo está disponible en la aplicación de escritorio.',
+        backgroundImage: 'No se pudo cargar la imagen de fondo.'
       },
+      decreaseScreens: 'Disminuir número de pantallas',
+      fullscreenMode: 'Iniciar en Pantalla Completa',
+      hardwareAccel: 'Aceleración de Hardware',
+      increaseScreens: 'Aumentar número de pantallas',
+      popupCountLabel: 'Número de pantallas',
+      popupScreens: 'Pantallas de Proyección',
+      popupScreensDesc: 'Cantidad de pantallas disponibles para proyección (como monitores).'
     },
     general: {
       languageTitle: 'Idioma',
@@ -108,23 +109,19 @@ export default {
       languageEnglish: 'English',
       languageSpanish: 'Español',
       dataTitle: 'Datos Locales',
-      dataHint:
-        'Elimina el catálogo, los medios descargados y las preferencias guardadas en la carpeta {product}. La aplicación reiniciará la configuración en el próximo inicio.',
+      dataHint: 'Elimina el catálogo, los medios descargados y las preferencias guardadas en la carpeta {product}. La aplicación reiniciará la configuración en el próximo inicio.',
       clearData: 'Borrar todos los datos',
       clearError: 'No se pudieron borrar los datos. Intente de nuevo.',
       updateTitle: 'Actualizaciones',
-      updateHint:
-        'Busca nuevas versiones de la app de escritorio.',
+      updateHint: 'Busca nuevas versiones de la app de escritorio.',
       updateAvailable: '¡Versión {version} disponible!',
       updateNotAvailable: 'Ya estás usando la última versión.',
       updateError: 'No se pudieron buscar actualizaciones.',
-      updateDesktopOnly:
-        'Las actualizaciones solo aplican a la app de escritorio.',
+      updateDesktopOnly: 'Las actualizaciones solo aplican a la app de escritorio.',
       checkUpdate: 'Buscar actualizaciones',
       checking: 'Buscando...',
-      desktopOnly: 'Solo disponible en la aplicación de escritorio.',
+      desktopOnly: 'Solo disponible en la aplicación de escritorio.'
     },
-
     remote: {
       p2pTitle: 'Control P2P (QR)',
       wsTitle: 'Conectar por el móvil',
@@ -162,6 +159,10 @@ export default {
       copyLink: 'Copiar enlace',
       waitingClient: 'Esperando control remoto…',
       clientConnected: '{device} conectado',
-    },
-  },
+      connect: 'Conectar',
+      disconnect: 'Desconectar',
+      connected: 'Conectado — el celular controla esta pantalla',
+      hint: 'Abra el Web Link en la app del celular (Configuraciones → Control Remoto) y pegue la dirección del QR aquí.'
+    }
+  }
 }

@@ -7,14 +7,14 @@ export default {
       media: 'Media & Player',
       projection: 'Projection & Screens',
       remote: 'Remote Control',
-      remoteP2p: 'P2P Control',
+      remoteP2p: 'P2P Control'
     },
     tabs: {
       appearance: 'Appearance',
       general: 'General',
       media: 'Media & Player',
       projection: 'Projection & Screens',
-      remote: 'Remote Control',
+      remote: 'Remote Control'
     },
     appearance: {
       changeTheme: 'Change theme',
@@ -34,18 +34,15 @@ export default {
       interactionSoft: 'Soft',
       interactionMist: 'Mist',
       preview: 'Preview',
-      previewHint:
-        'This is an example of how your interface will look during presentations.',
+      previewHint: 'This is an example of how your interface will look during presentations.',
       tipTitle: 'Performance Tip',
-      tipDark:
-        'Dark Mode reduces power consumption on OLED displays and decreases eye strain in worship environments.',
-      tipLight:
-        'Light Mode offers better readability in brightly lit environments during daytime services.',
+      tipDark: 'Dark Mode reduces power consumption on OLED displays and decreases eye strain in worship environments.',
+      tipLight: 'Light Mode offers better readability in brightly lit environments during daytime services.'
     },
     placeholder: {
       general: 'General app preferences coming soon.',
       media: 'Audio, video and player settings coming soon.',
-      projection: 'Projection and screen settings coming soon.',
+      projection: 'Projection and screen settings coming soon.'
     },
     projection: {
       monitors: {
@@ -55,21 +52,19 @@ export default {
         extended: 'Extended',
         empty: 'No monitors detected.',
         hint: 'Drag the monitors to rearrange their physical position.',
-        resetLayout: 'Reset arrangement',
+        resetLayout: 'Reset arrangement'
       },
       slides: {
         title: 'Song Slides',
         multiScreens: 'Multiple Screens',
         projectOn: 'Project on the following screens:',
-        noExtended:
-          'No extended (secondary) monitors detected on the system.',
+        noExtended: 'No extended (secondary) monitors detected on the system.'
       },
       mainScreen: {
         title: 'Main Screen',
         openFullscreen: 'Open song in fullscreen on the main screen',
-        disablePrimaryWhenExtended:
-          'Disable main screen when an extended monitor is available',
-        autoMinimizePlayer: 'Minimize the player automatically',
+        disablePrimaryWhenExtended: 'Disable main screen when an extended monitor is available',
+        autoMinimizePlayer: 'Minimize the player automatically'
       },
       lyrics: {
         title: 'Lyrics Customization',
@@ -91,15 +86,21 @@ export default {
         backgroundImage: 'Background image',
         selectImage: 'Click to select an image',
         removeImage: 'Remove image',
-        changeImage: 'Change image',
+        changeImage: 'Change image'
       },
       errors: {
         loadDisplays: 'Could not load the monitors.',
         identify: 'Could not identify the monitors.',
-        identifyDesktopOnly:
-          'Monitor identification is only available in the desktop app.',
-        backgroundImage: 'Could not load the background image.',
+        identifyDesktopOnly: 'Monitor identification is only available in the desktop app.',
+        backgroundImage: 'Could not load the background image.'
       },
+      decreaseScreens: 'Decrease number of screens',
+      fullscreenMode: 'Start in Full Screen',
+      hardwareAccel: 'Hardware Acceleration',
+      increaseScreens: 'Increase number of screens',
+      popupCountLabel: 'Number of screens',
+      popupScreens: 'Projection Screens',
+      popupScreensDesc: 'Number of screens available for projection (like monitors).'
     },
     general: {
       languageTitle: 'Language',
@@ -108,28 +109,24 @@ export default {
       languageEnglish: 'English',
       languageSpanish: 'Español',
       dataTitle: 'Local Data',
-      dataHint:
-        'Removes the catalog, downloaded media and saved preferences in the {product} folder. The app will restart setup on next launch.',
+      dataHint: 'Removes the catalog, downloaded media and saved preferences in the {product} folder. The app will restart setup on next launch.',
       clearData: 'Clear all data',
       clearError: 'Could not clear the data. Try again.',
       updateTitle: 'Updates',
-      updateHint:
-        'Check for new versions of the desktop app.',
+      updateHint: 'Check for new versions of the desktop app.',
       updateAvailable: 'Version {version} available!',
       updateNotAvailable: 'You are already using the latest version.',
       updateError: 'Could not check for updates.',
-      updateDesktopOnly:
-        'Updates only apply to the desktop app.',
+      updateDesktopOnly: 'Updates only apply to the desktop app.',
       checkUpdate: 'Check for updates',
       checking: 'Checking...',
-      desktopOnly: 'Only available in the desktop app.',
+      desktopOnly: 'Only available in the desktop app.'
     },
-
     remote: {
       p2pTitle: 'P2P control (QR)',
       wsTitle: 'Connect via phone',
       wsHint1: '1. In the Piano LouvorJA app: Settings → Remote Control → Start web link — a QR will appear.',
-      wsHint2: "2. Point the webcam at the phone's QR. Done — nothing to type.",
+      wsHint2: '2. Point the webcam at the phone\'s QR. Done — nothing to type.',
       wsStart: 'Open webcam',
       wsScanning: 'Point the webcam at the QR shown on the phone…',
       wsConnecting: 'Connecting…',
@@ -144,7 +141,7 @@ export default {
       wsError: 'Could not connect. Make sure the phone and PC are on the same network.',
       wsClosed: 'Connection closed.',
       p2pHint1: '1. Tap start and scan the QR with the APK — it will show a response QR.',
-      p2pHint2: "2. Point the webcam to the phone's QR (or paste the answer text below).",
+      p2pHint2: '2. Point the webcam to the phone\'s QR (or paste the answer text below).',
       p2pStart: 'Start pairing',
       p2pOfferReady: 'QR ready — scan with the APK',
       p2pNoCamera: 'No webcam — paste the answer manually',
@@ -162,6 +159,10 @@ export default {
       copyLink: 'Copy link',
       waitingClient: 'Waiting for remote control…',
       clientConnected: '{device} connected',
-    },
-  },
+      connect: 'Connect',
+      disconnect: 'Disconnect',
+      connected: 'Connected — the phone controls this screen',
+      hint: 'Open the Web Link on the phone app (Settings → Remote Control) and paste the address shown in the QR here.'
+    }
+  }
 }
