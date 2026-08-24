@@ -6,7 +6,8 @@ export default {
       hint: 'Conecte o app do celular (Web Link nas Configurações do app) e informe o endereço exibido no QR aqui.',
       connect: 'Conectar',
       disconnect: 'Desconectar',
-      connected: 'Conectado — o celular controla esta tela'
+      connected: 'Conectado — o celular controla esta tela',
+      scanQr: 'Escanear QR do celular'
     },
     sectionTitle: {
       appearance: 'Configurações de Aparência',

@@ -162,6 +162,7 @@ export default {
       connect: 'Connect',
       disconnect: 'Disconnect',
       connected: 'Connected — the phone controls this screen',
+      scanQr: 'Scan phone QR',
       hint: 'Open the Web Link on the phone app (Settings → Remote Control) and paste the address shown in the QR here.'
     }
   }

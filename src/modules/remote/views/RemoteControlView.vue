@@ -31,6 +31,11 @@ const player = useMediaPlayer();
 
 const connected = ref(false);
 const manualUrl = ref("");
+const scannerOpen = ref(false);
+const scannerError = ref("");
+const scannerVideo = ref<HTMLVideoElement | null>(null);
+let scannerStream: MediaStream | null = null;
+let scannerTimer: number | null = null;
 
 let bridge: WebRemoteBridge | null = null;
 let unwatchState: (() => void) | null = null;
@@ -129,6 +134,57 @@ async function execute(command: {
 	}
 }
 
+function stopScanner() {
+	if (scannerTimer !== null) {
+		window.clearInterval(scannerTimer);
+		scannerTimer = null;
+	}
+	scannerStream?.getTracks().forEach((track) => track.stop());
+	scannerStream = null;
+	scannerOpen.value = false;
+}
+
+async function startScanner() {
+	scannerError.value = "";
+	if (!("BarcodeDetector" in window)) {
+		scannerError.value = "Leitor QR não suportado neste navegador. Cole a URL abaixo.";
+		return;
+	}
+	try {
+		scannerStream = await navigator.mediaDevices.getUserMedia({
+			video: { facingMode: { ideal: "environment" } },
+			audio: false,
+		});
+		scannerOpen.value = true;
+		await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+		if (!scannerVideo.value) throw new Error("Câmera indisponível");
+		scannerVideo.value.srcObject = scannerStream;
+		await scannerVideo.value.play();
+		const Detector = (window as unknown as {
+			BarcodeDetector: new (options: { formats: string[] }) => {
+				detect(source: ImageBitmapSource): Promise<Array<{ rawValue: string }>>;
+			};
+		}).BarcodeDetector;
+		const detector = new Detector({ formats: ["qr_code"] });
+		scannerTimer = window.setInterval(async () => {
+			if (!scannerVideo.value) return;
+			try {
+				const result = await detector.detect(scannerVideo.value);
+				const value = result[0]?.rawValue?.trim();
+				if (!value) return;
+				stopScanner();
+				manualUrl.value = value;
+				connect(value);
+			} catch {
+				// frame ainda não decodificável; continua lendo
+			}
+		}, 250);
+	} catch (error) {
+		stopScanner();
+		scannerError.value = error instanceof Error ? error.message : "Não foi possível abrir a câmera.";
+	}
+}
+
 function disconnect() {
 	unwatchState?.();
 	unwatchState = null;
@@ -162,7 +218,7 @@ function connect(url: string) {
 	connected.value = true;
 }
 
-onUnmounted(disconnect);
+onUnmounted(() => { stopScanner(); disconnect(); });
 </script>
 
 <template>
@@ -175,6 +231,22 @@ onUnmounted(disconnect);
     </p>
 
     <div v-if="!connected" class="remote-view__panel">
+      <button
+        type="button"
+        class="remote-view__btn"
+        @click="startScanner"
+      >
+        {{ t('settings.remote.scanQr') }}
+      </button>
+      <video
+        v-if="scannerOpen"
+        ref="scannerVideo"
+        class="remote-view__scanner"
+        autoplay
+        muted
+        playsinline
+      />
+      <p v-if="scannerError" class="remote-view__error">{{ scannerError }}</p>
       <input
         v-model="manualUrl"
         type="text"
@@ -233,6 +305,20 @@ onUnmounted(disconnect);
   flex-wrap: wrap;
   gap: 0.75rem;
   align-items: center;
+}
+
+.remote-view__scanner {
+  width: 100%;
+  max-width: 26rem;
+  border-radius: 12px;
+  background: #000;
+}
+
+.remote-view__error {
+  width: 100%;
+  margin: 0;
+  color: #ef5350;
+  font-size: .85rem;
 }
 
 .remote-view__input {
