@@ -10,8 +10,6 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
     id: 'general',
     routeName: 'settings-general',
     labelKey: 'settings.tabs.general',
-    // Fora do menu — manter só Aparência e Projeção & Telas.
-    hidden: true,
   },
   {
     id: 'media',

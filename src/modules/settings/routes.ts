@@ -24,13 +24,13 @@ export const settingsRoutes: RouteRecordRaw[] = [
           desktopOnly: false,
         },
       },
-      // Geral / Mídia — ocultos no menu; redirect até reativarmos as seções.
       {
         path: 'general',
         name: 'settings-general',
-        redirect: { name: 'settings-appearance' },
+        component: () => import('./views/GeneralView.vue'),
         meta: {
-          desktopOnly: true,
+          navKey: 'settings',
+          desktopOnly: false,
         },
       },
       {

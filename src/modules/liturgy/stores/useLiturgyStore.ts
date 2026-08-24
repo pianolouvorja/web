@@ -360,6 +360,105 @@ export const useLiturgyStore = defineStore('liturgy', () => {
     })
   }
 
+  /**
+   * Importa dias de liturgia de um .ja parseado. `overwrite` substitui o
+   * dia inteiro; `merge` pula itens duplicados (type+name+musicId+filePath).
+   */
+  async function importJaDays(
+    parsed: import('../services/liturgy-ja-import').JaLiturgy,
+    mode: 'merge' | 'overwrite' = 'merge',
+  ) {
+    let added = 0
+    let skipped = 0
+    const days: string[] = []
+    const enriched = await enrichJaDurations(parsed)
+    for (const [day, items] of Object.entries(enriched)) {
+      const weekday = day as LiturgyWeekday
+      const existing = weekdays.value[weekday] ?? []
+      if (mode === 'overwrite') {
+        weekdays.value = { ...weekdays.value, [weekday]: [...(items ?? [])] }
+        added += items?.length ?? 0
+        days.push(day)
+        continue
+      }
+      const next = [...existing]
+      for (const item of items ?? []) {
+        const dup = existing.some(
+          (e) =>
+            e.type === item.type &&
+            e.name === item.name &&
+            e.musicId === item.musicId &&
+            e.filePath === item.filePath,
+        )
+        if (dup) {
+          skipped++
+          continue
+        }
+        next.push(item)
+        added++
+      }
+      weekdays.value = { ...weekdays.value, [weekday]: next }
+      days.push(day)
+    }
+    persist()
+    return { added, skipped, days }
+  }
+
+  /**
+   * Pré-checa quantos itens do .ja já existem (sem alterar nada) —
+   * usado pra decidir entre merge (pular) ou overwrite (substituir).
+   */
+  function countJaDuplicates(parsed: import('../services/liturgy-ja-import').JaLiturgy) {
+    let duplicates = 0
+    for (const [day, items] of Object.entries(parsed)) {
+      const existing = weekdays.value[day as LiturgyWeekday] ?? []
+      for (const item of items ?? []) {
+        if (
+          existing.some(
+            (e) =>
+              e.type === item.type &&
+              e.name === item.name &&
+              e.musicId === item.musicId &&
+              e.filePath === item.filePath,
+          )
+        ) {
+          duplicates++
+        }
+      }
+    }
+    return duplicates
+  }
+
+  /**
+   * Duração automática: música → catálogo (musicList). Caminhos Windows do
+   * Delphi não existem no browser — ficam 0 (paridade com o comportamento
+   * web do app).
+   */
+  async function enrichJaDurations(
+    parsed: import('../services/liturgy-ja-import').JaLiturgy,
+  ): Promise<import('../services/liturgy-ja-import').JaLiturgy> {
+    const byId = new Map(musicList.value.map((m) => [m.id, m]))
+    const result: import('../services/liturgy-ja-import').JaLiturgy = {}
+    for (const [day, items] of Object.entries(parsed)) {
+      result[day as LiturgyWeekday] = (items ?? []).map((item) => {
+        if (item.type === 'music' && item.musicId != null) {
+          const opt = byId.get(item.musicId)
+          if (opt?.durationMs) return { ...item, durationMs: opt.durationMs }
+        }
+        return item
+      })
+    }
+    return result
+  }
+
+  /** Atualiza a duração de um item (ex.: vídeo local lido do arquivo no web). */
+  function setItemDurationMs(itemId: string, durationMs: number): void {
+    if (!Number.isFinite(durationMs) || durationMs <= 0) return
+    currentItems.value = currentItems.value.map((item) =>
+      item.id === itemId ? { ...item, durationMs } : item,
+    )
+  }
+
   async function hydrate() {
     if (hydrated.value) return
 
@@ -1063,6 +1162,9 @@ export const useLiturgyStore = defineStore('liturgy', () => {
     complementaryTitleSuggestions,
     verseChapterOptions,
     hydrate,
+    importJaDays,
+    countJaDuplicates,
+    setItemDurationMs,
     selectDay,
     selectCustomLiturgy,
     setSessionStartFromInput,
