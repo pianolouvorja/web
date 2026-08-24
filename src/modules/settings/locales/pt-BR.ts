@@ -1,17 +1,26 @@
 export default {
   settings: {
     title: 'Configurações',
+    remote: {
+      title: 'Controle Remoto',
+      hint: 'Conecte o app do celular (Web Link nas Configurações do app) e informe o endereço exibido no QR aqui.',
+      connect: 'Conectar',
+      disconnect: 'Desconectar',
+      connected: 'Conectado — o celular controla esta tela',
+    },
     sectionTitle: {
       appearance: 'Configurações de Aparência',
       general: 'Configurações Gerais',
       media: 'Mídia & Player',
       projection: 'Projeção & Telas',
+      remote: 'Controle Remoto',
     },
     tabs: {
       appearance: 'Aparência',
       general: 'Geral',
       media: 'Mídia & Player',
       projection: 'Projeção & Telas',
+      remote: 'Controle Remoto',
     },
     appearance: {
       experienceTitle: 'Experiência Visual',
