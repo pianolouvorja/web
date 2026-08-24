@@ -1,11 +1,17 @@
 <script setup lang="ts">
+import {
+	filterAlbumMusicIndex,
+	loadAlbumMusicIndex,
+} from "@modules/albums/services/album-music-search";
 import { useBibleStore } from "@modules/bible/stores/useBibleStore";
 import { useClockStore } from "@modules/clock/stores/useClockStore";
 import { useCountdownStore } from "@modules/countdown/stores/useCountdownStore";
-
 import { useLiturgyStore } from "@modules/liturgy/stores/useLiturgyStore";
 import { useMediaPlayer } from "@modules/media/composables/useMediaPlayer";
-import { openMusicPlayer } from "@modules/media/services/open-music-player";
+import {
+	type OpenMusicPlayerParams,
+	openMusicPlayer,
+} from "@modules/media/services/open-music-player";
 import { useRandomStore } from "@modules/random/stores/useRandomStore";
 import { useTimerStore } from "@modules/timer/stores/useTimerStore";
 import { onUnmounted, ref, watch } from "vue";
@@ -14,9 +20,28 @@ import { useRouter } from "vue-router";
 import { createModuleHandlers } from "../services/module-handlers";
 import { WebRemoteBridge } from "../services/web-remote-bridge";
 
+// Busca de hinos com ids locais (paridade total com o desktop).
+let musicIndex: Awaited<ReturnType<typeof loadAlbumMusicIndex>> | null = null;
+const searchMusic = async (query: string) => {
+	try {
+		if (!musicIndex || musicIndex.length === 0) {
+			musicIndex = await loadAlbumMusicIndex();
+		}
+		if (query.length === 0) return [];
+		return filterAlbumMusicIndex(musicIndex, query);
+	} catch (error) {
+		console.warn("[remote] media.search falhou:", error);
+		return [];
+	}
+};
+
 // Módulos v2: mesmos namespaces do desktop (paridade Web Link).
 const modules = createModuleHandlers({
-	media: { openMusicPlayer: openMusicPlayer as never },
+	media: {
+		openMusicPlayer: (async (params: Record<string, unknown>) =>
+			openMusicPlayer({ ...params, project: true })) as never,
+		searchMusic,
+	},
 	bible: useBibleStore() as never,
 	timer: useTimerStore() as never,
 	countdown: useCountdownStore() as never,
@@ -147,7 +172,8 @@ function stopScanner() {
 async function startScanner() {
 	scannerError.value = "";
 	if (!("BarcodeDetector" in window)) {
-		scannerError.value = "Leitor QR não suportado neste navegador. Cole a URL abaixo.";
+		scannerError.value =
+			"Leitor QR não suportado neste navegador. Cole a URL abaixo.";
 		return;
 	}
 	try {
@@ -156,15 +182,23 @@ async function startScanner() {
 			audio: false,
 		});
 		scannerOpen.value = true;
-		await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+		await new Promise<void>((resolve) =>
+			requestAnimationFrame(() => resolve()),
+		);
 		if (!scannerVideo.value) throw new Error("Câmera indisponível");
 		scannerVideo.value.srcObject = scannerStream;
 		await scannerVideo.value.play();
-		const Detector = (window as unknown as {
-			BarcodeDetector: new (options: { formats: string[] }) => {
-				detect(source: ImageBitmapSource): Promise<Array<{ rawValue: string }>>;
-			};
-		}).BarcodeDetector;
+		const Detector = (
+			window as unknown as {
+				BarcodeDetector: new (options: {
+					formats: string[];
+				}) => {
+					detect(
+						source: ImageBitmapSource,
+					): Promise<Array<{ rawValue: string }>>;
+				};
+			}
+		).BarcodeDetector;
 		const detector = new Detector({ formats: ["qr_code"] });
 		scannerTimer = window.setInterval(async () => {
 			if (!scannerVideo.value) return;
@@ -181,7 +215,10 @@ async function startScanner() {
 		}, 250);
 	} catch (error) {
 		stopScanner();
-		scannerError.value = error instanceof Error ? error.message : "Não foi possível abrir a câmera.";
+		scannerError.value =
+			error instanceof Error
+				? error.message
+				: "Não foi possível abrir a câmera.";
 	}
 }
 
@@ -218,7 +255,10 @@ function connect(url: string) {
 	connected.value = true;
 }
 
-onUnmounted(() => { stopScanner(); disconnect(); });
+onUnmounted(() => {
+	stopScanner();
+	disconnect();
+});
 </script>
 
 <template>
