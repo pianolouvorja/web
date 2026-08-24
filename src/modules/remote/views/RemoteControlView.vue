@@ -38,7 +38,7 @@ const searchMusic = async (query: string) => {
 // Módulos v2: mesmos namespaces do desktop (paridade Web Link).
 const modules = createModuleHandlers({
 	media: {
-		openMusicPlayer: (async (params: Record<string, unknown>) =>
+		openMusicPlayer: (async (params: OpenMusicPlayerParams) =>
 			openMusicPlayer({ ...params, project: true })) as never,
 		searchMusic,
 	},
