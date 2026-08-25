@@ -8,7 +8,7 @@ import StageCustomizationCard from '../components/StageCustomizationCard.vue'
   <div class="projection-view">
     <PopupScreensCard />
     <ProjectionOptionsCard />
-    <StageCustomizationCard />
+    <StageCustomizationCard only-scope="global" />
   </div>
 </template>
 
