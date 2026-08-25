@@ -5,7 +5,8 @@ export default {
     nameJa: 'JA'
   },
   common: {
-    comingSoon: 'Em breve'
+    comingSoon: 'Em breve',
+    cancel: 'Cancelar',
   },
   nav: {
     home: 'Início',
@@ -46,15 +47,24 @@ export default {
   mobile: {
     desktopOnly: {
       title: 'Disponível apenas no desktop',
-      description: 'Este recurso está disponível somente na versão desktop do aplicativo.',
+      description: 'Esta funcionalidade está disponível somente na versão desktop do Louvor JA.',
       actionLabel: 'Voltar ao início',
-      dismiss: 'Fechar',
-      hint: 'Alguns recursos de projeção exigem o aplicativo desktop.'
-    }
+      dismiss: 'Dispensar',
+      hint: 'Use o aplicativo desktop para acessar este recurso.',
+    },
+    projection: {
+      desktopOnly: {
+        title: 'Disponível apenas no desktop',
+        description: 'A projeção está disponível somente na versão desktop do Louvor JA.',
+        actionLabel: 'Voltar ao início',
+        dismiss: 'Dispensar',
+        hint: 'Use o aplicativo desktop para projetar.',
+      },
+    },
   },
   uiZoom: {
-    label: 'Zoom',
+    label: 'Zoom da interface',
+    zoomIn: 'Aumentar zoom',
     zoomOut: 'Diminuir zoom',
-    zoomIn: 'Aumentar zoom'
-  }
+  },
 }
