@@ -161,6 +161,9 @@ export default {
       clientConnected: '{device} conectado',
       connect: 'Conectar',
       disconnect: 'Desconectar',
+      palco: 'Palco (TV)',
+      palcoOn: 'Encender Palco',
+      palcoOff: 'Apagar Palco',
       connected: 'Conectado — el celular controla esta pantalla',
       hint: 'Abra el Web Link en la app del celular (Configuraciones → Control Remoto) y pegue la dirección del QR aquí.'
     }

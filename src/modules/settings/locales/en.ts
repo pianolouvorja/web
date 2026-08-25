@@ -161,6 +161,9 @@ export default {
       clientConnected: '{device} connected',
       connect: 'Connect',
       disconnect: 'Disconnect',
+      palco: 'Stage (TV)',
+      palcoOn: 'Turn Stage On',
+      palcoOff: 'Turn Stage Off',
       connected: 'Connected — the phone controls this screen',
       scanQr: 'Scan phone QR',
       hint: 'Open the Web Link on the phone app (Settings → Remote Control) and paste the address shown in the QR here.'

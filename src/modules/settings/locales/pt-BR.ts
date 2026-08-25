@@ -6,6 +6,9 @@ export default {
       hint: 'Conecte o app do celular (Web Link nas Configurações do app) e informe o endereço exibido no QR aqui.',
       connect: 'Conectar',
       disconnect: 'Desconectar',
+      palco: 'Palco (TV)',
+      palcoOn: 'Ligar Palco',
+      palcoOff: 'Desligar Palco',
       connected: 'Conectado — o celular controla esta tela',
       scanQr: 'Escanear QR do celular'
     },
