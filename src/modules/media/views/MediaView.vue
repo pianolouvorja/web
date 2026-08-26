@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useDisplay } from 'vuetify'
 
+import StagePaletteButton from '../../settings/components/StagePaletteButton.vue'
 import MediaCloseDialog from '../components/MediaCloseDialog.vue'
 import MediaPlayerPill from '../components/MediaPlayerPill.vue'
 import MediaSlideStage from '../components/MediaSlideStage.vue'
@@ -219,6 +220,7 @@ function onStageClick() {
         />
       </button>
     </header>
+    <StagePaletteButton scope="hymns" />
 
     <header class="media-window__toolbar media-window__toolbar--end">
       <button

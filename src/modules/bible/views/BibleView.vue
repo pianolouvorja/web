@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
+import StagePaletteButton from '../../settings/components/StagePaletteButton.vue'
 import BibleNavPanel from '../components/BibleNavPanel.vue'
 import BibleProjectFab from '../components/BibleProjectFab.vue'
 import BibleToolbar from '../components/BibleToolbar.vue'
@@ -75,6 +76,7 @@ const navAllCollapsed = computed(() => isMobile.value && booksCollapsed.value &&
     class="bible-view"
     :class="{ 'bible-view--has-selection': selectedBookId !== null && selectedChapter !== null }"
   >
+    <StagePaletteButton scope="bible" />
     <BibleToolbar
       :versions="versions"
       :selected-version-id="selectedVersionId"

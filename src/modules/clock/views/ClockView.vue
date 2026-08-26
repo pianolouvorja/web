@@ -1,9 +1,14 @@
 <script setup lang="ts">
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
 import { GlassCard } from '@design-system/index'
+import { readEffectiveStageSettings, subscribeStageSettings } from '../../settings/services/stage-settings-runtime'
+import { resolveBackgroundImage, type StageSettings } from '../../settings/types/stage-settings'
 
+
+import StageCustomizationDialog from '../../settings/components/StageCustomizationDialog.vue'
 import ClockConfigDialog from '../components/ClockConfigDialog.vue'
 import ClockPreview from '../components/ClockPreview.vue'
 import ClockProjectFab from '../components/ClockProjectFab.vue'
@@ -35,6 +40,30 @@ function goBack() {
 function onToggleProjection() {
   toggleProjection()
 }
+
+const stage = ref<StageSettings>(readEffectiveStageSettings('clock'))
+let unsubStage: (() => void) | null = null
+onMounted(() => {
+  unsubStage = subscribeStageSettings(() => {
+    stage.value = readEffectiveStageSettings('clock')
+  })
+})
+onUnmounted(() => unsubStage?.())
+
+const stageBg = computed(() => ({
+  backgroundColor: stage.value.backgroundColor,
+  backgroundImage: resolveBackgroundImage(stage.value.backgroundImage)
+    ? `url(${resolveBackgroundImage(stage.value.backgroundImage)})`
+    : undefined,
+  backgroundSize: 'cover',
+  backgroundPosition: 'center',
+}))
+
+// Características do módulo vindas do StageSettings (fonte única).
+const effectiveConfig = computed(() => {
+  const mod = stage.value.clock
+  return mod ? { ...config.value, ...mod } : { ...config.value }
+})
 </script>
 
 <template>
@@ -87,9 +116,12 @@ function onToggleProjection() {
           </div>
         </div>
 
-        <div class="clock-view__preview">
+        <div
+          class="clock-view__preview"
+          :style="stageBg"
+        >
           <ClockPreview
-            :config="config"
+            :config="effectiveConfig"
             preview
           />
         </div>
@@ -107,16 +139,10 @@ function onToggleProjection() {
       </GlassCard>
     </div>
 
-    <ClockConfigDialog
+    <StageCustomizationDialog
       :open="configOpen"
-      :config="config"
+      scope="clock"
       @close="closeConfig"
-      @update:style="setStyle"
-      @update:show-seconds="setShowSeconds"
-      @update:format24h="setFormat24h"
-      @update:bg-color="setBgColor"
-      @update:text-color="setTextColor"
-      @reset="resetToDefault"
     />
 
     <ClockProjectFab
@@ -264,6 +290,8 @@ function onToggleProjection() {
 }
 
 .clock-view__preview {
+  border-radius: 0.75rem;
+  overflow: hidden;
   width: 100%;
   height: 100%;
   padding: 1.5rem;

@@ -1,17 +1,30 @@
 export default {
   settings: {
     title: 'Configurações',
+    remote: {
+      title: 'Controle Remoto',
+      hint: 'Conecte o app do celular (Web Link nas Configurações do app) e informe o endereço exibido no QR aqui.',
+      connect: 'Conectar',
+      disconnect: 'Desconectar',
+      palco: 'Palco (TV)',
+      palcoOn: 'Ligar Palco',
+      palcoOff: 'Desligar Palco',
+      connected: 'Conectado — o celular controla esta tela',
+      scanQr: 'Escanear QR do celular'
+    },
     sectionTitle: {
       appearance: 'Configurações de Aparência',
       general: 'Configurações Gerais',
       media: 'Mídia & Player',
       projection: 'Projeção & Telas',
+      remote: 'Controle Remoto'
     },
     tabs: {
       appearance: 'Aparência',
       general: 'Geral',
       media: 'Mídia & Player',
       projection: 'Projeção & Telas',
+      remote: 'Controle Remoto'
     },
     appearance: {
       experienceTitle: 'Experiência Visual',
@@ -31,18 +44,14 @@ export default {
       interactionSoft: 'Suave',
       interactionMist: 'Névoa',
       preview: 'Pré-visualização',
-      previewHint:
-        'Este é um exemplo de como sua interface será exibida em apresentações.',
+      previewHint: 'Este é um exemplo de como sua interface será exibida em apresentações.',
       tipTitle: 'Dica de Performance',
-      tipDark:
-        'O Modo Escuro reduz o consumo de energia em monitores OLED e diminui a fadiga ocular em ambientes de culto.',
-      tipLight:
-        'O Modo Claro oferece melhor legibilidade em ambientes muito iluminados durante cultos diurnos.',
+      tipDark: 'O Modo Escuro reduz o consumo de energia em monitores OLED e diminui a fadiga ocular em ambientes de culto.',
+      tipLight: 'O Modo Claro oferece melhor legibilidade em ambientes muito iluminados durante cultos diurnos.'
     },
     projection: {
       popupScreens: 'Telas de Projeção',
-      popupScreensDesc:
-        'Quantidade de telas disponíveis para projeção (como monitores estendidos). Nos módulos, escolha quais delas recebem o conteúdo.',
+      popupScreensDesc: 'Quantidade de telas disponíveis para projeção (como monitores estendidos). Nos módulos, escolha quais delas recebem o conteúdo.',
       popupCountLabel: 'Número de telas',
       decreaseScreens: 'Diminuir número de telas',
       increaseScreens: 'Aumentar número de telas',
@@ -68,15 +77,94 @@ export default {
         backgroundImage: 'Imagem de fundo',
         selectImage: 'Clique para selecionar uma imagem',
         removeImage: 'Remover imagem',
-        changeImage: 'Trocar imagem',
+        changeImage: 'Trocar imagem'
       },
       errors: {
-        backgroundImage: 'Não foi possível carregar a imagem de fundo.',
+        backgroundImage: 'Não foi possível carregar a imagem de fundo.'
       },
+      mobile: {
+        desktopOnly: {
+          title: 'Disponível apenas no desktop',
+          description: 'A projeção está disponível somente na versão desktop do Louvor JA.',
+          actionLabel: 'Voltar ao início',
+          dismiss: 'Dispensar',
+          hint: 'Use o aplicativo desktop para projetar.',
+        },
+      },
+    },
+    stage: {
+      title: 'Personalizar Palco',
+      scopeGlobal: 'Padrão (global)',
+      scope: {
+        hymns: 'Hinos',
+        bible: 'Bíblia',
+        liturgy: 'Liturgia',
+        timer: 'Cronômetro',
+        random: 'Sorteio',
+        clock: 'Relógio',
+        countdown: 'Contagem regressiva',
+      },
+      inheritingHint:
+        'Este módulo está herdando o padrão global. Qualquer alteração aqui cria uma personalização própria.',
+      backgroundColor: 'Cor de fundo',
+      backgroundImage: 'Imagem de fundo',
+      officialBackground: 'Fundo oficial',
+      officialGalleryHint: 'Toque para aplicar; toque novamente para remover.',
+      selectImage: 'Clique para selecionar uma imagem',
+      removeImage: 'Remover imagem',
+      changeImage: 'Trocar imagem',
+      textColor: 'Cor do texto',
+      fontSize: 'Tamanho da fonte',
+      fontWeight: 'Espessura',
+      weightNormal: 'Normal',
+      weightMedium: 'Média',
+      weightLightPlus: 'Leve+',
+      weightStrong: 'Forte',
+      bibleAppearance: 'Bíblia — aparência própria',
+      bibleTextColor: 'Cor do texto (Bíblia)',
+      bibleFontSize: 'Tamanho da fonte (Bíblia)',
+      bibleFontWeight: 'Espessura (Bíblia)',
+      showBibleVersion: 'Mostrar versão da Bíblia no rodapé',
+      footerRefColor: 'Cor da referência (rodapé)',
+      shadowAndBox: 'Sombra e caixinha',
+      textShadow: 'Sombra na letra',
+      shadowIntensity: 'Intensidade da sombra',
+      shadowBlur: 'Espalhamento da sombra',
+      textBox: 'Caixinha atrás da letra',
+      boxOpacity: 'Opacidade da caixinha',
+      boxBorder: 'Borda na caixinha',
+      alignment: 'Alinhamento do texto',
+      horizontal: 'Horizontal',
+      vertical: 'Vertical',
+      alignLeft: 'Esquerda',
+      alignCenter: 'Centro',
+      alignRight: 'Direita',
+      alignTop: 'Em cima',
+      alignMiddle: 'Meio',
+      alignBottom: 'Em baixo',
+      reset: 'Redefinir',
+      resetConfirm: 'Voltar este módulo para o padrão?',
+      moduleFeatures: 'Características deste módulo',
+      clockStyle: 'Estilo do relógio',
+      clockShowSeconds: 'Mostrar segundos',
+      clockFormat24h: 'Formato 24h',
+      timeFormat: 'Formato do tempo',
+      randomFontSize: 'Tamanho da fonte (sorteio)',
+      randomTextTransform: 'Caixa do texto',
+      randomAnimationSpeed: 'Velocidade da animação',
+      transformNone: 'Normal',
+      speedSlow: 'Lenta',
+      speedNormal: 'Normal',
+      speedFast: 'Rápida',
     },
     placeholder: {
       general: 'Preferências gerais do aplicativo em breve.',
-      media: 'Configurações de áudio, vídeo e player em breve.',
+      media: 'Configurações de áudio, vídeo e player em breve.'
     },
-  },
+    general: {
+      languageTitle: 'Idioma',
+      languageHint: 'Escolha o idioma da interface do aplicativo.'
+    }
+  }
 }
+

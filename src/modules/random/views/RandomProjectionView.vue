@@ -5,6 +5,9 @@ import { ProjectionBackground } from '@design-system/index'
 import { BROWSER_STORAGE_KEYS } from '@shared/constants/storage-keys'
 
 import RandomPreview from '../components/RandomPreview.vue'
+import { readEffectiveStageSettings, subscribeStageSettings } from '../../settings/services/stage-settings-runtime'
+import type { StageSettings } from '../../settings/types/stage-settings'
+import { resolveBackgroundImage } from '../../settings/types/stage-settings'
 import {
   RANDOM_CONFIG_CHANNEL,
   loadRandomDisplayConfig,
@@ -25,6 +28,10 @@ import {
 
 const config = ref<RandomDisplayConfig>({ ...DEFAULT_RANDOM_DISPLAY_CONFIG })
 const runtime = ref<RandomRuntimeState>({ ...DEFAULT_RANDOM_RUNTIME })
+
+// Personalização do Palco (escopo random) — override > config própria
+const stage = ref<StageSettings>(readEffectiveStageSettings('random'))
+let unsubStage: (() => void) | null = null
 
 let configChannel: BroadcastChannel | null = null
 let runtimeChannel: BroadcastChannel | null = null
@@ -60,6 +67,10 @@ onMounted(() => {
   refreshRuntime()
   window.addEventListener('storage', onStorage)
 
+  unsubStage = subscribeStageSettings(() => {
+    stage.value = readEffectiveStageSettings('random')
+  })
+
   try {
     configChannel = new BroadcastChannel(RANDOM_CONFIG_CHANNEL)
     configChannel.addEventListener('message', onConfigMessage)
@@ -77,6 +88,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('storage', onStorage)
+  unsubStage?.()
   configChannel?.removeEventListener('message', onConfigMessage)
   configChannel?.close()
   configChannel = null
@@ -86,8 +98,22 @@ onUnmounted(() => {
 })
 
 const surfaceStyle = computed(() => ({
-  background: config.value.bgColor,
+  // Palco customizado (bg/imagem do escopo random) vence a cor da config
+  backgroundColor: resolveBackgroundImage(stage.value.backgroundImage)
+    ? undefined
+    : stage.value.backgroundColor || config.value.bgColor,
+  backgroundImage: resolveBackgroundImage(stage.value.backgroundImage)
+    ? `url(${resolveBackgroundImage(stage.value.backgroundImage)})`
+    : undefined,
+  backgroundSize: 'cover',
+  backgroundPosition: 'center',
 }))
+
+// Características do módulo vindas do StageSettings (fonte única).
+const effectiveConfig = computed(() => {
+  const mod = stage.value.random
+  return mod ? { ...config.value, ...mod } : { ...config.value }
+})
 </script>
 
 <template>

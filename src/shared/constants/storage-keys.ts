@@ -21,6 +21,8 @@ export const USER_PREFERENCE_KEYS = {
   targetPopupSlots: 'projection.targetPopupSlots',
   /** Preferências de projeção (letra + popups); alinhado ao Electron. */
   projectionSettings: 'projection.settings',
+  /** Personalização do Palco por módulo (formato StageSettings do APK). */
+  stageSettingsPrefix: 'stage.settings.',
   homeLocation: 'home.location',
   /** Zoom da UI do operador (fator 0.7–1.5). */
   uiZoom: 'ui.zoom',
@@ -38,4 +40,5 @@ export const USER_PREFERENCE_KEYS = {
   randomConfig: 'random.config',
   randomSession: 'random.session',
   liturgyState: 'liturgy.state',
+  scheduledState: 'scheduled.state',
 } as const
