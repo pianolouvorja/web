@@ -230,6 +230,14 @@ function disconnect() {
 	connected.value = false;
 }
 
+/** Palco (cast TV): liga/desliga o sender no desktop conectado. */
+const palcoOn = ref(false);
+function togglePalco() {
+	const action = palcoOn.value ? "palco.off" : "palco.on";
+	bridge?.sendCommand(action);
+	palcoOn.value = !palcoOn.value;
+}
+
 function connect(url: string) {
 	disconnect();
 	const full = url.startsWith("ws://") ? url : `ws://${url}`;
@@ -308,6 +316,19 @@ onUnmounted(() => {
       <p class="remote-view__status">
         {{ t('settings.remote.connected') }}
       </p>
+
+      <!-- Palco (cast TV): liga/desliga o sender do desktop via remote -->
+      <div class="remote-view__palco">
+        <span>{{ t('settings.remote.palco') }}</span>
+        <button
+          type="button"
+          class="remote-view__btn"
+          @click="togglePalco"
+        >
+          {{ palcoOn ? t('settings.remote.palcoOff') : t('settings.remote.palcoOn') }}
+        </button>
+      </div>
+
       <button
         type="button"
         class="remote-view__btn remote-view__btn--ghost"
@@ -386,6 +407,14 @@ onUnmounted(() => {
     border: 1px solid var(--ds-color-outline);
     color: inherit;
   }
+}
+
+.remote-view__palco {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	width: 100%;
 }
 
 .remote-view__status {

@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
+import StagePaletteButton from '../../settings/components/StagePaletteButton.vue'
 import AlbumLyricDialog from '@modules/albums/components/AlbumLyricDialog.vue'
 
 import LiturgyCloneDialog from '../components/LiturgyCloneDialog.vue'
@@ -130,6 +131,7 @@ const liturgyAlertKey = computed(() => lastActionMessageKey.value || null)
         </div>
       </div>
     </header>
+    <StagePaletteButton scope="liturgy" />
 
     <div
       v-if="liturgyAlertKey"

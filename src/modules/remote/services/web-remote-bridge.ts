@@ -86,6 +86,21 @@ export class WebRemoteBridge {
     this.send({ v: 1, type: 'state', ...this.options.snapshot() })
   }
 
+  /**
+   * Envia um comando AO DESKTOP (sentido inverso: web → app).
+   * O remote-server do Electron trata `command` com token e despacha
+   * ao renderer (namespaces v2, incluindo palco.*).
+   */
+  sendCommand(action: string, payload: Record<string, unknown> = {}): void {
+    this.send({
+      v: 1,
+      type: 'command',
+      id: `web-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      action,
+      ...payload,
+    })
+  }
+
   private async handle(raw: string): Promise<void> {
     let message: WebRemoteCommand & { v?: number; type?: string }
     try {

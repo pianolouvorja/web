@@ -32,8 +32,11 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
+        // SW desabilitado em dev: o workbox intercepta os módulos do Vite
+        // (que mudam a cada HMR), polui o console com "Precaching did not
+        // find a match" e serve código stale do cache.
         devOptions: {
-          enabled: true,
+          enabled: false,
         },
         workbox: {
           globPatterns: ['**/*.{html,js,css,svg,png,woff,woff2,ttf}'],
