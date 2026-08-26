@@ -3,6 +3,7 @@ import type { RouteRecordRaw } from 'vue-router'
 import AppearanceView from './views/AppearanceView.vue'
 import ProjectionView from './views/ProjectionView.vue'
 import SettingsView from './views/SettingsView.vue'
+import { remoteRoutes } from '@modules/remote/routes'
 
 export const settingsRoutes: RouteRecordRaw[] = [
   {
@@ -23,13 +24,13 @@ export const settingsRoutes: RouteRecordRaw[] = [
           desktopOnly: false,
         },
       },
-      // Geral / Mídia — ocultos no menu; redirect até reativarmos as seções.
       {
         path: 'general',
         name: 'settings-general',
-        redirect: { name: 'settings-appearance' },
+        component: () => import('./views/GeneralView.vue'),
         meta: {
-          desktopOnly: true,
+          navKey: 'settings',
+          desktopOnly: false,
         },
       },
       {
@@ -49,6 +50,7 @@ export const settingsRoutes: RouteRecordRaw[] = [
           desktopOnly: true,
         },
       },
+      ...remoteRoutes,
     ],
   },
 ]

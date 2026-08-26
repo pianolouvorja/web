@@ -5,9 +5,15 @@ import { useRouter } from 'vue-router'
 
 import { useAlbumsStore } from '@modules/albums/stores/useAlbumsStore'
 import type { MediaPlaybackMode } from '@modules/media/types/media'
+import { appConfirm } from '@shared/composables/useAppConfirm'
 
 import { formatMomentDuration } from '../services/liturgy-item-helpers'
+import {
+  decodeJaBytes,
+  parseJaLiturgy,
+} from '../services/liturgy-ja-import'
 import { useLiturgyStore } from '../stores/useLiturgyStore'
+import { useScheduledStore } from '../stores/useScheduledStore'
 import type { LiturgyDayKey } from '../types/liturgy'
 import { useLiturgyClock } from './useLiturgyClock'
 
@@ -109,30 +115,41 @@ export function useLiturgy() {
     currentItems.value.map((item) => formatMomentDuration(item.durationMs)),
   )
 
-  function confirmClearLiturgy() {
+  async function confirmClearLiturgy() {
     if (currentItems.value.length === 0 || deletionLocked.value) return
-    if (!window.confirm(t('liturgy.messages.confirmClear'))) return
+    if (!await appConfirm({
+      title: t('liturgy.clearLiturgy'),
+      message: t('liturgy.messages.confirmClear'),
+      confirmLabel: t('liturgy.ok'),
+      danger: true,
+    })) return
     store.clearAllItems()
   }
 
-  function confirmRemoveItem(index: number) {
+  async function confirmRemoveItem(index: number) {
     if (deletionLocked.value) return
     const item = currentItems.value[index]
     const message =
       item?.type === 'category'
         ? t('liturgy.messages.confirmDeleteCategory')
         : t('liturgy.messages.confirmDelete')
-    if (!window.confirm(message)) return
+    if (!await appConfirm({
+      title: t('liturgy.editItem'),
+      message,
+      confirmLabel: t('liturgy.ok'),
+      danger: true,
+    })) return
     store.removeItem(index)
   }
 
-  function confirmRemoveCustom(index: number) {
+  async function confirmRemoveCustom(index: number) {
     const name = customLiturgies.value[index]?.name ?? ''
-    if (
-      !window.confirm(t('liturgy.messages.confirmDeleteCustom', { name }))
-    ) {
-      return
-    }
+    if (!await appConfirm({
+      title: t('liturgy.clearLiturgy'),
+      message: t('liturgy.messages.confirmDeleteCustom', { name }),
+      confirmLabel: t('liturgy.ok'),
+      danger: true,
+    })) return
     store.removeCustomLiturgy(index)
   }
 
@@ -148,8 +165,125 @@ export function useLiturgy() {
     store.selectDay(day)
   }
 
-  function onManageTeam() {
-    window.alert(t('liturgy.team.comingSoon'))
+  /** Abre seletor de arquivo e retorna bytes (browser: FileReader). */
+  function pickFileBytes(accept: string): Promise<Uint8Array | null> {
+    return new Promise((resolve) => {
+      const input = document.createElement('input')
+      input.type = 'file'
+      input.accept = accept
+      input.onchange = () => {
+        const file = input.files?.[0]
+        if (!file) {
+          resolve(null)
+          return
+        }
+        const reader = new FileReader()
+        reader.onload = () => resolve(new Uint8Array(reader.result as ArrayBuffer))
+        reader.onerror = () => resolve(null)
+        reader.readAsArrayBuffer(file)
+      }
+      input.click()
+    })
+  }
+
+  function pickFileText(accept: string): Promise<{ name: string; text: string } | null> {
+    return new Promise((resolve) => {
+      const input = document.createElement('input')
+      input.type = 'file'
+      input.accept = accept
+      input.onchange = () => {
+        const file = input.files?.[0]
+        if (!file) {
+          resolve(null)
+          return
+        }
+        const reader = new FileReader()
+        reader.onload = () => resolve({ name: file.name, text: String(reader.result) })
+        reader.onerror = () => resolve(null)
+        reader.readAsText(file)
+      }
+      input.click()
+    })
+  }
+
+  /** Importa liturgia .ja do LouvorJA Delphi (merge por dia). */
+  async function onImportJa() {
+    const bytes = await pickFileBytes('.ja')
+    if (!bytes) {
+      await appConfirm({
+        title: t('liturgy.importJa'),
+        message: t('liturgy.importJaReadError'),
+        confirmLabel: t('liturgy.ok'),
+      })
+      return
+    }
+    let parsed
+    try {
+      parsed = parseJaLiturgy(decodeJaBytes(bytes))
+    } catch {
+      await appConfirm({
+        title: t('liturgy.importJa'),
+        message: t('liturgy.importJaInvalid'),
+        confirmLabel: t('liturgy.ok'),
+      })
+      return
+    }
+    const duplicates = store.countJaDuplicates(parsed)
+    let mode: 'merge' | 'overwrite' = 'merge'
+    if (duplicates > 0) {
+      mode = await appConfirm({
+        title: t('liturgy.importJaOverwriteTitle'),
+        message: t('liturgy.importJaOverwriteAsk', { count: duplicates }),
+        confirmLabel: t('liturgy.importJaOverwrite'),
+        cancelLabel: t('liturgy.importJaKeep'),
+        danger: true,
+      })
+        ? 'overwrite'
+        : 'merge'
+    }
+    const { added, skipped, days } = await store.importJaDays(parsed, mode)
+    lastActionMessageKey.value = null
+    await appConfirm({
+      title: t('liturgy.importJa'),
+      message:
+        mode === 'overwrite'
+          ? t('liturgy.importJaOverwritten', { added, days: days.length })
+          : t('liturgy.importJaDone', { added, skipped, days: days.length }),
+      confirmLabel: t('liturgy.ok'),
+    })
+  }
+
+  /** Importa itens agendados (DATAPACKET XML) do Delphi: 2 arquivos. */
+  async function onImportScheduled() {
+    const scheduled = useScheduledStore()
+    const cats = await pickFileText('.xml')
+    if (!cats) return
+    // Arquivos irmãos do Delphi ainda não portados — reconhece e avisa.
+    const notPorted = ['coletaneasusuario', 'favoritos', 'videosonusuario', 'configpt']
+    if (notPorted.some((n) => cats.name.toLowerCase().includes(n))) {
+      await appConfirm({
+        title: t('liturgy.scheduled.import'),
+        message: t('liturgy.scheduled.notPorted', { name: cats.name }),
+        confirmLabel: t('liturgy.ok'),
+      })
+      return
+    }
+    const items = await pickFileText('.xml')
+    const n = scheduled.importFromDelphi(cats.text, items?.text ?? null)
+    lastActionMessageKey.value = null
+    await appConfirm({
+      title: t('liturgy.scheduled.import'),
+      message: t('liturgy.scheduled.imported', { count: n }),
+      confirmLabel: t('liturgy.ok'),
+    })
+  }
+
+  async function onManageTeam() {
+    await appConfirm({
+      title: t('liturgy.team.title'),
+      message: t('liturgy.team.comingSoon'),
+      confirmLabel: t('liturgy.ok'),
+    })
   }
 
   async function runMusicAction(
@@ -258,6 +392,8 @@ export function useLiturgy() {
     deletionLocked,
     videoProjectionItemId,
     selectDay: onSelectDay,
+    importJa: onImportJa,
+    importScheduled: onImportScheduled,
     selectCustomLiturgy: store.selectCustomLiturgy,
     setSessionStartFromInput: store.setSessionStartFromInput,
     clearSessionStart: store.clearSessionStart,
