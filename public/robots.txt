@@ -1,0 +1,3 @@
+# STAGING apenas - NAO traga este arquivo para main/producao.
+User-agent: *
+Disallow: /
