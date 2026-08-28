@@ -34,7 +34,7 @@ export function useMediaPlayer() {
     slideProgressRatio,
     currentTimeLabel,
     durationLabel,
-    slideCount,,
+    slideCount,
     queue,
     queueIndex,
 } = storeToRefs(store)
@@ -76,7 +76,7 @@ export function useMediaPlayer() {
     slideProgressRatio,
     currentTimeLabel,
     durationLabel,
-    slideCount,,
+    slideCount,
     queue,
     queueIndex,
   openTrack,

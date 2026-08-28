@@ -78,7 +78,7 @@ const {
   playInstrumental,
   playSlides,
   openLyric,
-  closeLyric,,
+  closeLyric,
   playAllInActiveCollection,
 } = useAlbums()
 

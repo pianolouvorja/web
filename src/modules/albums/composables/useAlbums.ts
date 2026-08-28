@@ -28,7 +28,6 @@ export function useAlbums() {
     lyricDoc,
     isLoadingLyric,
     filteredTracks,
-    playAllInActiveCollection,
     hubSearchResults,
     isHubSearching,
   } = storeToRefs(store)
@@ -87,6 +86,7 @@ export function useAlbums() {
   return {
     categories,
     activeCollection,
+    playAllInActiveCollection,
     tracks,
     searchQuery,
     hubSearchQuery,
