@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useDisplay } from 'vuetify'
@@ -37,6 +37,9 @@ const {
   durationLabel,
   progressRatio,
   slideProgressRatio,
+  queue,
+  queueIndex,
+  jumpToQueue,
   volume,
   maximize,
   minimize,
@@ -57,6 +60,21 @@ const {
   clearProjection,
   syncProjectionFlag,
 } = useMediaPlayer()
+
+const playlistListEl = ref<HTMLUListElement | null>(null)
+
+/** Slide/faixa em reprodução visível no painel lateral (auto-scroll). */
+const activeListIndex = computed(() =>
+  queue.value.length > 1 ? queueIndex.value : slideIndex.value,
+)
+
+watch(activeListIndex, async (index) => {
+  if (index < 0) return
+  await nextTick()
+  const list = playlistListEl.value
+  const active = list?.querySelector('.media-window__playlist-item--active')
+  active?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+})
 
 const stageLyric = computed(() => currentSlide.value?.lyric ?? '')
 const stageTitle = computed(() => session.value?.title ?? '')
@@ -280,10 +298,27 @@ function onStageClick() {
         v-if="playlistVisible"
         class="media-window__playlist"
       >
+        <template v-if="queue.length > 1">
+          <h2 class="media-window__playlist-title">Fila de reprodução</h2>
+          <ul ref="playlistListEl" class="media-window__playlist-list">
+            <li v-for="(item, index) in queue" :key="`${item.musicId}-${index}`">
+              <button
+                type="button"
+                class="media-window__playlist-item"
+                :class="{ 'media-window__playlist-item--active': index === queueIndex }"
+                @click="jumpToQueue(index)"
+              >
+                <span class="media-window__playlist-index">{{ index + 1 }}</span>
+                <span class="media-window__playlist-label">{{ item.title }}</span>
+              </button>
+            </li>
+          </ul>
+        </template>
+        <template v-else>
         <h2 class="media-window__playlist-title">
           {{ t('media.playlist') }}
         </h2>
-        <ul class="media-window__playlist-list">
+        <ul ref="playlistListEl" class="media-window__playlist-list">
           <li
             v-for="item in playlist"
             :key="item.index"
@@ -306,6 +341,7 @@ function onStageClick() {
             </button>
           </li>
         </ul>
+        </template>
       </aside>
 
       <div class="media-window__pill-wrap">
