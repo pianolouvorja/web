@@ -13,6 +13,48 @@ import { useAlbums } from '../composables/useAlbums'
 import type { AlbumCategory } from '../types/albums'
 
 const { t } = useI18n()
+
+import {
+  createPlaylist,
+  deletePlaylist,
+  listPlaylists,
+  removePlaylistItem,
+  type Playlist,
+} from '../services/playlist-storage'
+import { useMediaStore } from '../../media/stores/useMediaStore'
+
+const mediaStore = useMediaStore()
+const playlists = ref<Playlist[]>(listPlaylists())
+const newPlaylistName = ref('')
+const expandedPlaylistId = ref<string | null>(null)
+
+function addPlaylist() {
+  const name = newPlaylistName.value.trim()
+  if (!name) return
+  createPlaylist(name)
+  playlists.value = listPlaylists()
+  newPlaylistName.value = ''
+}
+
+function removePlaylist(id: string) {
+  deletePlaylist(id)
+  playlists.value = listPlaylists()
+}
+
+function removePlaylistTrack(id: string, index: number) {
+  removePlaylistItem(id, index)
+  playlists.value = listPlaylists()
+}
+
+function togglePlaylist(id: string) {
+  expandedPlaylistId.value = expandedPlaylistId.value === id ? null : id
+}
+
+async function playPlaylist(playlist: Playlist) {
+  if (playlist.items.length === 0) return
+  await mediaStore.playQueue(playlist.items, 0)
+  void router.push({ name: 'media' })
+}
 const router = useRouter()
 
 const {
@@ -142,6 +184,55 @@ async function runAction(
         </label>
       </div>
     </header>
+
+    <section class="albums-view__playlists" aria-labelledby="playlists-title">
+      <header class="albums-view__playlists-header">
+        <h2 id="playlists-title">
+          <i class="ti ti-playlist" aria-hidden="true" /> Playlists
+        </h2>
+        <form @submit.prevent="addPlaylist">
+          <input
+            v-model="newPlaylistName"
+            required
+            placeholder="Nome da nova playlist..."
+            aria-label="Nome da playlist"
+          >
+          <v-btn type="submit" size="small" color="primary" prepend-icon="mdi-plus">
+            Criar
+          </v-btn>
+        </form>
+      </header>
+
+      <div v-if="playlists.length === 0" class="albums-view__playlists-empty">
+        Nenhuma playlist criada ainda.
+      </div>
+
+      <div v-else class="albums-view__playlists-list">
+        <article v-for="playlist in playlists" :key="playlist.id" class="albums-view__playlist">
+          <div class="albums-view__playlist-row">
+            <button type="button" class="albums-view__playlist-toggle" @click="togglePlaylist(playlist.id)">
+              <i class="ti" :class="expandedPlaylistId === playlist.id ? 'ti-chevron-down' : 'ti-chevron-right'" aria-hidden="true" />
+              <span class="albums-view__playlist-name">
+                <strong>{{ playlist.name }}</strong>
+                <small>{{ playlist.items.length }} faixa(s)</small>
+              </span>
+            </button>
+            <div class="albums-view__playlist-actions">
+              <v-btn size="x-small" color="primary" variant="tonal" :disabled="playlist.items.length === 0" @click="playPlaylist(playlist)">
+                <i class="ti ti-player-play" aria-hidden="true" /> Tocar
+              </v-btn>
+              <v-btn size="x-small" icon="mdi-trash-can-outline" variant="text" color="error" :aria-label="`Remover playlist ${playlist.name}`" @click="removePlaylist(playlist.id)" />
+            </div>
+          </div>
+          <ul v-if="expandedPlaylistId === playlist.id && playlist.items.length > 0" class="albums-view__playlist-tracks">
+            <li v-for="(item, index) in playlist.items" :key="`${item.musicId}-${index}`">
+              <span>{{ index + 1 }}. {{ item.title }}</span>
+              <v-btn size="x-small" icon="mdi-close" variant="text" :aria-label="`Remover ${item.title}`" @click="removePlaylistTrack(playlist.id, index)" />
+            </li>
+          </ul>
+        </article>
+      </div>
+    </section>
 
     <div
       v-if="lastActionMessageKey && !lastActionMessageKey.startsWith('media.messages.')"
@@ -587,3 +678,115 @@ async function runAction(
   }
 }
 </style>
+.albums-view__playlists {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.albums-view__playlists-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.albums-view__playlists-header h2 {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 1.02rem;
+}
+
+.albums-view__playlists-header form {
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.albums-view__playlists-header input {
+  min-width: 14rem;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid rgba(125, 137, 155, 0.4);
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.88rem;
+}
+
+.albums-view__playlists-empty {
+  padding: 0.9rem;
+  color: rgba(125, 137, 155, 1);
+  font-size: 0.88rem;
+  border: 1px dashed rgba(125, 137, 155, 0.4);
+  border-radius: 8px;
+}
+
+.albums-view__playlists-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.albums-view__playlist {
+  border: 1px solid rgba(125, 137, 155, 0.25);
+  border-radius: 8px;
+  padding: 0.55rem 0.75rem;
+}
+
+.albums-view__playlist-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.albums-view__playlist-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  padding: 0;
+}
+
+.albums-view__playlist-name {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.albums-view__playlist-name small {
+  color: rgba(125, 137, 155, 1);
+  font-size: 0.76rem;
+}
+
+.albums-view__playlist-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.albums-view__playlist-tracks {
+  margin: 0.5rem 0 0 1.5rem;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.albums-view__playlist-tracks li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.3rem 0;
+  font-size: 0.85rem;
+  border-top: 1px solid rgba(125, 137, 155, 0.15);
+}

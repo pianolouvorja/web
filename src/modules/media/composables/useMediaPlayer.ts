@@ -35,7 +35,9 @@ export function useMediaPlayer() {
     currentTimeLabel,
     durationLabel,
     slideCount,
-  } = storeToRefs(store)
+    queue,
+    queueIndex,
+} = storeToRefs(store)
 
   async function openTrack(params: MediaOpenParams): Promise<MediaOpenResult> {
     return store.open(params)
@@ -75,7 +77,9 @@ export function useMediaPlayer() {
     currentTimeLabel,
     durationLabel,
     slideCount,
-    openTrack,
+    queue,
+    queueIndex,
+  openTrack,
     play: store.play,
     pause: store.pause,
     togglePlay: store.togglePlay,
@@ -84,6 +88,7 @@ export function useMediaPlayer() {
     goToSlide: store.goToSlide,
     nextSlide: store.nextSlide,
     previousSlide: store.previousSlide,
+  jumpToQueue: store.jumpToQueue,
     setVolume: store.setVolume,
     minimize: store.minimize,
     maximize: store.maximize,

@@ -6,8 +6,11 @@ import type { MediaPlaybackMode } from '@modules/media/types/media'
 
 import { useAlbumsStore } from '../stores/useAlbumsStore'
 
+import { useMediaStore } from '../../media/stores/useMediaStore'
+
 export function useAlbums() {
   const store = useAlbumsStore()
+  const mediaStore = useMediaStore()
   const router = useRouter()
 
   const {
@@ -53,6 +56,25 @@ export function useAlbums() {
     )
   }
 
+  /** Toca todas as faixas da coletânea ativa em fila (exceto hinários). */
+  async function playAllInActiveCollection(mode: MediaPlaybackMode = 'audio') {
+    const collection = activeCollection.value
+    if (!collection || collection.kind === 'hymnal') return false
+    const list = filteredTracks.value
+    if (list.length === 0) return false
+    await mediaStore.playQueue(
+      list.map((track) => ({
+        musicId: track.musicId,
+        albumId: Number(collection.id) || null,
+        title: track.name,
+      })),
+      0,
+      mode,
+    )
+    await router.push({ name: 'media' })
+    return true
+  }
+
   async function playMode(musicId: number, mode: MediaPlaybackMode) {
     return openPlayerWindow(
       await store.playTrack(musicId, mode, {
@@ -64,6 +86,7 @@ export function useAlbums() {
   return {
     categories,
     activeCollection,
+    playAllInActiveCollection,
     tracks,
     searchQuery,
     hubSearchQuery,

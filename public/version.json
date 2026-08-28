@@ -1,6 +1,6 @@
 {
-  "version": "1.18.0",
-  "changelog": "## Novidades\n- feat: verificação de atualização no PWA\n- feat: aceite de EULA\n- fix: idioma pt-BR no manifesto PWA",
-  "date": "2026-08-21",
+  "version": "1.20.0",
+  "changelog": "## Novidades\n- feat: gerenciamento de playlists no web (criar, adicionar faixas, tocar e excluir)\n- feat: fila de reprodução com auto-scroll no player\n- feat: ação tocar tudo por coletânea de álbuns",
+  "date": "2026-08-28",
   "platform": "web"
 }
