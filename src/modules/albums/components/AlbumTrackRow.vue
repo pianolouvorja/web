@@ -17,6 +17,7 @@ const emit = defineEmits<{
   instrumental: []
   slides: []
   lyric: []
+  playlist: []
 }>()
 
 const rowHovered = ref(false)
@@ -82,6 +83,15 @@ const { t } = useI18n()
     </span>
 
     <div class="album-track-row__actions">
+      <button
+        type="button"
+        class="album-track-row__playlist-btn"
+        :aria-label="`Adicionar ${track.name} à playlist`"
+        :title="`Adicionar ${track.name} à playlist`"
+        @click.stop="emit('playlist')"
+      >
+        <i class="ti ti-playlist-add" aria-hidden="true" />
+      </button>
       <MusicTrackActions
         :music-id="track.musicId"
         :track-name="track.name"
@@ -307,3 +317,19 @@ const { t } = useI18n()
   }
 }
 </style>
+
+.album-track-row__playlist-btn {
+  border: 0;
+  background: transparent;
+  color: rgba(125, 137, 155, 1);
+  font-size: 1.05rem;
+  cursor: pointer;
+  padding: 0.3rem;
+  border-radius: 6px;
+  transition: color 0.2s ease, background 0.2s ease;
+}
+
+.album-track-row__playlist-btn:hover {
+  color: rgb(251, 140, 0);
+  background: rgba(251, 140, 0, 0.08);
+}

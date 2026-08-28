@@ -9,6 +9,10 @@ import {
 } from '@shared/services/popup-windows'
 
 import {
+  resolveNext,
+  type QueueItem,
+} from '../services/media-queue'
+import {
   attachMediaAudioListeners,
   detachMediaAudioListeners,
   fadeInMediaAudio,
@@ -56,6 +60,8 @@ function isMobileOperatorViewport(): boolean {
 
 export const useMediaStore = defineStore('media', () => {
   const session = ref<MediaSession | null>(null)
+  const queue = ref<QueueItem[]>([])
+  const queueIndex = ref(-1)
   const status = ref<MediaPlayerStatus>('idle')
   const lastErrorKey = ref<string | null>(null)
   const minimized = ref(true)
@@ -278,6 +284,11 @@ export const useMediaStore = defineStore('media', () => {
         status.value = session.value ? 'paused' : 'idle'
       },
       onEnded: () => {
+        const item = resolveNext({ items: queue.value, index: queueIndex.value })
+        if (item) {
+          void playQueueItem(item)
+          return
+        }
         status.value = 'paused'
         currentTimeSec.value = durationSec.value
         close()
@@ -308,6 +319,9 @@ export const useMediaStore = defineStore('media', () => {
     }
 
     const requestedMode: MediaPlaybackMode = params.mode ?? 'audio'
+
+    queue.value = []
+    queueIndex.value = -1
 
     // Mesma faixa: troca de modo sem reset (legado Media.open + isSameSong).
     if (session.value?.musicId === musicId) {
@@ -495,6 +509,51 @@ export const useMediaStore = defineStore('media', () => {
     }
 
     await refreshResolvedSlideImage()
+  }
+
+  // ===== Fila (paridade app PR #131) =====
+
+  async function playQueueItem(item: QueueItem, mode?: MediaPlaybackMode): Promise<void> {
+    const target = mode ?? session.value?.mode ?? 'audio'
+    const currentQueue = queue.value
+    const currentIndex = queueIndex.value
+    await open({
+      musicId: item.musicId,
+      mode: target,
+      albumId: item.albumId,
+      project: undefined,
+    })
+    if (queue.value.length === 0 && currentQueue.length > 0) {
+      queue.value = currentQueue
+      queueIndex.value = currentIndex
+    }
+    queueIndex.value = queue.value.findIndex((q) => q.musicId === item.musicId)
+  }
+
+  async function playQueue(items: QueueItem[], startIndex = 0, mode?: MediaPlaybackMode): Promise<void> {
+    queue.value = items
+    const first = items[startIndex]
+    if (!first) return
+    await playQueueItem(first, mode)
+  }
+
+  function nextTrack(): void {
+    const item = resolveNext({ items: queue.value, index: queueIndex.value })
+    if (item) void playQueueItem(item)
+  }
+
+  function jumpToQueue(index: number): void {
+    const item = queue.value[index]
+    if (item) void playQueueItem(item)
+  }
+
+  function hasQueue(): boolean {
+    return queue.value.length > 1
+  }
+
+  function clearQueue(): void {
+    queue.value = []
+    queueIndex.value = -1
   }
 
   async function nextSlide(): Promise<void> {
@@ -861,6 +920,14 @@ export const useMediaStore = defineStore('media', () => {
     goToSlide,
     nextSlide,
     previousSlide,
+    queue,
+    queueIndex,
+    playQueue,
+    playQueueItem,
+    nextTrack,
+    jumpToQueue,
+    hasQueue,
+    clearQueue,
     setVolume,
     minimize,
     maximize,
