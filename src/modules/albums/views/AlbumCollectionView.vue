@@ -30,7 +30,8 @@ const {
   playInstrumental,
   playSlides,
   openLyric,
-  closeLyric,
+  closeLyric,,
+  playAllInActiveCollection,
 } = useAlbums()
 
 const busyMusicId = ref<number | null>(null)
@@ -105,6 +106,15 @@ async function runAction(
         </h1>
       </div>
 
+      <v-btn
+        v-if="activeCollection?.kind !== 'hymnal' && filteredTracks.length > 0"
+        size="small"
+        color="primary"
+        prepend-icon="mdi-play"
+        @click="playAllInActiveCollection()"
+      >
+        Tocar tudo
+      </v-btn>
     </header>
 
     <div
