@@ -93,9 +93,6 @@ const effectiveConfig = computed(() => {
 
 <template>
   <section class="random-view">
-    <div class="random-view__palette-slot">
-      <StagePaletteButton scope="random" />
-    </div>
     <header class="random-view__header">
       <button
         type="button"
@@ -108,6 +105,8 @@ const effectiveConfig = computed(() => {
           aria-hidden="true"
         />
       </button>
+
+      <StagePaletteButton scope="random" />
 
       <div class="random-view__brand">
         <div class="random-view__brand-icon">
@@ -465,10 +464,7 @@ const effectiveConfig = computed(() => {
   }
 }
 
-.random-view__palette-slot {
-  position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  z-index: 30;
+.random-view__header .stage-palette-fab {
+  margin-left: 0.25rem;
 }
 </style>
