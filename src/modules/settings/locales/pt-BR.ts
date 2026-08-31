@@ -161,6 +161,22 @@ export default {
       general: 'Preferências gerais do aplicativo em breve.',
       media: 'Configurações de áudio, vídeo e player em breve.'
     },
+    palco: {
+      tvs: 'Telas (TV)',
+      webHint: 'Controle o cast do desktop: TVs conectadas por slot.',
+      desktopConnected: 'Desktop conectado',
+      desktopOffline: 'Desktop desconectado',
+      connectFirst: 'Conecte o desktop no Controle Remoto (QR ou URL) para ver as TVs.',
+      senderStatus: 'Palco',
+      senderOn: 'ligado',
+      senderOff: 'desligado',
+      slotOn: 'ligada',
+      slotOff: 'desligada',
+      oneReceiver: '1 TV conectada',
+      nReceivers: '{n} TVs conectadas',
+      noSlots: 'Nenhuma TV configurada no desktop.',
+      statusError: 'Falha ao consultar o palco do desktop.'
+    },
     general: {
       languageTitle: 'Idioma',
       languageHint: 'Escolha o idioma da interface do aplicativo.'

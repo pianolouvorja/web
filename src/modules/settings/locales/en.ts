@@ -166,7 +166,22 @@ export default {
       palcoOff: 'Turn Stage Off',
       connected: 'Connected — the phone controls this screen',
       scanQr: 'Scan phone QR',
-      hint: 'Open the Web Link on the phone app (Settings → Remote Control) and paste the address shown in the QR here.'
+          },
+    palco: {
+      tvs: 'Screens (TV)',
+      webHint: 'Control the desktop cast: TVs connected per slot.',
+      desktopConnected: 'Desktop connected',
+      desktopOffline: 'Desktop offline',
+      connectFirst: 'Connect the desktop in Remote Control (QR or URL) to see the TVs.',
+      senderStatus: 'Stage',
+      senderOn: 'on',
+      senderOff: 'off',
+      slotOn: 'on',
+      slotOff: 'off',
+      oneReceiver: '1 TV connected',
+      nReceivers: '{n} TVs connected',
+      noSlots: 'No TV configured on the desktop.',
+      statusError: 'Failed to query the desktop stage.'
     }
   }
 }

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import PalcoTvCard from '../components/PalcoTvCard.vue'
 import PopupScreensCard from '../components/PopupScreensCard.vue'
 import ProjectionOptionsCard from '../components/ProjectionOptionsCard.vue'
 import StageCustomizationCard from '../components/StageCustomizationCard.vue'
@@ -6,6 +7,7 @@ import StageCustomizationCard from '../components/StageCustomizationCard.vue'
 
 <template>
   <div class="projection-view">
+    <PalcoTvCard />
     <PopupScreensCard />
     <ProjectionOptionsCard />
     <StageCustomizationCard only-scope="global" />

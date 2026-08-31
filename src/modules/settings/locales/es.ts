@@ -165,7 +165,22 @@ export default {
       palcoOn: 'Encender Palco',
       palcoOff: 'Apagar Palco',
       connected: 'Conectado — el celular controla esta pantalla',
-      hint: 'Abra el Web Link en la app del celular (Configuraciones → Control Remoto) y pegue la dirección del QR aquí.'
+          },
+    palco: {
+      tvs: 'Pantallas (TV)',
+      webHint: 'Controla el cast del desktop: TVs conectadas por slot.',
+      desktopConnected: 'Desktop conectado',
+      desktopOffline: 'Desktop desconectado',
+      connectFirst: 'Conecta el desktop en Control Remoto (QR o URL) para ver las TVs.',
+      senderStatus: 'Escenario',
+      senderOn: 'encendido',
+      senderOff: 'apagado',
+      slotOn: 'encendida',
+      slotOff: 'apagada',
+      oneReceiver: '1 TV conectada',
+      nReceivers: '{n} TVs conectadas',
+      noSlots: 'Ninguna TV configurada en el desktop.',
+      statusError: 'Error al consultar el escenario del desktop.'
     }
   }
 }
