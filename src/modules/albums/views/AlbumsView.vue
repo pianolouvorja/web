@@ -274,97 +274,154 @@ async function runAction(
       </div>
     </header>
 
-    <section class="albums-view__playlists" aria-labelledby="playlists-title">
-      <header class="albums-view__playlists-header">
-        <h2 id="playlists-title">
-          <i class="ti ti-playlist" aria-hidden="true" /> {{ t('albums.playlists.title') }}
-        </h2>
-        <div class="albums-view__playlists-io">
-          <v-btn
-            size="small"
-            variant="tonal"
-            color="primary"
-            prepend-icon="mdi-upload"
-            data-testid="playlists-export"
-            :disabled="playlists.length === 0"
-            :title="t('albums.playlists.export')"
-            @click="exportPlaylists"
-          >
-            {{ t('albums.playlists.export') }}
-          </v-btn>
-          <v-btn
-            size="small"
-            variant="tonal"
-            color="primary"
-            prepend-icon="mdi-download"
-            data-testid="playlists-import"
-            :title="t('albums.playlists.import')"
-            @click="fileInput?.click()"
-          >
-            {{ t('albums.playlists.import') }}
-          </v-btn>
-          <input
-            ref="fileInput"
-            type="file"
-            accept="application/json,.json"
-            data-testid="playlists-import-input"
-            aria-hidden="true"
-            tabindex="-1"
-            @change="onImportFileChange"
-          >
-        </div>
-        <form @submit.prevent="addPlaylist">
-          <input
-            v-model="newPlaylistName"
-            required
-            :placeholder="t('albums.playlists.newPlaceholder')"
-            :aria-label="t('albums.playlists.newPlaceholder')"
-          >
-          <v-btn type="submit" size="small" color="primary" prepend-icon="mdi-plus">
-            {{ t('albums.playlists.create') }}
-          </v-btn>
-        </form>
-      </header>
-
-      <Teleport to="body">
-        <Transition name="playlist-toast">
-          <div v-if="importFeedback" class="playlist-toast" role="status" aria-live="polite">
-            <i class="ti ti-circle-check" aria-hidden="true" />
-            {{ importFeedback }}
+    <GlassCard
+      class="albums-view__playlists"
+      :padding="false"
+    >
+      <div class="albums-view__playlists-inner">
+        <header class="albums-view__playlists-header">
+          <div class="albums-view__playlists-heading">
+            <i class="ti ti-playlist" aria-hidden="true" />
+            <h2 id="playlists-title">{{ t('albums.playlists.title') }}</h2>
           </div>
-        </Transition>
-      </Teleport>
-
-      <div v-if="playlists.length === 0" class="albums-view__playlists-empty">
-        {{ t('albums.playlists.empty') }}
-      </div>
-
-      <div v-else class="albums-view__playlists-list">
-        <article v-for="playlist in playlists" :key="playlist.id" class="albums-view__playlist">
-          <div class="albums-view__playlist-row">
-            <button type="button" class="albums-view__playlist-toggle" @click="togglePlaylist(playlist.id)">
-              <i class="ti" :class="expandedPlaylistId === playlist.id ? 'ti-chevron-down' : 'ti-chevron-right'" aria-hidden="true" />
-              <span class="albums-view__playlist-name">
-                <strong>{{ playlist.name }}</strong>
-                <small>{{ playlist.items.length }} faixa(s)</small>
-              </span>
+          <form @submit.prevent="addPlaylist">
+            <input
+              v-model="newPlaylistName"
+              required
+              :placeholder="t('albums.playlists.newPlaceholder')"
+              :aria-label="t('albums.playlists.newPlaceholder')"
+            >
+            <button type="submit">
+              <i class="ti ti-plus" aria-hidden="true" /> {{ t('albums.playlists.create') }}
             </button>
-            <div class="albums-view__playlist-actions">
-              <v-btn size="x-small" color="primary" variant="tonal" :disabled="playlist.items.length === 0" @click="playPlaylist(playlist)">
-                <i class="ti ti-player-play" aria-hidden="true" /> Tocar
-              </v-btn>
-              <v-btn size="x-small" icon="mdi-trash-can-outline" variant="text" color="error" :aria-label="`Remover playlist ${playlist.name}`" @click="removePlaylist(playlist.id)" />
+            <button
+              type="button"
+              class="albums-view__playlists-io"
+              data-testid="playlists-export"
+              :disabled="playlists.length === 0"
+              :aria-label="t('albums.playlists.export')"
+              :title="t('albums.playlists.export')"
+              @click="exportPlaylists"
+            >
+              <i class="ti ti-upload" aria-hidden="true" />
+            </button>
+            <label
+              class="albums-view__playlists-io"
+              data-testid="playlists-import"
+              :aria-label="t('albums.playlists.import')"
+              :title="t('albums.playlists.import')"
+            >
+              <i class="ti ti-download" aria-hidden="true" />
+              <input
+                ref="fileInput"
+                type="file"
+                accept="application/json,.json"
+                hidden
+                @change="onImportFileChange"
+              >
+            </label>
+          </form>
+        </header>
+
+        <p
+          v-if="importFeedback"
+          class="albums-view__playlists-feedback"
+          role="status"
+          aria-live="polite"
+        >
+          {{ importFeedback }}
+        </p>
+
+        <div
+          v-if="playlists.length === 0"
+          class="albums-view__state albums-view__playlists-empty"
+        >
+          <i class="ti ti-music-plus" aria-hidden="true" />
+          {{ t('albums.playlists.empty') }}
+        </div>
+
+        <TransitionGroup
+          v-else
+          name="playlist-card"
+          tag="div"
+          class="albums-view__playlists-list"
+        >
+          <article
+            v-for="playlist in playlists"
+            :key="playlist.id"
+            class="albums-view__playlist"
+            :class="{ 'albums-view__playlist--open': expandedPlaylistId === playlist.id }"
+          >
+            <div class="albums-view__playlist-row">
+              <button
+                type="button"
+                class="albums-view__playlist-toggle"
+                :aria-expanded="expandedPlaylistId === playlist.id"
+                @click="togglePlaylist(playlist.id)"
+              >
+                <span class="albums-view__playlist-icon">
+                  <i
+                    class="ti"
+                    :class="playlist.items.length > 0 ? 'ti-playlist' : 'ti-music-off'"
+                    aria-hidden="true"
+                  />
+                </span>
+                <span class="albums-view__playlist-name">
+                  <strong>{{ playlist.name }}</strong>
+                  <small>{{ playlist.items.length }} faixa(s)</small>
+                </span>
+                <i
+                  class="ti albums-view__playlist-chevron"
+                  :class="expandedPlaylistId === playlist.id ? 'ti-chevron-down' : 'ti-chevron-right'"
+                  aria-hidden="true"
+                />
+              </button>
+              <div class="albums-view__playlist-actions">
+                <button
+                  type="button"
+                  class="albums-view__playlist-play"
+                  :disabled="playlist.items.length === 0"
+                  :aria-label="`Tocar ${playlist.name}`"
+                  @click="playPlaylist(playlist)"
+                >
+                  <i class="ti ti-player-play" aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  class="albums-view__playlist-remove"
+                  :aria-label="`Remover playlist ${playlist.name}`"
+                  @click="removePlaylist(playlist.id)"
+                >
+                  <i class="ti ti-trash" aria-hidden="true" />
+                </button>
+              </div>
             </div>
-          </div>
-          <ul v-if="expandedPlaylistId === playlist.id && playlist.items.length > 0" class="albums-view__playlist-tracks">
-            <li v-for="(item, index) in playlist.items" :key="`${item.musicId}-${index}`">
-              <span>{{ index + 1 }}. {{ item.title }}</span>
-              <v-btn size="x-small" icon="mdi-close" variant="text" :aria-label="`Remover ${item.title}`" @click="removePlaylistTrack(playlist.id, index)" />
-            </li>
-          </ul>
-        </article>
+            <Transition name="playlist-tracks">
+              <ul
+                v-if="expandedPlaylistId === playlist.id && playlist.items.length > 0"
+                class="albums-view__playlist-tracks"
+              >
+                <li
+                  v-for="(item, index) in playlist.items"
+                  :key="`${item.musicId}-${index}`"
+                >
+                  <span class="albums-view__playlist-track-index">{{ index + 1 }}</span>
+                  <span class="albums-view__playlist-track-title">{{ item.title }}</span>
+                  <button
+                    type="button"
+                    class="albums-view__playlist-track-remove"
+                    :aria-label="`Remover ${item.title} da playlist`"
+                    @click="removePlaylistTrack(playlist.id, index)"
+                  >
+                    <i class="ti ti-x" aria-hidden="true" />
+                  </button>
+                </li>
+              </ul>
+            </Transition>
+          </article>
+        </TransitionGroup>
       </div>
-    </section>
+    </GlassCard>
 
     <div
       v-if="lastActionMessageKey && !lastActionMessageKey.startsWith('media.messages.')"
@@ -812,9 +869,14 @@ async function runAction(
 </style>
 .albums-view__playlists {
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+.albums-view__playlists-inner {
+  padding: 1.1rem 1.25rem;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.9rem;
 }
 
 .albums-view__playlists-header {
@@ -825,12 +887,21 @@ async function runAction(
   flex-wrap: wrap;
 }
 
-.albums-view__playlists-header h2 {
-  margin: 0;
+.albums-view__playlists-heading {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  font-size: 1.02rem;
+  gap: 0.55rem;
+
+  .ti {
+    color: var(--ds-color-primary);
+    font-size: 1.15rem;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 1.05rem;
+    letter-spacing: -0.01em;
+  }
 }
 
 .albums-view__playlists-header form {
@@ -840,34 +911,110 @@ async function runAction(
 }
 
 .albums-view__playlists-header input {
-  min-width: 14rem;
-  padding: 0.45rem 0.75rem;
-  border: 1px solid rgba(125, 137, 155, 0.4);
-  border-radius: 8px;
-  background: transparent;
-  color: inherit;
+  min-width: 16rem;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--ds-color-outline-strong);
+  border-radius: var(--ds-radius-sm, 8px 0 8px 0);
+  background: color-mix(in srgb, var(--ds-color-surface-card, #201f1f) 80%, transparent);
+  color: var(--ds-color-on-surface);
   font: inherit;
   font-size: 0.88rem;
+  transition: border-color 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: var(--ds-color-primary);
+  }
+}
+
+.albums-view__playlists-header form button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.9rem;
+  border: 0;
+  border-radius: var(--ds-radius-sm, 8px 0 8px 0);
+  background: var(--ds-color-primary);
+  color: var(--ds-color-on-primary, #fff);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 0.2s ease;
+
+  &:hover {
+    filter: brightness(1.1);
+  }
+}
+
+.albums-view__playlists-io {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--ds-color-outline-strong);
+  border-radius: var(--ds-radius-sm, 8px 0 8px 0);
+  background: transparent;
+  color: var(--ds-color-on-surface-variant);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    color: var(--ds-color-primary);
+    border-color: color-mix(in srgb, var(--ds-color-primary) 45%, transparent);
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+}
+
+.albums-view__playlists-feedback {
+  margin: 0;
+  padding: 0.55rem 0.8rem;
+  border-radius: var(--ds-radius-sm, 8px 0 8px 0);
+  background: color-mix(in srgb, var(--ds-color-primary) 12%, transparent);
+  color: var(--ds-color-on-surface);
+  font-size: 0.85rem;
 }
 
 .albums-view__playlists-empty {
-  padding: 0.9rem;
-  color: rgba(125, 137, 155, 1);
-  font-size: 0.88rem;
-  border: 1px dashed rgba(125, 137, 155, 0.4);
-  border-radius: 8px;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.25rem;
+  color: var(--ds-color-on-surface-variant);
+  font-size: 0.9rem;
+  border: 1px dashed var(--ds-color-outline-strong);
+  border-radius: var(--ds-radius-md, 12px 0 12px 0);
+
+  .ti {
+    font-size: 1.1rem;
+  }
 }
 
 .albums-view__playlists-list {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.55rem;
 }
 
 .albums-view__playlist {
-  border: 1px solid rgba(125, 137, 155, 0.25);
-  border-radius: 8px;
-  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--ds-color-outline-strong);
+  border-radius: var(--ds-radius-md, 12px 0 12px 0);
+  background: color-mix(in srgb, var(--ds-color-surface-card, #201f1f) 70%, transparent);
+  transition: border-color 0.2s ease, background 0.2s ease;
+  overflow: hidden;
+
+  &--open {
+    border-color: color-mix(in srgb, var(--ds-color-primary) 45%, transparent);
+    background: color-mix(in srgb, var(--ds-color-surface-card, #2a2a2a) 75%, transparent);
+
+    .albums-view__playlist-chevron {
+      color: var(--ds-color-primary);
+    }
+  }
 }
 
 .albums-view__playlist-row {
@@ -875,50 +1022,184 @@ async function runAction(
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
+  padding: 0.55rem 0.75rem;
 }
 
 .albums-view__playlist-toggle {
+  flex: 1;
   display: inline-flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.7rem;
   border: 0;
   background: transparent;
   color: inherit;
   font: inherit;
   cursor: pointer;
   padding: 0;
+  text-align: left;
+  min-width: 0;
+}
+
+.albums-view__playlist-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  flex-shrink: 0;
+  border-radius: var(--ds-radius-sm, 8px 0 8px 0);
+  background: color-mix(in srgb, var(--ds-color-primary) 18%, transparent);
+  color: var(--ds-color-primary);
+  font-size: 1rem;
 }
 
 .albums-view__playlist-name {
   display: flex;
   flex-direction: column;
-  text-align: left;
+  min-width: 0;
+
+  strong {
+    font-size: 0.92rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  small {
+    color: var(--ds-color-on-surface-variant);
+    font-size: 0.76rem;
+  }
 }
 
-.albums-view__playlist-name small {
-  color: rgba(125, 137, 155, 1);
-  font-size: 0.76rem;
+.albums-view__playlist-chevron {
+  color: var(--ds-color-on-surface-variant);
+  font-size: 0.9rem;
+  transition: transform 0.2s ease;
 }
 
 .albums-view__playlist-actions {
   display: inline-flex;
+  gap: 0.4rem;
   align-items: center;
-  gap: 0.3rem;
+  flex-shrink: 0;
+}
+
+.albums-view__playlist-play,
+.albums-view__playlist-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border: 1px solid var(--ds-color-outline-strong);
+  border-radius: var(--ds-radius-sm, 8px 0 8px 0);
+  background: transparent;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.albums-view__playlist-play {
+  color: var(--ds-color-primary);
+  border-color: color-mix(in srgb, var(--ds-color-primary) 45%, transparent);
+
+  &:hover:not(:disabled) {
+    background: var(--ds-color-primary);
+    color: var(--ds-color-on-primary, #fff);
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+}
+
+.albums-view__playlist-remove {
+  color: var(--ds-color-on-surface-variant);
+
+  &:hover {
+    color: #ff6b6b;
+    border-color: rgba(255, 107, 107, 0.45);
+  }
 }
 
 .albums-view__playlist-tracks {
-  margin: 0.5rem 0 0 1.5rem;
+  margin: 0 0.75rem 0.7rem 3.65rem;
   padding: 0;
   list-style: none;
   display: flex;
   flex-direction: column;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.45rem 0.1rem;
+    font-size: 0.85rem;
+    border-top: 1px solid var(--ds-color-outline);
+
+    &:first-child {
+      border-top: 0;
+    }
+  }
 }
 
-.albums-view__playlist-tracks li {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.3rem 0;
-  font-size: 0.85rem;
-  border-top: 1px solid rgba(125, 137, 155, 0.15);
+.albums-view__playlist-track-index {
+  width: 1.4rem;
+  text-align: right;
+  color: var(--ds-color-primary);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.78rem;
+  flex-shrink: 0;
 }
+
+.albums-view__playlist-track-title {
+  flex: 1;
+  color: var(--ds-color-on-surface);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.albums-view__playlist-track-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: var(--ds-color-on-surface-variant);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0.25rem 0.4rem;
+  border-radius: 0.4rem;
+  opacity: 0.55;
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: #ff6b6b;
+    opacity: 1;
+  }
+}
+
+.playlist-card-enter-active,
+.playlist-card-leave-active {
+  transition: all 0.25s ease;
+}
+
+.playlist-card-enter-from,
+.playlist-card-leave-to {
+  opacity: 0;
+  transform: translateY(-0.4rem);
+}
+
+.playlist-tracks-enter-active,
+.playlist-tracks-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.playlist-tracks-enter-from,
+.playlist-tracks-leave-to {
+  opacity: 0;
+}
+

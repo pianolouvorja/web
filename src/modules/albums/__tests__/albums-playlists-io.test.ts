@@ -170,8 +170,8 @@ describe('AlbumsView — export/import de playlists', () => {
     const current = listPlaylists()
     expect(current).toHaveLength(1)
     expect(current[0]?.items).toHaveLength(2)
-    expect(document.body.textContent).toContain('Importado')
-    expect(document.body.textContent).toContain('1 faixa(s) adicionada(s)')
+    expect(wrapper.text()).toContain('Importado')
+    expect(wrapper.text()).toContain('1 faixa(s) adicionada(s)')
   })
 
   it('import inválido mostra toast de erro', async () => {
@@ -182,6 +182,6 @@ describe('AlbumsView — export/import de playlists', () => {
     await input.trigger('change')
     await flushPromises()
 
-    expect(document.body.textContent).toContain('Arquivo de playlists inválido')
+    expect(wrapper.text()).toContain('Arquivo de playlists inválido')
   })
 })
