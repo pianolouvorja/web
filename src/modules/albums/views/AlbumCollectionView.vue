@@ -400,10 +400,8 @@ async function runAction(
 }
 
 .album-collection-view__palette-slot {
-  position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  z-index: 30;
+  display: flex;
+  align-items: flex-start;
 }
 
 @media (max-width: 1280px) {
