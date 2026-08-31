@@ -183,6 +183,11 @@ onUnmounted(stopPolling)
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  padding: 1.5rem;
+
+  @media (max-width: 900px) {
+    padding: 1rem;
+  }
 }
 
 .palco-tv-card__header {
