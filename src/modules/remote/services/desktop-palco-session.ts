@@ -56,5 +56,26 @@ export function useDesktopPalcoSession() {
     return ack.ok ? ((ack.data as PalcoSlotInfo[]) ?? []) : []
   }
 
-  return { bridge, connected, attach, detach, fetchStatus, fetchSlots }
+  async function turnOn(): Promise<boolean> {
+    const b = bridge.value
+    if (!b) return false
+    const ack = await b.request('palco.on')
+    return ack.ok
+  }
+
+  async function turnOff(): Promise<boolean> {
+    const b = bridge.value
+    if (!b) return false
+    const ack = await b.request('palco.off')
+    return ack.ok
+  }
+
+  async function idle(): Promise<boolean> {
+    const b = bridge.value
+    if (!b) return false
+    const ack = await b.request('palco.idle')
+    return ack.ok
+  }
+
+  return { bridge, connected, attach, detach, fetchStatus, fetchSlots, turnOn, turnOff, idle }
 }

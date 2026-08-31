@@ -175,7 +175,11 @@ export default {
       oneReceiver: '1 TV conectada',
       nReceivers: '{n} TVs conectadas',
       noSlots: 'Nenhuma TV configurada no desktop.',
-      statusError: 'Falha ao consultar o palco do desktop.'
+      statusError: 'Falha ao consultar o palco do desktop.',
+      toggleError: 'Falha ao executar o comando no desktop.',
+      actionOn: 'Ligar',
+      actionOff: 'Desligar',
+      actionIdle: 'Tela de espera'
     },
     general: {
       languageTitle: 'Idioma',

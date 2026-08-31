@@ -181,7 +181,11 @@ export default {
       oneReceiver: '1 TV connected',
       nReceivers: '{n} TVs connected',
       noSlots: 'No TV configured on the desktop.',
-      statusError: 'Failed to query the desktop stage.'
+      statusError: 'Failed to query the desktop stage.',
+      toggleError: 'Failed to run the command on the desktop.',
+      actionOn: 'Turn on',
+      actionOff: 'Turn off',
+      actionIdle: 'Waiting screen'
     }
   }
 }

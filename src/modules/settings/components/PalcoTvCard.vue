@@ -11,9 +11,10 @@ import {
 } from '../../remote/services/desktop-palco-session'
 
 const { t } = useI18n()
-const { connected, fetchStatus, fetchSlots } = useDesktopPalcoSession()
+const { connected, fetchStatus, fetchSlots, turnOn, turnOff, idle } = useDesktopPalcoSession()
 
 const loading = ref(false)
+const toggling = ref(false)
 const status = ref<PalcoStatusInfo | null>(null)
 const slots = ref<PalcoSlotInfo[]>([])
 const lastError = ref('')
@@ -32,6 +33,37 @@ async function refresh(): Promise<void> {
     lastError.value = t('settings.palco.statusError')
   } finally {
     loading.value = false
+  }
+}
+
+async function togglePalco(): Promise<void> {
+  if (toggling.value || !connected.value) return
+  toggling.value = true
+  lastError.value = ''
+  try {
+    const running = status.value?.running === true
+    const ok = running ? await turnOff() : await turnOn()
+    if (!ok) lastError.value = t('settings.palco.toggleError')
+    await refresh()
+  } catch {
+    lastError.value = t('settings.palco.toggleError')
+  } finally {
+    toggling.value = false
+  }
+}
+
+async function goIdle(): Promise<void> {
+  if (toggling.value || !connected.value) return
+  toggling.value = true
+  lastError.value = ''
+  try {
+    const ok = await idle()
+    if (!ok) lastError.value = t('settings.palco.toggleError')
+    await refresh()
+  } catch {
+    lastError.value = t('settings.palco.toggleError')
+  } finally {
+    toggling.value = false
   }
 }
 
@@ -92,10 +124,29 @@ onUnmounted(stopPolling)
     </p>
 
     <template v-else>
-      <div v-if="status" class="palco-tv-card__summary">
+      <div class="palco-tv-card__summary">
         <span>{{ t('settings.palco.senderStatus') }}:</span>
-        <strong>{{ status.running ? t('settings.palco.senderOn') : t('settings.palco.senderOff') }}</strong>
-        <span v-if="status.running">· {{ clientsLabel(status.clients) }}</span>
+        <strong>{{ status?.running ? t('settings.palco.senderOn') : t('settings.palco.senderOff') }}</strong>
+        <span v-if="status?.running">· {{ clientsLabel(status.clients) }}</span>
+        <span class="palco-tv-card__actions">
+          <button
+            type="button"
+            class="palco-tv-card__btn palco-tv-card__btn--primary"
+            :disabled="toggling"
+            @click="togglePalco"
+          >
+            {{ status?.running ? t('settings.palco.actionOff') : t('settings.palco.actionOn') }}
+          </button>
+          <button
+            v-if="status?.running"
+            type="button"
+            class="palco-tv-card__btn"
+            :disabled="toggling"
+            @click="goIdle"
+          >
+            {{ t('settings.palco.actionIdle') }}
+          </button>
+        </span>
       </div>
 
       <ul class="palco-tv-card__slots">
@@ -183,6 +234,37 @@ onUnmounted(stopPolling)
   gap: 0.4rem;
   font-size: 0.82rem;
   color: rgb(255 255 255 / 0.72);
+}
+
+.palco-tv-card__actions {
+  display: inline-flex;
+  gap: 0.4rem;
+  margin-left: auto;
+}
+
+.palco-tv-card__btn {
+  border: 1px solid rgb(255 255 255 / 0.18);
+  border-radius: 999px;
+  padding: 0.3rem 0.85rem;
+  background: transparent;
+  color: #fff;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: rgb(255 255 255 / 0.08);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.palco-tv-card__btn--primary {
+  background: var(--ds-color-primary, #2196f3);
+  border-color: transparent;
 }
 
 .palco-tv-card__slots {

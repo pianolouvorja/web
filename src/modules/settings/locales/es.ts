@@ -180,7 +180,11 @@ export default {
       oneReceiver: '1 TV conectada',
       nReceivers: '{n} TVs conectadas',
       noSlots: 'Ninguna TV configurada en el desktop.',
-      statusError: 'Error al consultar el escenario del desktop.'
+      statusError: 'Error al consultar el escenario del desktop.',
+      toggleError: 'Error al ejecutar el comando en el desktop.',
+      actionOn: 'Encender',
+      actionOff: 'Apagar',
+      actionIdle: 'Pantalla de espera'
     }
   }
 }
