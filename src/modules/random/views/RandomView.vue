@@ -93,6 +93,9 @@ const effectiveConfig = computed(() => {
 
 <template>
   <section class="random-view">
+    <div class="random-view__palette-slot">
+      <StagePaletteButton scope="random" />
+    </div>
     <header class="random-view__header">
       <button
         type="button"
@@ -157,7 +160,6 @@ const effectiveConfig = computed(() => {
         {{ t('random.resetAll') }}
       </button>
     </header>
-    <StagePaletteButton scope="random" />
 
     <div class="random-view__content">
       <div class="random-view__panel random-view__panel--available">
@@ -224,6 +226,7 @@ const effectiveConfig = computed(() => {
 
 <style scoped lang="scss">
 .random-view {
+  position: relative;
   display: flex;
   box-sizing: border-box;
   flex: 1 1 auto;
@@ -460,5 +463,12 @@ const effectiveConfig = computed(() => {
       max-height: min(48vh, 20rem);
     }
   }
+}
+
+.random-view__palette-slot {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 30;
 }
 </style>

@@ -9,6 +9,7 @@ import AlbumCollectionCard from '../components/AlbumCollectionCard.vue'
 import AlbumHymnalCard from '../components/AlbumHymnalCard.vue'
 import AlbumLyricDialog from '../components/AlbumLyricDialog.vue'
 import AlbumSearchHitRow from '../components/AlbumSearchHitRow.vue'
+import StagePaletteButton from '../../settings/components/StagePaletteButton.vue'
 import { useAlbums } from '../composables/useAlbums'
 import type { AlbumCategory } from '../types/albums'
 
@@ -246,6 +247,7 @@ async function runAction(
       </div>
 
       <div class="albums-view__header-actions">
+        <StagePaletteButton scope="hymns" />
         <label class="albums-view__search">
           <i
             class="ti ti-search"

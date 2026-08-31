@@ -109,6 +109,9 @@ const liturgyAlertKey = computed(() => lastActionMessageKey.value || null)
 
 <template>
   <section class="liturgy-view">
+    <div class="liturgy-view__palette-slot">
+      <StagePaletteButton scope="liturgy" />
+    </div>
     <header class="liturgy-view__header">
       <div class="liturgy-view__brand">
         <i
@@ -131,7 +134,6 @@ const liturgyAlertKey = computed(() => lastActionMessageKey.value || null)
         </div>
       </div>
     </header>
-    <StagePaletteButton scope="liturgy" />
 
     <div
       v-if="liturgyAlertKey"
@@ -334,6 +336,7 @@ const liturgyAlertKey = computed(() => lastActionMessageKey.value || null)
 
 <style scoped lang="scss">
 .liturgy-view {
+  position: relative;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -739,5 +742,12 @@ const liturgyAlertKey = computed(() => lastActionMessageKey.value || null)
   .liturgy-view__clear {
     flex: 0 0 auto;
   }
+}
+
+.liturgy-view__palette-slot {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 30;
 }
 </style>
