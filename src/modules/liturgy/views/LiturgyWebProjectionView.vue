@@ -13,6 +13,7 @@ import { syncPopupWindows } from '@shared/services/popup-windows'
 
 import LiturgyWebControlBar from '../components/LiturgyWebControlBar.vue'
 import { toggleLiturgyScreensFromControl } from '../services/liturgy-web-projection'
+import { useLiturgyVideoAutoclose } from '../composables/useLiturgyVideoAutoclose'
 import {
   captureCurrentSurface,
   startSiteMirrorBroadcaster,
@@ -86,6 +87,15 @@ const isControl = computed(() => {
   if (role === 'screen') return false
   return window.name === 'LiturgyWebControl'
 })
+
+// Autoclose de mídia com fim natural (vídeo local/YouTube) — paridade app RF-03.
+useLiturgyVideoAutoclose({ runtime, isControl })
+const runtimeAutoclose = computed(
+  () =>
+    (runtime.value as LiturgyWebProjectionRuntime & {
+      __autoclose?: { onLocalVideoEnded: () => void; handleYtStateChange: (state: number) => void }
+    }).__autoclose,
+)
 
 const showContent = computed(
   () => runtime.value.active && Boolean(runtime.value.url),
@@ -541,6 +551,9 @@ async function mountYtPlayer() {
         const paused = event.data === window.YT!.PlayerState.PAUSED
         if (playing) isPlaying.value = true
         if (paused) isPlaying.value = false
+        if (event.data === window.YT!.PlayerState.ENDED) {
+          runtimeAutoclose.value?.handleYtStateChange(0)
+        }
         if (isControl.value) publishSyncFromLocal()
       },
     },
@@ -952,6 +965,7 @@ onUnmounted(() => {
         @timeupdate="onVideoTimeUpdate"
         @play="onVideoPlay"
         @pause="onVideoPause"
+        @ended="runtimeAutoclose?.onLocalVideoEnded()"
       />
       <div
         v-else-if="showContent && runtime.kind === 'youtube'"
