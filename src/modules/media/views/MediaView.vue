@@ -9,6 +9,7 @@ import MediaCloseDialog from '../components/MediaCloseDialog.vue'
 import MediaPlayerPill from '../components/MediaPlayerPill.vue'
 import MediaSlideStage from '../components/MediaSlideStage.vue'
 import { useMediaPlayer } from '../composables/useMediaPlayer'
+import { revealItemInAside } from '../services/media-aside-scroll'
 import { stripHtmlBreaks } from '../services/media-slides'
 import type { MediaPlaybackMode } from '../types/media'
 
@@ -61,7 +62,7 @@ const {
   syncProjectionFlag,
 } = useMediaPlayer()
 
-const playlistListEl = ref<HTMLUListElement | null>(null)
+const playlistAsideEl = ref<HTMLElement | null>(null)
 
 /** Slide/faixa em reprodução visível no painel lateral (auto-scroll). */
 const activeListIndex = computed(() =>
@@ -71,9 +72,9 @@ const activeListIndex = computed(() =>
 watch(activeListIndex, async (index) => {
   if (index < 0) return
   await nextTick()
-  const list = playlistListEl.value
-  const active = list?.querySelector('.media-window__playlist-item--active')
-  active?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  const aside = playlistAsideEl.value
+  const active = aside?.querySelector<HTMLElement>('.media-window__playlist-item--active')
+  if (aside && active) revealItemInAside(aside, active)
 })
 
 const stageLyric = computed(() => currentSlide.value?.lyric ?? '')
@@ -298,11 +299,12 @@ function onStageClick() {
 
       <aside
         v-if="playlistVisible"
+        ref="playlistAsideEl"
         class="media-window__playlist"
       >
         <template v-if="queue.length > 1">
           <h2 class="media-window__playlist-title">Fila de reprodução</h2>
-          <ul ref="playlistListEl" class="media-window__playlist-list">
+          <ul class="media-window__playlist-list">
             <li v-for="(item, index) in queue" :key="`${item.musicId}-${index}`">
               <button
                 type="button"
@@ -320,7 +322,7 @@ function onStageClick() {
         <h2 class="media-window__playlist-title">
           {{ t('media.playlist') }}
         </h2>
-        <ul ref="playlistListEl" class="media-window__playlist-list">
+        <ul class="media-window__playlist-list">
           <li
             v-for="item in playlist"
             :key="item.index"
