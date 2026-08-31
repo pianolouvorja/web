@@ -19,14 +19,103 @@ import {
   deletePlaylist,
   listPlaylists,
   removePlaylistItem,
+  savePlaylists,
   type Playlist,
 } from '../services/playlist-storage'
+import {
+  parsePlaylistsImport,
+  serializePlaylists,
+} from '../services/playlist-io'
 import { useMediaStore } from '../../media/stores/useMediaStore'
 
 const mediaStore = useMediaStore()
 const playlists = ref<Playlist[]>(listPlaylists())
 const newPlaylistName = ref('')
 const expandedPlaylistId = ref<string | null>(null)
+const importFeedback = ref('')
+let importFeedbackTimer: ReturnType<typeof setTimeout> | null = null
+
+function showImportFeedback(message: string) {
+  importFeedback.value = message
+  if (importFeedbackTimer) clearTimeout(importFeedbackTimer)
+  importFeedbackTimer = setTimeout(() => {
+    importFeedback.value = ''
+  }, 2600)
+}
+
+const fileInput = ref<HTMLInputElement | null>(null)
+
+function exportPlaylists() {
+  if (playlists.value.length === 0) return
+  const payload = JSON.stringify(serializePlaylists(playlists.value), null, 2)
+  const blob = new Blob([payload], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  const today = new Date().toISOString().slice(0, 10)
+  link.href = url
+  link.download = `playlists-${today}.json`
+  link.click()
+  URL.revokeObjectURL(url)
+}
+
+function onImportFileChange(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  // Permite re-selecionar o mesmo arquivo depois.
+  input.value = ''
+  if (!file) return
+  void file.text().then((raw) => {
+    const result = parsePlaylistsImport(raw)
+    if (!result.ok) {
+      showImportFeedback(t('albums.playlists.invalidFile'))
+      return
+    }
+    // Merge por nome: playlist nova entra; existente ganha só faixas novas.
+    const current = listPlaylists()
+    const byName = new Map(current.map((p) => [p.name.toLowerCase(), p]))
+    let addedTracks = 0
+    let newLists = 0
+    for (const imported of result.playlists) {
+      const existing = byName.get(imported.name.toLowerCase())
+      if (!existing) {
+        current.push(imported)
+        byName.set(imported.name.toLowerCase(), imported)
+        newLists += 1
+        addedTracks += imported.items.length
+        continue
+      }
+      for (const item of imported.items) {
+        const dup = existing.items.some(
+          (i) => i.musicId === item.musicId && i.albumId === item.albumId,
+        )
+        if (!dup) {
+          existing.items.push(item)
+          addedTracks += 1
+        }
+      }
+    }
+    if (newLists > 0 || addedTracks > 0) {
+      savePlaylists(current)
+      playlists.value = listPlaylists()
+    }
+    const summary: string[] = []
+    if (newLists > 0) {
+      summary.push(
+        t('albums.playlists.newLists', { count: newLists }),
+      )
+    }
+    if (addedTracks > 0) {
+      summary.push(
+        t('albums.playlists.addedTracks', { count: addedTracks }),
+      )
+    }
+    showImportFeedback(
+      summary.length > 0
+        ? t('albums.playlists.imported', { summary: summary.join(', ') })
+        : t('albums.playlists.nothingToImport'),
+    )
+  })
+}
 
 function addPlaylist() {
   const name = newPlaylistName.value.trim()
@@ -188,23 +277,66 @@ async function runAction(
     <section class="albums-view__playlists" aria-labelledby="playlists-title">
       <header class="albums-view__playlists-header">
         <h2 id="playlists-title">
-          <i class="ti ti-playlist" aria-hidden="true" /> Playlists
+          <i class="ti ti-playlist" aria-hidden="true" /> {{ t('albums.playlists.title') }}
         </h2>
+        <div class="albums-view__playlists-io">
+          <v-btn
+            size="small"
+            variant="tonal"
+            color="primary"
+            prepend-icon="mdi-upload"
+            data-testid="playlists-export"
+            :disabled="playlists.length === 0"
+            :title="t('albums.playlists.export')"
+            @click="exportPlaylists"
+          >
+            {{ t('albums.playlists.export') }}
+          </v-btn>
+          <v-btn
+            size="small"
+            variant="tonal"
+            color="primary"
+            prepend-icon="mdi-download"
+            data-testid="playlists-import"
+            :title="t('albums.playlists.import')"
+            @click="fileInput?.click()"
+          >
+            {{ t('albums.playlists.import') }}
+          </v-btn>
+          <input
+            ref="fileInput"
+            type="file"
+            accept="application/json,.json"
+            data-testid="playlists-import-input"
+            aria-hidden="true"
+            tabindex="-1"
+            @change="onImportFileChange"
+          >
+        </div>
         <form @submit.prevent="addPlaylist">
           <input
             v-model="newPlaylistName"
             required
-            placeholder="Nome da nova playlist..."
-            aria-label="Nome da playlist"
+            :placeholder="t('albums.playlists.newPlaceholder')"
+            :aria-label="t('albums.playlists.newPlaceholder')"
           >
           <v-btn type="submit" size="small" color="primary" prepend-icon="mdi-plus">
-            Criar
+            {{ t('albums.playlists.create') }}
           </v-btn>
         </form>
       </header>
 
+      <Teleport to="body">
+        <Transition name="playlist-toast">
+          <div v-if="importFeedback" class="playlist-toast" role="status" aria-live="polite">
+            <i class="ti ti-circle-check" aria-hidden="true" />
+            {{ importFeedback }}
+          </div>
+        </Transition>
+      </Teleport>
+
       <div v-if="playlists.length === 0" class="albums-view__playlists-empty">
-        Nenhuma playlist criada ainda.
+        {{ t('albums.playlists.empty') }}
       </div>
 
       <div v-else class="albums-view__playlists-list">
