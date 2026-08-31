@@ -7,7 +7,6 @@ import { MediaCollectionList } from '@design-system/index'
 
 import AlbumLyricDialog from '../components/AlbumLyricDialog.vue'
 import AlbumTrackRow from '../components/AlbumTrackRow.vue'
-import StagePaletteButton from '../../settings/components/StagePaletteButton.vue'
 import { useAlbums } from '../composables/useAlbums'
 
 const { t } = useI18n()
@@ -123,10 +122,6 @@ async function runAction(
 
 <template>
   <section class="album-collection-view">
-    <div class="album-collection-view__palette-slot">
-      <StagePaletteButton scope="hymns" />
-    </div>
-
     <header class="album-collection-view__header">
       <div class="album-collection-view__brand">
         <button
@@ -397,11 +392,6 @@ async function runAction(
     color: var(--ds-color-on-surface);
     cursor: pointer;
   }
-}
-
-.album-collection-view__palette-slot {
-  display: flex;
-  align-items: flex-start;
 }
 
 @media (max-width: 1280px) {
