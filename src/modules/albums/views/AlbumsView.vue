@@ -866,7 +866,7 @@ async function runAction(
     padding: 0.75rem;
   }
 }
-</style>
+
 .albums-view__playlists {
   flex-shrink: 0;
   overflow: hidden;
@@ -1202,4 +1202,4 @@ async function runAction(
 .playlist-tracks-leave-to {
   opacity: 0;
 }
-
+</style>
