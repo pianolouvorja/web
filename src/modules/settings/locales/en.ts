@@ -99,7 +99,7 @@ export default {
       hardwareAccel: 'Hardware Acceleration',
       increaseScreens: 'Increase number of screens',
       popupCountLabel: 'Number of screens',
-      popupScreens: 'Projection Screens',
+      popupScreens: 'Projection Screens (popups in this browser)',
       popupScreensDesc: 'Number of screens available for projection (like monitors).'
     },
     general: {
@@ -168,11 +168,11 @@ export default {
       scanQr: 'Scan phone QR',
           },
     palco: {
-      tvs: 'Screens (TV)',
-      webHint: 'Control the desktop cast: TVs connected per slot.',
+      tvs: 'TVs (via Desktop)',
+      webHint: 'Real TVs (receiver on the TV set). Requires the desktop app running on the same network — it does the broadcasting.',
       desktopConnected: 'Desktop connected',
       desktopOffline: 'Desktop offline',
-      connectFirst: 'Connect the desktop in Remote Control (QR or URL) to see the TVs.',
+      connectFirst: 'To see TVs: open the desktop app on the same network and connect this browser to it in Remote Control (QR). This tab commands; the desktop broadcasts.',
       senderStatus: 'Stage',
       senderOn: 'on',
       senderOff: 'off',

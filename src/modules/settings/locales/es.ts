@@ -99,7 +99,7 @@ export default {
       hardwareAccel: 'Aceleración de Hardware',
       increaseScreens: 'Aumentar número de pantallas',
       popupCountLabel: 'Número de pantallas',
-      popupScreens: 'Pantallas de Proyección',
+      popupScreens: 'Pantallas de Proyección (popups de este navegador)',
       popupScreensDesc: 'Cantidad de pantallas disponibles para proyección (como monitores).'
     },
     general: {
@@ -167,11 +167,11 @@ export default {
       connected: 'Conectado — el celular controla esta pantalla',
           },
     palco: {
-      tvs: 'Pantallas (TV)',
-      webHint: 'Controla el cast del desktop: TVs conectadas por slot.',
+      tvs: 'TVs (vía Desktop)',
+      webHint: 'TVs reales (receiver en la TV). Requiere la app desktop abierta en la misma red — es ella quien transmite.',
       desktopConnected: 'Desktop conectado',
       desktopOffline: 'Desktop desconectado',
-      connectFirst: 'Conecta el desktop en Control Remoto (QR o URL) para ver las TVs.',
+      connectFirst: 'Para ver las TVs: abre la app desktop en la misma red y conecta este navegador a ella en Control Remoto (QR). Esta pestaña comanda; el desktop transmite.',
       senderStatus: 'Escenario',
       senderOn: 'encendido',
       senderOff: 'apagado',

@@ -50,7 +50,7 @@ export default {
       tipLight: 'O Modo Claro oferece melhor legibilidade em ambientes muito iluminados durante cultos diurnos.'
     },
     projection: {
-      popupScreens: 'Telas de Projeção',
+      popupScreens: 'Telas de Projeção (popups deste navegador)',
       popupScreensDesc: 'Quantidade de telas disponíveis para projeção (como monitores estendidos). Nos módulos, escolha quais delas recebem o conteúdo.',
       popupCountLabel: 'Número de telas',
       decreaseScreens: 'Diminuir número de telas',
@@ -162,11 +162,11 @@ export default {
       media: 'Configurações de áudio, vídeo e player em breve.'
     },
     palco: {
-      tvs: 'Telas (TV)',
-      webHint: 'Controle o cast do desktop: TVs conectadas por slot.',
+      tvs: 'TVs (via Desktop)',
+      webHint: 'TVs de verdade (receiver na TV). Requer o app desktop aberto na mesma rede — é ele quem transmite.',
       desktopConnected: 'Desktop conectado',
       desktopOffline: 'Desktop desconectado',
-      connectFirst: 'Conecte o desktop no Controle Remoto (QR ou URL) para ver as TVs.',
+      connectFirst: 'Para ver as TVs: abra o app desktop na mesma rede e conecte este navegador a ele em Controle Remoto (QR). Esta aba comanda; o desktop transmite.',
       senderStatus: 'Palco',
       senderOn: 'ligado',
       senderOff: 'desligado',
