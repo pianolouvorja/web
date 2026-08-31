@@ -48,5 +48,18 @@ export default {
       projectionFailed:
         'Não foi possível abrir a projeção nas telas configuradas.',
     },
+    playlists: {
+      title: 'Playlists',
+      newPlaceholder: 'Nome da nova playlist...',
+      create: 'Criar',
+      empty: 'Nenhuma playlist criada ainda.',
+      export: 'Exportar',
+      import: 'Importar',
+      imported: 'Importado: {summary}',
+      nothingToImport: 'Nada novo para importar.',
+      invalidFile: 'Arquivo de playlists inválido.',
+      newLists: '{count} playlist(s) nova(s)',
+      addedTracks: '{count} faixa(s) adicionada(s)',
+    },
   },
 }

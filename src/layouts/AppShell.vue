@@ -19,6 +19,7 @@ import { useTimerStore } from '@modules/timer/stores/useTimerStore'
 import { mainNavRoutes } from '@shared/constants/navigation'
 import PopupScreenControls from '@shared/components/PopupScreenControls.vue'
 import UiZoomControls from '@shared/components/UiZoomControls.vue'
+import { useOperatorEscapeToCloseAllProjections } from '@shared/composables/useOperatorEscapeToCloseAllProjections'
 import logoUrl from '@assets/brand/logo-louvor-ja.svg'
 import CodenameLogo from '@assets/brand/CodenameLogo.vue'
 import { APP_VERSION } from '@shared/constants/app'
@@ -28,6 +29,9 @@ const router = useRouter()
 const { t } = useI18n()
 const { transitionName } = usePageTransition()
 const { smAndDown } = useDisplay()
+
+// ESC no operador fecha TODAS as projeções ativas (com confirmação) — paridade app.
+useOperatorEscapeToCloseAllProjections()
 
 const {
   hasSession: hasMediaSession,
