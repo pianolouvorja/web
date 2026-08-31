@@ -6,7 +6,7 @@ import { defineComponent, h } from 'vue'
 import { useOperatorEscapeToCloseAllProjections } from '../useOperatorEscapeToCloseAllProjections'
 
 const mocks = vi.hoisted(() => ({
-  media: { isProjecting: false, clearProjection: vi.fn() },
+  media: { isProjecting: false, clearProjection: vi.fn(), requestClose: vi.fn() },
   bible: { isProjecting: false, clearProjectionWindow: vi.fn() },
   random: { isProjecting: false, clearProjection: vi.fn() },
   timer: { isProjecting: false, clearProjection: vi.fn() },
@@ -49,6 +49,15 @@ vi.mock('@shared/services/popup-windows', () => ({
   hasScreenPopups: vi.fn(() => false),
 }))
 
+const routerPush = vi.fn()
+const { useRouteMock } = vi.hoisted(() => ({
+  useRouteMock: vi.fn(() => ({ name: 'media' })),
+}))
+vi.mock('vue-router', () => ({
+  useRoute: () => useRouteMock(),
+  useRouter: () => ({ push: routerPush }),
+}))
+
 vi.mock('../useAppConfirm', () => ({ appConfirm: vi.fn() }))
 
 import { appConfirm } from '../useAppConfirm'
@@ -79,6 +88,10 @@ beforeEach(() => {
       else if (typeof value === 'boolean') group.isProjecting = false
     }
   }
+  mocks.liturgy.siteProjectionItemId = undefined
+  mocks.liturgy.videoProjectionItemId = undefined
+  useRouteMock.mockReset()
+  useRouteMock.mockReturnValue({ name: 'media' })
   vi.mocked(hasScreenPopups).mockReturnValue(false)
 })
 
@@ -151,6 +164,27 @@ describe('useOperatorEscapeToCloseAllProjections', () => {
 
     expect(appConfirm).not.toHaveBeenCalled()
     dialog.remove()
+    wrapper.unmount()
+  })
+
+  it('ESC sem projeção na rota /media dispara requestClose do now playing', async () => {
+    const wrapper = mountHook()
+
+    pressEscape()
+    await vi.waitFor(() => expect(mocks.media.requestClose).toHaveBeenCalledOnce())
+
+    expect(appConfirm).not.toHaveBeenCalled()
+    wrapper.unmount()
+  })
+
+  it('ESC fora da rota /media sem projeção é no-op', async () => {
+    vi.mocked(useRouteMock).mockReturnValueOnce({ name: 'albums' })
+    const wrapper = mountHook()
+
+    pressEscape()
+    await vi.waitFor(() => {})
+
+    expect(mocks.media.requestClose).not.toHaveBeenCalled()
     wrapper.unmount()
   })
 

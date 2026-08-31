@@ -1,4 +1,5 @@
 import { onMounted, onUnmounted } from 'vue'
+import { useRoute } from 'vue-router'
 
 import { useBibleStore } from '@modules/bible/stores/useBibleStore'
 import { useClockStore } from '@modules/clock/stores/useClockStore'
@@ -22,6 +23,7 @@ import { appConfirm } from './useAppConfirm'
  * - liturgia: clearWebProjection() (limpa runtime + popups + refs)
  */
 export function useOperatorEscapeToCloseAllProjections(): void {
+  const route = useRoute()
   let handling = false
 
   function collectActiveClosers(): Array<() => void | Promise<void>> {
@@ -73,7 +75,14 @@ export function useOperatorEscapeToCloseAllProjections(): void {
     if (document.querySelector('[role="dialog"]')) return
 
     const closers = collectActiveClosers()
-    if (closers.length === 0) return
+    if (closers.length === 0) {
+      // Sem projeção ativa: ESC na rota /media fecha o now playing
+      // (requestClose abre o confirm existente; o close navega de volta).
+      if (route.name === 'media') {
+        useMediaStore().requestClose()
+      }
+      return
+    }
 
     handling = true
     try {
