@@ -12,6 +12,7 @@ import {
   type PalcoSlotInfo,
   type PalcoStatusInfo,
 } from '../../remote/services/desktop-palco-session'
+import { useStageRelay } from '../../remote/services/stage-relay'
 
 /**
  * Paridade 1:1 com PalcoCard + PalcoSlotsCard do desktop.
@@ -43,13 +44,29 @@ const tvStatus = ref<PalcoStatusInfo | null>(null)
 const tvSlots = ref<PalcoSlotInfo[]>([])
 const tvError = ref('')
 
+// WT-5c: modo cloud — quando o desktop não conecta, o relay da API assume.
+const relay = useStageRelay()
+const cloudInput = ref('')
+const cloudMode = computed(() => !desktopConnected.value)
+
+async function connectCloud(): Promise<void> {
+  tvError.value = ''
+  const ok = await relay.attachCode(cloudInput.value)
+  if (!ok) tvError.value = t('settings.palco.statusError')
+}
+
 async function refreshTvs(): Promise<void> {
-  if (!desktopConnected.value || tvLoading.value) return
+  if (tvLoading.value) return
   tvLoading.value = true
   try {
-    const [st, sl] = await Promise.all([fetchStatus(), fetchSlots()])
-    tvStatus.value = st
-    tvSlots.value = sl
+    if (relay.connected.value) {
+      tvStatus.value = await relay.fetchStatus()
+      tvSlots.value = await relay.fetchSlots()
+    } else if (desktopConnected.value) {
+      const [st, sl] = await Promise.all([fetchStatus(), fetchSlots()])
+      tvStatus.value = st
+      tvSlots.value = sl
+    }
   } catch {
     tvError.value = t('settings.palco.statusError')
   } finally {
@@ -92,7 +109,7 @@ let pollTimer: ReturnType<typeof setInterval> | null = null
 pollTimer = setInterval(() => {
   popupCount.value = getPopupCount()
   tick.value++
-  if (desktopConnected.value) void refreshTvs()
+  if (desktopConnected.value || relay.connected.value) void refreshTvs()
 }, 3000)
 onUnmounted(() => {
   if (pollTimer) clearInterval(pollTimer)
@@ -200,10 +217,10 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <!-- ═══ TVs (cast via desktop) ═══ -->
+    <!-- ═══ TVs (desktop OU cloud WT-5c) ═══ -->
     <div
       class="palco-slots-card__tv"
-      :class="{ 'palco-slots-card__tv--off': !desktopConnected }"
+      :class="{ 'palco-slots-card__tv--off': !desktopConnected && !relay.connected.value }"
     >
       <div class="palco-slots-card__tv-head">
         <span class="palco-slots-card__tv-label">
@@ -211,10 +228,11 @@ onUnmounted(() => {
           {{ t('settings.palco.tvsPlain') }}
           <span
             class="palco-slot__dot"
-            :class="{ 'palco-slot__dot--on': desktopConnected }"
+            :class="{ 'palco-slot__dot--on': desktopConnected || relay.connected.value }"
           />
         </span>
         <button
+          v-if="desktopConnected"
           type="button"
           class="palco-slots-card__add"
           :disabled="!desktopConnected"
@@ -225,8 +243,29 @@ onUnmounted(() => {
         </button>
       </div>
 
+      <!-- Modo cloud: input do código da sessão -->
       <div
-        v-if="desktopConnected"
+        v-if="cloudMode && !relay.connected.value"
+        class="palco-slots-card__cloud"
+      >
+        <input
+          v-model="cloudInput"
+          class="palco-slots-card__cloud-input"
+          maxlength="6"
+          placeholder="ABC123"
+          @keydown.enter="connectCloud"
+        >
+        <button
+          type="button"
+          class="palco-slots-card__add"
+          @click="connectCloud"
+        >
+          {{ t('settings.palco.cloudConnect') }}
+        </button>
+      </div>
+
+      <div
+        v-if="desktopConnected || relay.connected.value"
         class="palco-slots-card__list"
       >
         <div
@@ -278,7 +317,7 @@ onUnmounted(() => {
         </p>
       </div>
       <p
-        v-else
+        v-if="!desktopConnected && !relay.connected.value"
         class="palco-slots-card__hint"
       >
         {{ t('settings.palco.tvHowTo') }}
@@ -323,6 +362,8 @@ onUnmounted(() => {
 .palco-slot__remove { display:flex; align-items:center; justify-content:center; width:1.8rem; height:1.8rem; border:0; border-radius:.35rem; background:transparent; color:var(--ds-color-on-surface-variant); cursor:pointer; }
 .palco-slot__remove:hover { color:#e65c66; }
 .palco-slots-card__tv { display:flex; flex-direction:column; gap:.5rem; padding:.75rem 1.25rem; border-top:1px solid color-mix(in srgb,var(--ds-color-on-surface) 8%,transparent); }
+.palco-slots-card__cloud{display:flex;gap:8px;align-items:center;margin:8px 0}
+.palco-slots-card__cloud-input{width:110px;padding:8px 10px;border-radius:8px;border:1px solid var(--glass-border,rgba(255,255,255,.2));background:transparent;color:inherit;font:inherit;text-transform:uppercase;letter-spacing:3px;text-align:center}
 .palco-slots-card__tv--off { opacity:.75; }
 .palco-slots-card__tv-head { display:flex; align-items:center; justify-content:space-between; gap:1rem; }
 .palco-slots-card__tv-label { display:inline-flex; align-items:center; gap:.5rem; font-size:.9rem; font-weight:600; color:var(--ds-color-on-surface); }

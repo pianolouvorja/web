@@ -197,6 +197,8 @@ export default {
     },
     palco: {
       tvsPlain: 'Stage TVs',
+      cloudConnect: 'Connect to cloud',
+      cloudHint: 'No desktop? Enter the session code to project via cloud.',
       tvHowTo: 'Connect a TV with the LouvorJA receiver on the same network.',
       addTv: 'Add TV',
       mainTv: 'Main TV',

@@ -179,6 +179,8 @@ export default {
       routeAria: 'Destino de projeção de {module}',
       noPopups: 'Nenhuma tela aberta. Use o botão de projetar em um módulo (hinos, bíblia...) para abrir as telas.',
       localNote: 'As telas funcionam neste navegador, sem precisar de mais nada.',
+      cloudConnect: 'Conectar à nuvem',
+      cloudHint: 'Sem desktop? Digite o código da sessão para projetar via nuvem.',
       tvHowTo: 'Conecte uma TV com o receiver LouvorJA na mesma rede.',
       modules: {
         bible: 'Bíblia',

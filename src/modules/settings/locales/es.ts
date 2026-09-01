@@ -196,6 +196,8 @@ export default {
     },
     palco: {
       tvsPlain: 'TVs del Escenario',
+      cloudConnect: 'Conectar a la nube',
+      cloudHint: '¿Sin desktop? Ingresa el código de sesión para proyectar vía nube.',
       tvHowTo: 'Conecta una TV con el receiver LouvorJA en la misma red.',
       addTv: 'Agregar TV',
       mainTv: 'TV principal',
