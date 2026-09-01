@@ -6,6 +6,7 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
 import StagePaletteButton from '../../settings/components/StagePaletteButton.vue'
+import PopupRouteSelect from '../../settings/components/PopupRouteSelect.vue'
 import RandomAvailablePanel from '../components/RandomAvailablePanel.vue'
 import RandomConfigDialog from '../components/RandomConfigDialog.vue'
 import RandomHistoryPanel from '../components/RandomHistoryPanel.vue'
@@ -158,6 +159,7 @@ const effectiveConfig = computed(() => {
         />
         {{ t('random.resetAll') }}
       </button>
+      <PopupRouteSelect module="random" compact />
     </header>
 
     <div class="random-view__content">

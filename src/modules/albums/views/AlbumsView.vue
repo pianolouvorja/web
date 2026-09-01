@@ -27,6 +27,7 @@ import {
   serializePlaylists,
 } from '../services/playlist-io'
 import { useMediaStore } from '../../media/stores/useMediaStore'
+import PopupRouteSelect from '../../settings/components/PopupRouteSelect.vue'
 
 const mediaStore = useMediaStore()
 const playlists = ref<Playlist[]>(listPlaylists())
@@ -272,6 +273,7 @@ async function runAction(
           </button>
         </label>
       </div>
+      <PopupRouteSelect module="media" compact />
     </header>
 
     <GlassCard
