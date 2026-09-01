@@ -194,6 +194,9 @@ export const useTimerStore = defineStore('timer', () => {
     await exitPopupModule()
     isProjecting.value = false
     stopProjectionWatch()
+    // WT-5: TV é destino independente — parar manda idle pro relay
+    runtime.value = { ...DEFAULT_TIMER_RUNTIME, savedTimesMs: runtime.value.savedTimesMs }
+    syncRuntime()
   }
 
   function refreshProjectionState() {

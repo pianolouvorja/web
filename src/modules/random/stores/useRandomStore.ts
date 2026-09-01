@@ -373,6 +373,8 @@ export const useRandomStore = defineStore('random', () => {
     await exitPopupModule()
     isProjecting.value = false
     stopProjectionWatch()
+    // WT-5: TV é destino independente — parar tem que mandar idle pro relay
+    publishRandomRuntime({ currentDisplay: '', isDrawing: false })
   }
 
   function refreshProjectionState() {

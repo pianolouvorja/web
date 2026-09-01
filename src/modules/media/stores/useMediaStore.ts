@@ -830,7 +830,10 @@ export const useMediaStore = defineStore('media', () => {
     void exitPopupModule()
     isProjecting.value = false
     stopProjectionWatch()
-    publishProjectionState()
+    // WT-5: TV é destino independente — parar projeção tem que MANDAR idle
+    // pro relay, senão o runtime republica o conteúdo (hino ficava preso na
+    // TV mesmo com o botão desligado). Runtime inativo explícito:
+    publishMediaRuntime({ ...DEFAULT_MEDIA_PROJECTION, active: false })
   }
 
   async function toggleProjection(): Promise<void> {
