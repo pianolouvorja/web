@@ -80,10 +80,28 @@ export function publish(state: Record<string, unknown>): void {
 }
 
 export function useStageRelay(): StageRelayState {
+  // WT-5 race fix: attachCode é async (token) — dois attach em voo (ex. usuário
+  // conecta código novo enquanto reconnect da sessão velha dispara) faziam o
+  // handler antigo ganhar e o operator publicava na ROOM ERRADA (caso real
+  // 01/09: code.value=RWL4AA, WS aberto em JB5YXU). attachGen identifica o
+  // attach mais recente; eventos de geração morta são ignorados.
+  let attachGen = 0
   async function attachCode(c: string, base?: string): Promise<boolean> {
     if (base) apiBase = base
     const clean = c.trim().toUpperCase().replace(/[^A-Z0-9]/g, '')
     if (clean.length !== 6) return false
+    const gen = ++attachGen
+    stopKeepalive()
+    if (ws) {
+      // órfão: desliga handlers do socket anterior antes de abrir o novo
+      ws.onopen = null
+      ws.onmessage = null
+      ws.onclose = null
+      ws.onerror = null
+      try { ws.close(1000) } catch { /* já fechado */ }
+      ws = null
+    }
+    connected.value = false
     try {
       const token = await bootstrapToken(clean)
       // cid estável: servidor reconhece a reconexão e limpa o socket morto
@@ -97,12 +115,14 @@ export function useStageRelay(): StageRelayState {
       const url = `${resolveApi(apiBase)}/relay/${clean}?token=${encodeURIComponent(token)}&role=operator&cid=${encodeURIComponent(cid)}`
       ws = new WebSocket(url)
       ws.onopen = () => {
+        if (gen !== attachGen) return
         connected.value = true
         code.value = clean
         retryMs = 1000
         startKeepalive()
       }
       ws.onmessage = (ev) => {
+        if (gen !== attachGen) return
         try {
           const msg = JSON.parse(ev.data as string) as Record<string, unknown>
           if (msg.type === 'youare') {
@@ -111,6 +131,7 @@ export function useStageRelay(): StageRelayState {
         } catch { /* ignora mensagem não-JSON */ }
       }
       ws.onclose = (ev) => {
+        if (gen !== attachGen) return
         connected.value = false
         stopKeepalive()
         if (ev.code !== 4404 && ev.code !== 1000) scheduleReconnect()
@@ -144,7 +165,11 @@ export function useStageRelay(): StageRelayState {
   function scheduleReconnect(): void {
     const c = code.value
     if (!c) return
-    setTimeout(() => { void attachCode(c) }, retryMs)
+    const genAtSchedule = attachGen
+    setTimeout(() => {
+      // sessão mudou desde o agendamento? reconnect antigo não roda
+      if (genAtSchedule === attachGen) void attachCode(c)
+    }, retryMs)
     retryMs = Math.min(retryMs * 2, 10000)
   }
 
