@@ -55,6 +55,9 @@ let apiBase = import.meta.env.DEV
 let keepalive: ReturnType<typeof setInterval> | null = null
 let lastState: PalcoStatusInfo | null = null
 let receivers = 0
+// WT-5: TVs individualmente conectadas (youare.receiverList do relay)
+interface ReceiverEntry { id: string; label: string }
+let receiverList: ReceiverEntry[] = []
 
 function resolveApi(httpBase: string): string {
   // http(s)://host/v1/palco → ws(s)://host/v1/palco
@@ -150,6 +153,12 @@ export function useStageRelay(): StageRelayState {
           const msg = JSON.parse(ev.data as string) as Record<string, unknown>
           if (msg.type === 'youare') {
             receivers = typeof msg.receivers === 'number' ? msg.receivers : receivers
+            if (Array.isArray(msg.receiverList)) {
+              receiverList = (msg.receiverList as ReceiverEntry[]).map((r) => ({
+                id: String(r.id),
+                label: String(r.label ?? r.id),
+              }))
+            }
           }
         } catch { /* ignora mensagem não-JSON */ }
       }
@@ -216,6 +225,7 @@ export function useStageRelay(): StageRelayState {
     code.value = null
     lastState = null
     receivers = 0
+    receiverList = []
   }
 
   async function fetchStatus(): Promise<PalcoStatusInfo | null> {
@@ -224,17 +234,17 @@ export function useStageRelay(): StageRelayState {
   }
 
   async function fetchSlots(): Promise<PalcoSlotInfo[]> {
-    // Cloud: cada TV é um receiver direto — não há slots gerenciados.
-    // Retorna 1 "slot virtual" por compatibilidade com o card.
+    // Cloud: UMA entrada por TV realmente conectada — sem slot fantasma.
+    // Nenhuma TV conectada = lista vazia (o card mostra o estado vazio).
     if (!connected.value) return []
-    return [{
-      id: '0',
-      label: code.value ?? '',
+    return receiverList.map((r) => ({
+      id: r.id,
+      label: r.label,
       running: true,
-      clients: receivers,
+      clients: 1,
       httpPort: 0,
       wsPort: 0,
-    }]
+    }))
   }
 
   async function turnOn(): Promise<boolean> { publish({ type: 'idle', msg: 'Palco ligado' }); return connected.value }

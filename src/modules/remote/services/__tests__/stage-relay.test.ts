@@ -87,14 +87,32 @@ describe('stage-relay (WT-5c)', () => {
     expect(relay.code.value).toBe('ABC234')
   })
 
-  it('fetchSlots retorna slot virtual com clients do youare', async () => {
+  it('fetchSlots lista cada TV conectada (receiverList do youare)', async () => {
     await relay.attachCode('ABC234')
     const sock = FakeWebSocket.instances[0]
     sock.serverOpen()
-    sock.serverMessage({ v: 2, type: 'youare', receivers: 3 })
+    sock.serverMessage({
+      v: 2,
+      type: 'youare',
+      receivers: 2,
+      receiverList: [
+        { id: 'tv-abc', label: 'TV 1' },
+        { id: 'tv-def', label: 'TV 2' },
+      ],
+    })
     const slots = await relay.fetchSlots()
-    expect(slots).toHaveLength(1)
-    expect(slots[0]).toMatchObject({ id: '0', clients: 3, running: true })
+    expect(slots).toHaveLength(2)
+    expect(slots[0]).toMatchObject({ id: 'tv-abc', label: 'TV 1', running: true })
+    expect(slots[1]).toMatchObject({ id: 'tv-def', label: 'TV 2' })
+  })
+
+  it('fetchSlots sem TV conectada = lista vazia (sem slot fantasma)', async () => {
+    await relay.attachCode('ABC234')
+    const sock = FakeWebSocket.instances[0]
+    sock.serverOpen()
+    sock.serverMessage({ v: 2, type: 'youare', receivers: 0, receiverList: [] })
+    const slots = await relay.fetchSlots()
+    expect(slots).toHaveLength(0)
   })
 
   it('publish envia envelope v2 pelo WS aberto', async () => {
