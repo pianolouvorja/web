@@ -1,3 +1,5 @@
+import { publish } from '@modules/remote/services/stage-relay'
+
 export type ReceiverMessage = {
   v: 2
   type: string
@@ -12,22 +14,30 @@ function field(payload: unknown, name: string): string | null {
   return typeof value === 'string' ? value : null
 }
 
+let lastRelayModule: string | null = null
+
 /**
- * Publica o estado do módulo no relay cloud (WT-5), se houver sessão ativa.
- * Sem sessão (modo local/desktop) é no-op — BroadcastChannel dos popups
- * continua sendo o caminho principal do browser.
- * best-effort: nunca lança, falha de rede não pode derrubar o runtime.
+ * WT-5 exclusividade: a TV mostra UM módulo por vez (padrão do palco).
+ * Ao publicar um módulo diferente do ativo, manda idle ANTES — o conteúdo
+ * anterior sai da tela sem o operador precisar desligar (esquecidinhos).
  */
 export function publishToStageRelay(moduleId: string, payload: unknown): void {
   try {
-    // import dinâmico: evita dependência circular (stage-relay → nada daqui)
-    void import('@modules/remote/services/stage-relay').then(({ publish }) => {
-      const msg = toReceiverMessage(moduleId, payload)
-      if (msg) publish(msg as unknown as Record<string, unknown>)
-    })
+    if (lastRelayModule && lastRelayModule !== moduleId) {
+      publish({ v: 2, type: 'idle', msg: '' })
+    }
+    lastRelayModule = moduleId
+    const msg = toReceiverMessage(moduleId, payload)
+    if (msg) publish(msg as unknown as Record<string, unknown>)
+    else if (moduleId === lastRelayModule) lastRelayModule = null
   } catch {
     // relay indisponível — projeção local segue
   }
+}
+
+/** Reset (detach/encerrar sessão) — próximo publish não compara com estado morto. */
+export function resetStageRelayModule(): void {
+  lastRelayModule = null
 }
 
 /** Serializa estados de projeção web para o protocolo do receiver cloud. */
