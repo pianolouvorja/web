@@ -191,7 +191,9 @@ export const useMediaStore = defineStore('media', () => {
   }
 
   function buildRuntime(): MediaProjectionRuntime {
-    const active = session.value != null && isProjecting.value
+    // WT-5: TV é destino independente do popup — conteúdo selecionado projeta
+    // na TV mesmo sem popup local aberto (paridade com o app).
+    const active = session.value != null
     const slide = currentSlide.value
     if (!session.value || !slide) {
       return { ...DEFAULT_MEDIA_PROJECTION, active: false }

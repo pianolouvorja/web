@@ -70,6 +70,13 @@ export function toReceiverMessage(moduleId: string, payload: unknown): ReceiverM
     return time === null ? null : { v: 2, type: 'timer', text: time }
   }
 
+  if (moduleId === 'random') {
+    const display = field(payload, 'currentDisplay')
+    if (display === null) return null
+    if (!display.trim()) return { v: 2, type: 'idle', msg: 'Aguardando conteúdo…' }
+    return { v: 2, type: 'projection', text: display }
+  }
+
   if (moduleId === 'timer' || moduleId === 'countdown') {
     const display = field(payload, 'display')
     return display === null ? null : { v: 2, type: 'timer', text: display }

@@ -31,9 +31,11 @@ const {
 
 // WT-5: projetando (popup fullscreen, não preview do operador), espelha a
 // hora no relay cloud — receiver TV mostra como 'timer'. best-effort.
+// Publica na montagem (a hora pode não mudar por até 1s — sem isso a TV
+// ficava em idle até o próximo tick) e a cada mudança.
 watch(formattedTime, (time) => {
   if (!props.preview) publishToStageRelay('clock', { time })
-})
+}, { immediate: true })
 
 const digitalFontSize = computed(() => {
   const v = Math.min(sizeWidth.value, sizeHeight.value)
