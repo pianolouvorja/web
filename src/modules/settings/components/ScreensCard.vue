@@ -13,7 +13,7 @@ import {
   type PalcoSlotInfo,
   type PalcoStatusInfo,
 } from '../../remote/services/desktop-palco-session'
-import { useStageRelay } from '../../remote/services/stage-relay'
+import { attachStoredSession, useStageRelay } from '../../remote/services/stage-relay'
 
 /**
  * Paridade 1:1 com PalcoCard + PalcoSlotsCard do desktop.
@@ -64,6 +64,11 @@ async function connectCloud(): Promise<void> {
 // Operador escaneia → web conecta como operator direto, zero digitação.
 const route = useRoute()
 const router = useRouter()
+
+// WT-5 persistência: reload do navegador reconecta sozinho na última sessão
+// (culto não pode desparear porque o operador apertou F5). Silencioso: falhou,
+// cai no fluxo normal (criar/informar código).
+void attachStoredSession()
 void watch(
   () => route.query.palco,
   async (code) => {

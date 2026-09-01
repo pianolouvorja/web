@@ -79,6 +79,22 @@ export function publish(state: Record<string, unknown>): void {
   }
 }
 
+const SESSION_CODE_KEY = 'palcoOperatorSession'
+
+/**
+ * WT-5: reconecta automaticamente na última sessão (reload do navegador não
+ * pode desparear operador e TV durante o culto). Retorna true se reconectou.
+ */
+export async function attachStoredSession(): Promise<boolean> {
+  try {
+    const stored = localStorage.getItem(SESSION_CODE_KEY)
+    if (!stored || !/^[A-Z0-9]{6}$/.test(stored)) return false
+    return await useStageRelay().attachCode(stored)
+  } catch {
+    return false
+  }
+}
+
 export function useStageRelay(): StageRelayState {
   // WT-5 race fix: attachCode é async (token) — dois attach em voo (ex. usuário
   // conecta código novo enquanto reconnect da sessão velha dispara) faziam o
@@ -120,6 +136,8 @@ export function useStageRelay(): StageRelayState {
         code.value = clean
         retryMs = 1000
         startKeepalive()
+        // Sessão persiste o reload do navegador — operator reconecta sozinho.
+        try { localStorage.setItem(SESSION_CODE_KEY, clean) } catch { /* ignore */ }
       }
       ws.onmessage = (ev) => {
         if (gen !== attachGen) return
@@ -185,6 +203,8 @@ export function useStageRelay(): StageRelayState {
 
   function detach(): void {
     stopKeepalive()
+    // detach é intencional (botão encerrar) — sessão não volta no reload
+    try { localStorage.removeItem(SESSION_CODE_KEY) } catch { /* ignore */ }
     if (ws) { try { ws.close(1000) } catch { /* já fechado */ } ws = null }
     connected.value = false
     code.value = null
