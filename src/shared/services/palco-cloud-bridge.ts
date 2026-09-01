@@ -1,4 +1,6 @@
 import * as popupRouting from '@shared/services/popup-routing'
+import { readEffectiveStageSettings } from '@modules/settings/services/stage-settings-runtime'
+import type { StageSettings } from '@modules/settings/types/stage-settings'
 
 export type ReceiverMessage = {
   v: 2
@@ -64,6 +66,32 @@ export function resetStageRelayModule(): void {
   lastRelayModule = null
 }
 
+/**
+ * WT-5 paridade visual: anexa o StageSettings EFETIVO do módulo (mesmo que o
+ * popup usa) ao envelope do receiver — fontSize, shadow, caixinha, cores,
+ * background. O receiver TV já consome esses campos (protocolo v2 do palco).
+ */
+/** Lê o StageSettings EFETIVO do módulo (override > global > defaults). */
+function stageStyle(moduleId: string): StageSettings {
+  return readEffectiveStageSettings(moduleId)
+}
+
+function stageFields(moduleId: string, s: StageSettings): Partial<ReceiverMessage & Record<string, unknown>> {
+  const out: Record<string, unknown> = {
+    fontSize: s.fontSize,
+    fontWeight: s.fontWeight,
+    textShadow: s.textShadow,
+    shadowIntensity: s.shadowIntensity,
+    shadowBlur: s.shadowBlur,
+    textBox: s.textBox,
+    boxOpacity: s.boxOpacity,
+    boxBorder: s.boxBorder,
+    textColor: s.textColor,
+  }
+  if (s.backgroundColor) out.background = s.backgroundColor
+  return out
+}
+
 /** Serializa estados de projeção web para o protocolo do receiver cloud. */
 export function toReceiverMessage(moduleId: string, payload: unknown): ReceiverMessage | null {
   if (moduleId === 'bible') {
@@ -71,7 +99,18 @@ export function toReceiverMessage(moduleId: string, payload: unknown): ReceiverM
     const text = field(payload, 'text')
     if (reference === null || text === null) return null
     if (!text.trim()) return { v: 2, type: 'idle', msg: '' }
-    return { v: 2, type: 'projection', footerRef: reference, text }
+    const st = stageStyle(moduleId)
+    return {
+      v: 2,
+      type: 'projection',
+      footerRef: reference,
+      text,
+      ...stageFields(moduleId, st),
+      fontSize: st.bibleFontSize,
+      fontWeight: st.bibleFontWeight,
+      textColor: st.bibleTextColor,
+      footerRefColor: st.footerRefColor,
+    }
   }
 
   if (moduleId === 'media') {
@@ -86,24 +125,35 @@ export function toReceiverMessage(moduleId: string, payload: unknown): ReceiverM
       text: lyric,
       footer: field(payload, 'title') ?? '',
       ...(field(payload, 'subtitle') ? { footerRef: field(payload, 'subtitle') as string } : {}),
+      isCover: (payload as Record<string, unknown>)?.isCover === true,
+      ...stageFields(moduleId, stageStyle(moduleId)),
     }
   }
 
   if (moduleId === 'clock') {
     const time = field(payload, 'time')
-    return time === null ? null : { v: 2, type: 'timer', text: time }
+    if (time === null) return null
+    return { v: 2, type: 'timer', text: time, ...stageFields(moduleId, stageStyle(moduleId)) }
   }
 
   if (moduleId === 'random') {
     const display = field(payload, 'currentDisplay')
     if (display === null) return null
     if (!display.trim()) return { v: 2, type: 'idle', msg: 'Aguardando conteúdo…' }
-    return { v: 2, type: 'projection', text: display }
+    const st = stageStyle(moduleId)
+    return {
+      v: 2,
+      type: 'projection',
+      text: display,
+      fontSize: st.random?.fontSizePc,
+      ...stageFields(moduleId, st),
+    }
   }
 
   if (moduleId === 'timer' || moduleId === 'countdown') {
     const display = field(payload, 'display')
-    return display === null ? null : { v: 2, type: 'timer', text: display }
+    if (display === null) return null
+    return { v: 2, type: 'timer', text: display, ...stageFields(moduleId, stageStyle(moduleId)) }
   }
 
   return null
