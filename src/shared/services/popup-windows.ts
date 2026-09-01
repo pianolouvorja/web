@@ -348,9 +348,17 @@ export async function openPopupModule(
 
   // Roteamento por módulo (paridade palco-routing do desktop): sem override
   // explícito, módulo com rota individual projeta SÓ no slot designado.
+  // WT-5: rota 'tv' = só TV cloud — NENHUM popup local abre.
   let effectiveSlots = options?.slots
   if (!effectiveSlots && (POPUP_ROUTABLE_MODULES as readonly string[]).includes(moduleId)) {
     const route = getPopupRoute(moduleId as PopupRoutableModule)
+    if (route === 'tv') {
+      // Conteúdo vai pelo relay (runtime publica ao selecionar); aqui só
+      // registra o módulo ativo pra UI/estado.
+      if (!isLiturgyControlOpen()) setActiveModule(moduleId)
+      requestWindowManagementPermission()
+      return true
+    }
     if (route !== 'mirror') {
       const slot = Number.parseInt(route, 10)
       if (!Number.isNaN(slot) && slot >= 1 && slot <= getPopupCount()) {

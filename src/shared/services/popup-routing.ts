@@ -4,11 +4,12 @@
  * Port do conceito de `palco-routing.ts` do desktop: cada módulo projetável
  * tem uma rota — 'mirror' (todas as popups seguem o módulo global) ou um
  * slotId específico ('1', '2'... = popup dedicada a esse módulo).
- * Persistência em localStorage. Conceito: áudio fica na aba do operador;
- * conteúdos podem divergir por tela.
+ * WT-5: rota 'tv' = SÓ a TV cloud (nenhum popup local abre) — paridade app:
+ * destino independente por módulo. Persistência em localStorage. Conceito:
+ * áudio fica na aba do operador; conteúdos podem divergir por tela.
  */
 
-export type PopupRoute = 'mirror' | string // string = slotId (ex.: '1', '2')
+export type PopupRoute = 'mirror' | 'tv' | string // string = slotId (ex.: '1', '2')
 
 export type PopupRoutableModule =
   | 'bible'

@@ -175,6 +175,7 @@ export default {
       removeScreen: 'Remover Tela',
       moduleHint: 'Nos módulos, escolha Espelhar (todas) ou uma tela individual.',
       mirror: 'Espelhar todas',
+      routeTv: 'Só TV (nuvem)',
       route: 'Destino das telas',
       routeAria: 'Destino de projeção de {module}',
       noPopups: 'Nenhuma tela aberta. Use o botão de projetar em um módulo (hinos, bíblia...) para abrir as telas.',

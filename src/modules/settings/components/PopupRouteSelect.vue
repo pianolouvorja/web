@@ -42,6 +42,9 @@ function update(value: string): void {
       <option value="mirror">
         {{ t('settings.screens.mirror') }}
       </option>
+      <option value="tv">
+        {{ t('settings.screens.routeTv') }}
+      </option>
       <optgroup
         v-if="popupCount > 0"
         :label="t('settings.screens.screensOfStage')"
