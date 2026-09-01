@@ -70,6 +70,34 @@ export function useDesktopPalcoSession() {
     return ack.ok
   }
 
+  async function createTv(label: string): Promise<boolean> {
+    const b = bridge.value
+    if (!b) return false
+    const ack = await b.request('palco.slot-add', { label })
+    return ack.ok
+  }
+
+  async function removeTv(id: string): Promise<boolean> {
+    const b = bridge.value
+    if (!b) return false
+    const ack = await b.request('palco.slot-remove', { slotId: id })
+    return ack.ok
+  }
+
+  async function startTv(id: string): Promise<boolean> {
+    const b = bridge.value
+    if (!b) return false
+    const ack = await b.request('palco.slot-start', { slotId: id })
+    return ack.ok
+  }
+
+  async function stopTv(id: string): Promise<boolean> {
+    const b = bridge.value
+    if (!b) return false
+    const ack = await b.request('palco.slot-stop', { slotId: id })
+    return ack.ok
+  }
+
   async function idle(): Promise<boolean> {
     const b = bridge.value
     if (!b) return false
@@ -77,5 +105,5 @@ export function useDesktopPalcoSession() {
     return ack.ok
   }
 
-  return { bridge, connected, attach, detach, fetchStatus, fetchSlots, turnOn, turnOff, idle }
+  return { bridge, connected, attach, detach, fetchStatus, fetchSlots, turnOn, turnOff, idle, createTv, removeTv, startTv, stopTv }
 }
