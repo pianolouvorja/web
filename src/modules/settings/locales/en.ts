@@ -167,6 +167,26 @@ export default {
       connected: 'Connected — the phone controls this screen',
       scanQr: 'Scan phone QR',
           },
+    screens: {
+      localTitle: 'Projection Screens',
+      localDesc: 'Popups in this browser work as independent screens — each one can show different content. No external app needed.',
+      noPopups: 'No screen open. Use the project button in a module (hymns, bible...) to open screens.',
+      routeMirror: 'All screens',
+      routeAria: 'Projection target for {module}',
+      routeHint: 'Choose which screen each content appears on — or all of them.',
+      tvConnectedHint: 'Desktop connected: TVs are listed below.',
+      tvOfflineHint: 'Real TVs (receiver on the TV set) require the desktop app running on the same network.',
+      tvHowTo: 'Open the desktop app on the same network and connect this browser to it in Remote Control (QR). This tab commands; the desktop broadcasts.',
+      modules: {
+        bible: 'Bible',
+        media: 'Hymns',
+        liturgy: 'Liturgy',
+        random: 'Draw',
+        clock: 'Clock',
+        timer: 'Timer',
+        countdown: 'Countdown'
+      }
+    },
     palco: {
       tvs: 'TVs (via Desktop)',
       webHint: 'Real TVs (receiver on the TV set). Requires the desktop app running on the same network — it does the broadcasting.',

@@ -161,6 +161,26 @@ export default {
       general: 'Preferências gerais do aplicativo em breve.',
       media: 'Configurações de áudio, vídeo e player em breve.'
     },
+    screens: {
+      localTitle: 'Telas de Projeção',
+      localDesc: 'Popups deste navegador funcionam como telas independentes — cada uma pode mostrar um conteúdo diferente. Não precisa de nada externo.',
+      noPopups: 'Nenhuma tela aberta. Use o botão de projetar em um módulo (hinos, bíblia...) para abrir as telas.',
+      routeMirror: 'Todas as telas',
+      routeAria: 'Destino de projeção de {module}',
+      routeHint: 'Escolha para cada conteúdo em qual tela ele aparece — ou em todas.',
+      tvConnectedHint: 'Desktop conectado: as TVs aparecem abaixo.',
+      tvOfflineHint: 'Para TVs de verdade (receiver na TV), o app desktop precisa estar aberto na mesma rede.',
+      tvHowTo: 'Abra o app desktop na mesma rede e conecte este navegador a ele em Controle Remoto (QR). Esta aba comanda; o desktop transmite.',
+      modules: {
+        bible: 'Bíblia',
+        media: 'Hinos',
+        liturgy: 'Liturgia',
+        random: 'Sorteio',
+        clock: 'Relógio',
+        timer: 'Cronômetro',
+        countdown: 'Contagem'
+      }
+    },
     palco: {
       tvs: 'TVs (via Desktop)',
       webHint: 'TVs de verdade (receiver na TV). Requer o app desktop aberto na mesma rede — é ele quem transmite.',

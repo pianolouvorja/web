@@ -166,6 +166,26 @@ export default {
       palcoOff: 'Apagar Palco',
       connected: 'Conectado — el celular controla esta pantalla',
           },
+    screens: {
+      localTitle: 'Pantallas de Proyección',
+      localDesc: 'Los popups de este navegador funcionan como pantallas independientes — cada una puede mostrar contenido diferente. No necesita nada externo.',
+      noPopups: 'Ninguna pantalla abierta. Usa el botón de proyectar en un módulo (hinos, biblia...) para abrir las pantallas.',
+      routeMirror: 'Todas las pantallas',
+      routeAria: 'Destino de proyección de {module}',
+      routeHint: 'Elige en qué pantalla aparece cada contenido — o en todas.',
+      tvConnectedHint: 'Desktop conectado: las TVs aparecen abajo.',
+      tvOfflineHint: 'Para TVs reales (receiver en la TV) se requiere la app desktop abierta en la misma red.',
+      tvHowTo: 'Abre la app desktop en la misma red y conecta este navegador a ella en Control Remoto (QR). Esta pestaña comanda; el desktop transmite.',
+      modules: {
+        bible: 'Biblia',
+        media: 'Hinos',
+        liturgy: 'Liturgia',
+        random: 'Sorteo',
+        clock: 'Reloj',
+        timer: 'Cronómetro',
+        countdown: 'Cuenta regresiva'
+      }
+    },
     palco: {
       tvs: 'TVs (vía Desktop)',
       webHint: 'TVs reales (receiver en la TV). Requiere la app desktop abierta en la misma red — es ella quien transmite.',
