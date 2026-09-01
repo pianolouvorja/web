@@ -138,6 +138,11 @@ export function useStageRelay(): StageRelayState {
         startKeepalive()
         // Sessão persiste o reload do navegador — operator reconecta sozinho.
         try { localStorage.setItem(SESSION_CODE_KEY, clean) } catch { /* ignore */ }
+        // WT-5: registra o send NESTA instância do módulo — o bridge consome
+        // via window (Vite em dev duplica módulos com ?t= e o import estático
+        // do bridge pegava instância connected:false — hinos não projetavam).
+        ;(window as unknown as { __palcoRelaySend?: (s: Record<string, unknown>) => void }).__palcoRelaySend =
+          (state) => { if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ v: 2, ...state })) }
       }
       ws.onmessage = (ev) => {
         if (gen !== attachGen) return
@@ -152,6 +157,7 @@ export function useStageRelay(): StageRelayState {
         if (gen !== attachGen) return
         connected.value = false
         stopKeepalive()
+        try { delete (window as unknown as { __palcoRelaySend?: unknown }).__palcoRelaySend } catch { /* ignore */ }
         if (ev.code !== 4404 && ev.code !== 1000) scheduleReconnect()
       }
       ws.onerror = () => { /* onclose dispara depois */ }

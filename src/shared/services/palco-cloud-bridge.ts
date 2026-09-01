@@ -1,4 +1,3 @@
-import { publish } from '@modules/remote/services/stage-relay'
 import * as popupRouting from '@shared/services/popup-routing'
 
 export type ReceiverMessage = {
@@ -7,6 +6,20 @@ export type ReceiverMessage = {
   text?: string
   footer?: string
   footerRef?: string
+}
+
+/**
+ * Registro global do send do relay — evita import estático do stage-relay.
+ * Em dev, o Vite cria MÚLTIPLAS instâncias do módulo (?t= do HMR), cada uma
+ * com seu próprio `ws`; o bridge importava uma instância connected:false e
+ * o publish ia pro limbo (hinos/utilitários não projetavam na TV, caso real
+ * 01/09). O stage-relay se registra aqui no attach — instância única.
+ */
+type RelaySend = (state: Record<string, unknown>) => void
+declare global {
+  interface Window {
+    __palcoRelaySend?: RelaySend
+  }
 }
 
 function field(payload: unknown, name: string): string | null {
@@ -26,6 +39,8 @@ let lastRelayModule: string | null = null
  */
 export function publishToStageRelay(moduleId: string, payload: unknown): void {
   try {
+    const send = typeof window !== 'undefined' ? window.__palcoRelaySend : undefined
+    if (!send) return // sem relay registrado (modo local/desktop ou instância dev)
     if (moduleId === 'clock' && lastRelayModule !== 'clock') {
       try {
         const { getPopupRoute } = popupRouting
@@ -33,11 +48,11 @@ export function publishToStageRelay(moduleId: string, payload: unknown): void {
       } catch { /* routing indisponível — segue o fluxo */ }
     }
     if (lastRelayModule && lastRelayModule !== moduleId) {
-      publish({ v: 2, type: 'idle', msg: '' })
+      send({ v: 2, type: 'idle', msg: '' })
     }
     lastRelayModule = moduleId
     const msg = toReceiverMessage(moduleId, payload)
-    if (msg) publish(msg as unknown as Record<string, unknown>)
+    if (msg) send(msg as unknown as Record<string, unknown>)
     else if (moduleId === lastRelayModule) lastRelayModule = null
   } catch {
     // relay indisponível — projeção local segue
