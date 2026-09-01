@@ -8,6 +8,7 @@ import { GlassCard } from '@design-system/index'
 import { getPopupCount, setPopupCount } from '@shared/services/projection-preferences'
 import { getPopupRefs } from '@shared/services/popup-registry'
 import { closeScreenPopups, openPopupModule } from '@shared/services/popup-windows'
+import { resetStageRelayModule } from '@shared/services/palco-cloud-bridge'
 import {
   useDesktopPalcoSession,
   type PalcoSlotInfo,
@@ -53,6 +54,11 @@ const cloudMode = computed(() => !desktopConnected.value)
 // streaming a TV também pode criar (OK vazio) e mostrar o QR dela; aqui
 // fica só o criar manual + encerrar.
 const creatingSession = ref(false)
+
+function endCloudSession(): void {
+  relay.detach()
+  resetStageRelayModule()
+}
 
 async function connectCloud(): Promise<void> {
   tvError.value = ''
@@ -325,7 +331,7 @@ onUnmounted(() => {
           type="button"
           class="palco-slots-card__remove"
           :aria-label="t('settings.palco.cloudEnd')"
-          @click="relay.detach()"
+          @click="endCloudSession"
         >
           <i class="ti ti-x" aria-hidden="true" />
         </button>
