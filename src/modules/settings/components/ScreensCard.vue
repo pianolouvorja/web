@@ -7,6 +7,11 @@ import { GlassCard } from '@design-system/index'
 import { getPopupCount, setPopupCount } from '@shared/services/projection-preferences'
 import { getPopupRefs } from '@shared/services/popup-registry'
 import { closeScreenPopups, openPopupModule } from '@shared/services/popup-windows'
+import {
+  useDesktopPalcoSession,
+  type PalcoSlotInfo,
+  type PalcoStatusInfo,
+} from '../../remote/services/desktop-palco-session'
 
 /**
  * Paridade 1:1 com PalcoCard + PalcoSlotsCard do desktop.
@@ -19,6 +24,57 @@ const { t } = useI18n()
 const popupCount = ref(getPopupCount())
 const activeId = ref('1')
 const tick = ref(0)
+
+const {
+  connected: desktopConnected,
+  fetchStatus,
+  fetchSlots,
+  turnOn,
+  turnOff,
+  idle,
+  createTv,
+  removeTv,
+  startTv,
+  stopTv,
+} = useDesktopPalcoSession()
+
+const tvLoading = ref(false)
+const tvStatus = ref<PalcoStatusInfo | null>(null)
+const tvSlots = ref<PalcoSlotInfo[]>([])
+const tvError = ref('')
+
+async function refreshTvs(): Promise<void> {
+  if (!desktopConnected.value || tvLoading.value) return
+  tvLoading.value = true
+  try {
+    const [st, sl] = await Promise.all([fetchStatus(), fetchSlots()])
+    tvStatus.value = st
+    tvSlots.value = sl
+  } catch {
+    tvError.value = t('settings.palco.statusError')
+  } finally {
+    tvLoading.value = false
+  }
+}
+
+async function addTv(): Promise<void> {
+  if (!desktopConnected.value) return
+  const label = `${t('settings.palco.tv')} ${tvSlots.value.length + 1}`
+  await createTv(label)
+  await refreshTvs()
+}
+
+async function removeTvSlot(id: string): Promise<void> {
+  if (id === '0') return
+  await removeTv(id)
+  await refreshTvs()
+}
+
+async function toggleTv(slot: PalcoSlotInfo): Promise<void> {
+  if (slot.running) await stopTv(slot.id)
+  else await startTv(slot.id)
+  await refreshTvs()
+}
 
 const aliveSlots = computed(() => {
   void tick.value
@@ -36,7 +92,8 @@ let pollTimer: ReturnType<typeof setInterval> | null = null
 pollTimer = setInterval(() => {
   popupCount.value = getPopupCount()
   tick.value++
-}, 1500)
+  if (desktopConnected.value) void refreshTvs()
+}, 3000)
 onUnmounted(() => {
   if (pollTimer) clearInterval(pollTimer)
 })
@@ -143,6 +200,98 @@ onUnmounted(() => {
       </div>
     </div>
 
+    <!-- ═══ TVs (cast via desktop) ═══ -->
+    <div
+      class="palco-slots-card__tv"
+      :class="{ 'palco-slots-card__tv--off': !desktopConnected }"
+    >
+      <div class="palco-slots-card__tv-head">
+        <span class="palco-slots-card__tv-label">
+          <i class="ti ti-device-tv" aria-hidden="true" />
+          {{ t('settings.palco.tvsPlain') }}
+          <span
+            class="palco-slot__dot"
+            :class="{ 'palco-slot__dot--on': desktopConnected }"
+          />
+        </span>
+        <button
+          type="button"
+          class="palco-slots-card__add"
+          :disabled="!desktopConnected"
+          @click="addTv"
+        >
+          <i class="ti ti-plus" aria-hidden="true" />
+          {{ t('settings.palco.addTv') }}
+        </button>
+      </div>
+
+      <div
+        v-if="desktopConnected"
+        class="palco-slots-card__list"
+      >
+        <div
+          v-for="slot in tvSlots"
+          :key="slot.id"
+          class="palco-slot"
+          :class="{ 'palco-slot--active': slot.running }"
+        >
+          <button
+            type="button"
+            class="palco-slot__select"
+          >
+            <span
+              class="palco-slot__dot"
+              :class="{ 'palco-slot__dot--on': slot.running && slot.clients > 0 }"
+            />
+            <span>
+              <strong>{{ slot.id === '0' ? t('settings.palco.mainTv') : slot.label }}</strong>
+              <small>:{{ slot.httpPort }} · {{ slot.clients ? t('settings.palco.connected', { count: slot.clients }) : t('settings.palco.waiting') }}</small>
+            </span>
+          </button>
+          <button
+            type="button"
+            class="palco-slot__power"
+            :aria-label="slot.running ? t('settings.palco.stop') : t('settings.palco.start')"
+            @click="toggleTv(slot)"
+          >
+            <i
+              class="ti"
+              :class="slot.running ? 'ti-player-stop' : 'ti-player-play'"
+              aria-hidden="true"
+            />
+          </button>
+          <button
+            v-if="slot.id !== '0'"
+            type="button"
+            class="palco-slot__remove"
+            :aria-label="t('settings.palco.removeTv')"
+            @click="removeTvSlot(slot.id)"
+          >
+            <i class="ti ti-trash" aria-hidden="true" />
+          </button>
+        </div>
+        <p
+          v-if="!tvSlots.length"
+          class="palco-slots-card__hint"
+        >
+          {{ t('settings.palco.noSlots') }}
+        </p>
+      </div>
+      <p
+        v-else
+        class="palco-slots-card__hint"
+      >
+        {{ t('settings.screens.tvHowTo') }}
+      </p>
+      <p
+        v-if="tvError"
+        class="palco-slots-card__error"
+        role="alert"
+      >
+        {{ tvError }}
+      </p>
+    </div>
+
     <p class="palco-slots-card__note">
       {{ t('settings.screens.moduleHint') }}
     </p>
@@ -173,6 +322,12 @@ onUnmounted(() => {
 .palco-slots-card__add { display:flex; align-items:center; gap:.35rem; padding:.45rem .7rem; border:1px solid color-mix(in srgb,var(--ds-color-primary) 50%,transparent); border-radius:.5rem 0 .5rem 0; background:transparent; color:var(--ds-color-primary); cursor:pointer; font-size:.75rem; }
 .palco-slot__remove { display:flex; align-items:center; justify-content:center; width:1.8rem; height:1.8rem; border:0; border-radius:.35rem; background:transparent; color:var(--ds-color-on-surface-variant); cursor:pointer; }
 .palco-slot__remove:hover { color:#e65c66; }
+.palco-slots-card__tv { display:flex; flex-direction:column; gap:.5rem; padding:.75rem 1.25rem; border-top:1px solid color-mix(in srgb,var(--ds-color-on-surface) 8%,transparent); }
+.palco-slots-card__tv--off { opacity:.75; }
+.palco-slots-card__tv-head { display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+.palco-slots-card__tv-label { display:inline-flex; align-items:center; gap:.5rem; font-size:.9rem; font-weight:600; color:var(--ds-color-on-surface); }
+.palco-slots-card__tv-label .ti-device-tv { color:var(--ds-color-primary); }
+.palco-slots-card__tv .palco-slot__select strong { font-size:.86rem; }
 .palco-slots-card__note { padding:0 1.25rem .5rem; font-size:.75rem; color:var(--ds-color-on-surface-variant); }
 
 

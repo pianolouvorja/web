@@ -190,6 +190,14 @@ export default {
       }
     },
     palco: {
+      tvsPlain: 'TVs do Palco',
+      addTv: 'Adicionar TV',
+      mainTv: 'TV principal',
+      connected: '{count} TV conectada',
+      waiting: 'Aguardando TV conectar…',
+      removeTv: 'Remover TV',
+      start: 'Ligar',
+      stop: 'Desligar',
       tvs: 'TVs (via Desktop)',
       webHint: 'TVs de verdade (receiver na TV). Requer o app desktop aberto na mesma rede — é ele quem transmite.',
       desktopConnected: 'Desktop conectado',

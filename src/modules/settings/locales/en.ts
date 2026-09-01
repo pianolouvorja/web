@@ -196,6 +196,14 @@ export default {
       }
     },
     palco: {
+      tvsPlain: 'Stage TVs',
+      addTv: 'Add TV',
+      mainTv: 'Main TV',
+      connected: '{count} TV connected',
+      waiting: 'Waiting for TV to connect…',
+      removeTv: 'Remove TV',
+      start: 'Start',
+      stop: 'Stop',
       tvs: 'TVs (via Desktop)',
       webHint: 'Real TVs (receiver on the TV set). Requires the desktop app running on the same network — it does the broadcasting.',
       desktopConnected: 'Desktop connected',
