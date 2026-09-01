@@ -86,7 +86,15 @@ export function useStageRelay(): StageRelayState {
     if (clean.length !== 6) return false
     try {
       const token = await bootstrapToken(clean)
-      const url = `${resolveApi(apiBase)}/relay/${clean}?token=${encodeURIComponent(token)}&role=operator`
+      // cid estável: servidor reconhece a reconexão e limpa o socket morto
+      // (sem cid, reconexão tomava 4409 operator_already_present em loop).
+      let cid = ''
+      try { cid = localStorage.getItem('palcoOperatorCid') ?? '' } catch { /* storage restrito */ }
+      if (!cid) {
+        cid = `op-${Math.random().toString(36).slice(2, 10)}`
+        try { localStorage.setItem('palcoOperatorCid', cid) } catch { /* ignore */ }
+      }
+      const url = `${resolveApi(apiBase)}/relay/${clean}?token=${encodeURIComponent(token)}&role=operator&cid=${encodeURIComponent(cid)}`
       ws = new WebSocket(url)
       ws.onopen = () => {
         connected.value = true
