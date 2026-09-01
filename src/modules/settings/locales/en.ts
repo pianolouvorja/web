@@ -269,6 +269,7 @@ export default {
       cloudCreate: 'Create session',
       cloudCodeLabel: 'Session code — enter it on the TV (red button)',
       cloudEnd: 'End cloud session',
+      cloudAlwaysOn: 'always on while connected',
       cloudHint: 'No desktop? Enter the session code to project via cloud.',
       tvHowTo: 'Connect a TV with the LouvorJA receiver on the same network.',
       addTv: 'Add TV',

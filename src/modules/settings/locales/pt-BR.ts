@@ -200,6 +200,7 @@ export default {
       cloudCreate: 'Criar sessão',
       cloudCodeLabel: 'Código da sessão — digite na TV (tecla vermelha)',
       cloudEnd: 'Encerrar sessão cloud',
+      cloudAlwaysOn: 'sempre ativa quando conectada',
       cloudHint: 'Sem desktop? Digite o código da sessão para projetar via nuvem.',
       addTv: 'Adicionar TV',
       mainTv: 'TV principal',

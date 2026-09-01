@@ -357,10 +357,15 @@ onUnmounted(() => {
             />
             <span>
               <strong>{{ slot.id === '0' ? t('settings.palco.mainTv') : slot.label }}</strong>
-              <small>:{{ slot.httpPort }} · {{ slot.clients ? t('settings.palco.connected', { count: slot.clients }) : t('settings.palco.waiting') }}</small>
+              <!-- cloud: httpPort=0 e TV sempre ativa quando conectada -->
+              <small v-if="slot.httpPort">:{{ slot.httpPort }} · {{ slot.clients ? t('settings.palco.connected', { count: slot.clients }) : t('settings.palco.waiting') }}</small>
+              <small v-else>{{ t('settings.palco.connected', { count: 1 }) }} · {{ t('settings.palco.cloudAlwaysOn') }}</small>
             </span>
           </button>
+          <!-- WT-5: TV cloud não tem slot ligável/desligável — o conteúdo é
+               controlado pelo módulo (projetar/idle). Play/stop só no desktop. -->
           <button
+            v-if="desktopConnected"
             type="button"
             class="palco-slot__power"
             :aria-label="slot.running ? t('settings.palco.stop') : t('settings.palco.start')"
@@ -373,7 +378,7 @@ onUnmounted(() => {
             />
           </button>
           <button
-            v-if="slot.id !== '0'"
+            v-if="desktopConnected && slot.id !== '0'"
             type="button"
             class="palco-slot__remove"
             :aria-label="t('settings.palco.removeTv')"

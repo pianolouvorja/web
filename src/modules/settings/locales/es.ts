@@ -268,6 +268,7 @@ export default {
       cloudCreate: 'Crear sesión',
       cloudCodeLabel: 'Código de sesión — ingrésalo en el TV (botón rojo)',
       cloudEnd: 'Cerrar sesión cloud',
+      cloudAlwaysOn: 'siempre activa mientras esté conectada',
       cloudHint: '¿Sin desktop? Ingresa el código de sesión para proyectar vía nube.',
       tvHowTo: 'Conecta una TV con el receiver LouvorJA en la misma red.',
       addTv: 'Agregar TV',
