@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onUnmounted, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { GlassCard } from '@design-system/index'
@@ -10,20 +10,21 @@ import {
   setPopupRoute,
   type PopupRoutableModule,
 } from '@shared/services/popup-routing'
-import { displayLabel } from '@shared/services/popup-outputs'
 import { getPopupCount } from '@shared/services/projection-preferences'
-
-import {
-  useDesktopPalcoSession,
-  type PalcoSlotInfo,
-  type PalcoStatusInfo,
-} from '../../remote/services/desktop-palco-session'
 
 const { t } = useI18n()
 
-/* ── Telas locais (popups) — autônomas, sem desktop ── */
+/* Paridade desktop: um card "Palco (Telas)" com toggle + lista de telas com
+ * dot, seleção, e roteamento por módulo ("Espelhar todas" / tela específica).
+ * No web as "telas" são popups deste navegador — funciona sozinho. */
 
 const popupCount = computed(() => getPopupCount())
+
+const slotsList = computed(() =>
+  Array.from({ length: popupCount.value }, (_, i) => i + 1),
+)
+
+const selectedSlot = ref('0') // '0' = principal/espelho
 
 const modules: PopupRoutableModule[] = [...POPUP_ROUTABLE_MODULES]
 
@@ -42,272 +43,135 @@ function routeOf(module: PopupRoutableModule): string {
 }
 
 function onRouteChange(module: PopupRoutableModule, event: Event): void {
-  const value = (event.target as HTMLSelectElement).value
-  setPopupRoute(module, value)
+  setPopupRoute(module, (event.target as HTMLSelectElement).value)
 }
 
-function slotLabel(slot: number): string {
-  return displayLabel(slot)
-}
-
-/* ── TVs (opcional, via desktop) ── */
-
-const {
-  connected,
-  fetchStatus,
-  fetchSlots,
-  turnOn,
-  turnOff,
-  idle,
-} = useDesktopPalcoSession()
-
-const tvOpen = ref(false)
-const loading = ref(false)
-const toggling = ref(false)
-const status = ref<PalcoStatusInfo | null>(null)
-const slots = ref<PalcoSlotInfo[]>([])
-const lastError = ref('')
-
-let refreshTimer: ReturnType<typeof setInterval> | null = null
-
-async function refresh(): Promise<void> {
-  if (!connected.value || loading.value) return
-  loading.value = true
-  lastError.value = ''
-  try {
-    const [st, sl] = await Promise.all([fetchStatus(), fetchSlots()])
-    status.value = st
-    slots.value = sl
-  } catch {
-    lastError.value = t('settings.palco.statusError')
-  } finally {
-    loading.value = false
-  }
-}
-
-async function togglePalco(): Promise<void> {
-  if (toggling.value || !connected.value) return
-  toggling.value = true
-  lastError.value = ''
-  try {
-    const running = status.value?.running === true
-    const ok = running ? await turnOff() : await turnOn()
-    if (!ok) lastError.value = t('settings.palco.toggleError')
-    await refresh()
-  } catch {
-    lastError.value = t('settings.palco.toggleError')
-  } finally {
-    toggling.value = false
-  }
-}
-
-async function goIdle(): Promise<void> {
-  if (toggling.value || !connected.value) return
-  toggling.value = true
-  lastError.value = ''
-  try {
-    const ok = await idle()
-    if (!ok) lastError.value = t('settings.palco.toggleError')
-    await refresh()
-  } catch {
-    lastError.value = t('settings.palco.toggleError')
-  } finally {
-    toggling.value = false
-  }
-}
-
-function stopPolling(): void {
-  if (refreshTimer) clearInterval(refreshTimer)
-  refreshTimer = null
-}
-
-watch([tvOpen, connected], ([open, conn]) => {
-  stopPolling()
-  if (open && conn) {
-    void refresh()
-    refreshTimer = setInterval(() => void refresh(), 3000)
-  } else if (!open) {
-    status.value = null
-    slots.value = []
-  }
-}, { immediate: true })
-
-onUnmounted(stopPolling)
-
-function clientsLabel(count: number): string {
-  return count === 1
-    ? t('settings.palco.oneReceiver')
-    : t('settings.palco.nReceivers', { n: count })
+function screenLabel(slot: number): string {
+  return slot === 1
+    ? t('settings.screens.mainScreen')
+    : t('settings.screens.screenN', { n: slot })
 }
 </script>
 
 <template>
-  <GlassCard class="screens-card" :padding="false">
-    <!-- ═══ Seção 1: telas locais — funciona sozinha ═══ -->
+  <GlassCard
+    class="screens-card"
+    :padding="false"
+  >
+    <!-- Toggle principal (paridade PalcoCard do desktop) -->
     <div class="screens-card__header">
-      <i class="ti ti-layout-navbar screens-card__icon" aria-hidden="true" />
       <div class="screens-card__heading">
-        <h3 class="screens-card__title">
-          {{ t('settings.screens.localTitle') }}
-        </h3>
-        <p class="screens-card__desc">
-          {{ t('settings.screens.localDesc') }}
-        </p>
+        <div class="screens-card__icon">
+          <i
+            class="ti ti-devices"
+            aria-hidden="true"
+          />
+        </div>
+        <div>
+          <h3 class="screens-card__title">
+            {{ t('settings.screens.title') }}
+          </h3>
+          <p class="screens-card__subtitle">
+            {{ t('settings.screens.subtitle') }}
+          </p>
+        </div>
       </div>
     </div>
 
+    <!-- Lista de telas (paridade PalcoSlotsCard do desktop) -->
+    <div
+      v-if="popupCount > 0"
+      class="screens-card__body"
+    >
+      <div class="screens-card__list-head">
+        <div>
+          <h4 class="screens-card__list-title">
+            {{ t('settings.screens.screensOfStage') }}
+          </h4>
+          <p class="screens-card__list-hint">
+            {{ t('settings.screens.screensHint') }}
+          </p>
+        </div>
+      </div>
+
+      <ul class="screens-card__list">
+        <li
+          v-for="slot in slotsList"
+          :key="slot"
+          class="screens-card__item"
+          :class="{ 'screens-card__item--selected': selectedSlot === String(slot) }"
+        >
+          <span
+            class="screens-card__dot"
+            aria-hidden="true"
+          />
+          <div class="screens-card__item-info">
+            <span class="screens-card__item-name">{{ screenLabel(slot) }}</span>
+            <span class="screens-card__item-sub">
+              {{ t('settings.screens.waitingScreen') }}
+            </span>
+          </div>
+          <button
+            type="button"
+            class="screens-card__select-btn"
+            :disabled="selectedSlot === String(slot)"
+            @click="selectedSlot = String(slot)"
+          >
+            {{ selectedSlot === String(slot) ? t('settings.screens.selected') : '' }}
+            <i
+              v-if="selectedSlot !== String(slot)"
+              class="ti ti-player-play"
+              aria-hidden="true"
+            />
+          </button>
+        </li>
+      </ul>
+
+      <p class="screens-card__foot-hint">
+        {{ t('settings.screens.moduleHint') }}
+      </p>
+
+      <!-- Roteamento por módulo (Espelhar / tela individual) -->
+      <ul class="screens-card__routes">
+        <li
+          v-for="module in modules"
+          :key="module"
+          class="screens-card__route"
+        >
+          <span class="screens-card__route-label">
+            {{ t(`settings.screens.modules.${moduleLabelKeys[module]}`) }}
+          </span>
+          <select
+            class="screens-card__route-select"
+            :value="routeOf(module)"
+            :aria-label="t('settings.screens.routeAria', { module: t(`settings.screens.modules.${moduleLabelKeys[module]}`) })"
+            @change="onRouteChange(module, $event)"
+          >
+            <option value="mirror">
+              {{ t('settings.screens.mirror') }}
+            </option>
+            <option
+              v-for="slot in slotsList"
+              :key="slot"
+              :value="String(slot)"
+            >
+              {{ screenLabel(slot) }}
+            </option>
+          </select>
+        </li>
+      </ul>
+    </div>
+
     <p
-      v-if="popupCount === 0"
+      v-else
       class="screens-card__hint"
     >
       {{ t('settings.screens.noPopups') }}
     </p>
 
-    <ul
-      v-else
-      class="screens-card__routes"
-    >
-      <li
-        v-for="module in modules"
-        :key="module"
-        class="screens-card__route"
-      >
-        <span class="screens-card__route-label">
-          {{ t(`settings.screens.modules.${moduleLabelKeys[module]}`) }}
-        </span>
-        <select
-          class="screens-card__route-select"
-          :value="routeOf(module)"
-          :aria-label="t('settings.screens.routeAria', { module: t(`settings.screens.modules.${moduleLabelKeys[module]}`) })"
-          @change="onRouteChange(module, $event)"
-        >
-          <option value="mirror">
-            {{ t('settings.screens.routeMirror') }}
-          </option>
-          <option
-            v-for="slot in popupCount"
-            :key="slot"
-            :value="String(slot)"
-          >
-            {{ slotLabel(slot) }}
-          </option>
-        </select>
-      </li>
-    </ul>
-
     <p class="screens-card__note">
-      {{ t('settings.screens.routeHint') }}
+      {{ t('settings.screens.localNote') }}
     </p>
-
-    <!-- ═══ Separador ═══ -->
-    <div
-      class="screens-card__divider"
-      role="separator"
-    />
-
-    <!-- ═══ Seção 2: TVs reais — opcional, via desktop ═══ -->
-    <button
-      type="button"
-      class="screens-card__tv-toggle"
-      :aria-expanded="tvOpen"
-      @click="tvOpen = !tvOpen"
-    >
-      <i class="ti ti-device-tv" aria-hidden="true" />
-      <span class="screens-card__tv-title">{{ t('settings.palco.tvs') }}</span>
-      <span
-        class="screens-card__tv-badge"
-        :class="{ 'screens-card__tv-badge--on': connected }"
-      >
-        {{ connected ? t('settings.palco.desktopConnected') : t('settings.palco.desktopOffline') }}
-      </span>
-      <i
-        class="ti ti-chevron-down screens-card__tv-chevron"
-        :class="{ 'screens-card__tv-chevron--open': tvOpen }"
-        aria-hidden="true"
-      />
-    </button>
-
-    <div
-      v-if="tvOpen"
-      class="screens-card__tv-body"
-    >
-      <p class="screens-card__tv-hint">
-        {{ connected
-          ? t('settings.screens.tvConnectedHint')
-          : t('settings.screens.tvOfflineHint') }}
-      </p>
-
-      <template v-if="connected">
-        <div class="screens-card__summary">
-          <span>{{ t('settings.palco.senderStatus') }}:</span>
-          <strong>{{ status?.running ? t('settings.palco.senderOn') : t('settings.palco.senderOff') }}</strong>
-          <span v-if="status?.running">· {{ clientsLabel(status.clients) }}</span>
-          <span class="screens-card__actions">
-            <button
-              type="button"
-              class="screens-card__btn screens-card__btn--primary"
-              :disabled="toggling"
-              @click="togglePalco"
-            >
-              {{ status?.running ? t('settings.palco.actionOff') : t('settings.palco.actionOn') }}
-            </button>
-            <button
-              v-if="status?.running"
-              type="button"
-              class="screens-card__btn"
-              :disabled="toggling"
-              @click="goIdle"
-            >
-              {{ t('settings.palco.actionIdle') }}
-            </button>
-          </span>
-        </div>
-
-        <ul class="screens-card__slots">
-          <li
-            v-for="slot in slots"
-            :key="slot.id"
-            class="screens-card__slot"
-          >
-            <span class="screens-card__slot-label">{{ slot.label }}</span>
-            <span
-              class="screens-card__slot-state"
-              :class="{ 'screens-card__slot-state--on': slot.running }"
-            >
-              {{ slot.running ? t('settings.palco.slotOn') : t('settings.palco.slotOff') }}
-            </span>
-            <span
-              v-if="slot.running"
-              class="screens-card__slot-clients"
-            >
-              {{ clientsLabel(slot.clients) }}
-            </span>
-          </li>
-        </ul>
-
-        <p
-          v-if="!slots.length && !loading"
-          class="screens-card__hint"
-        >
-          {{ t('settings.palco.noSlots') }}
-        </p>
-      </template>
-
-      <p
-        v-else
-        class="screens-card__hint"
-      >
-        {{ t('settings.screens.tvHowTo') }}
-      </p>
-
-      <p
-        v-if="lastError"
-        class="screens-card__error"
-        role="alert"
-      >
-        {{ lastError }}
-      </p>
-    </div>
   </GlassCard>
 </template>
 
@@ -315,7 +179,7 @@ function clientsLabel(count: number): string {
 .screens-card {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.9rem;
   padding: 1.5rem;
 
   @media (max-width: 900px) {
@@ -325,18 +189,28 @@ function clientsLabel(count: number): string {
 
 .screens-card__header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.screens-card__heading {
+  display: flex;
+  align-items: center;
   gap: 0.75rem;
 }
 
 .screens-card__icon {
-  font-size: 1.4rem;
-  color: var(--ds-color-primary, #2196f3);
-}
-
-.screens-card__heading {
-  flex: 1;
-  min-width: 0;
+  width: 2.4rem;
+  height: 2.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  background: rgb(245 158 11 / 0.12);
+  color: #f59e0b;
+  font-size: 1.3rem;
+  flex-shrink: 0;
 }
 
 .screens-card__title {
@@ -345,16 +219,109 @@ function clientsLabel(count: number): string {
   font-weight: 600;
 }
 
-.screens-card__desc {
-  margin: 0.15rem 0 0;
+.screens-card__subtitle {
+  margin: 0.1rem 0 0;
   font-size: 0.8rem;
   color: rgb(255 255 255 / 0.6);
 }
 
-.screens-card__hint {
+.screens-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.screens-card__list-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.screens-card__list-title {
   margin: 0;
-  font-size: 0.8rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.screens-card__list-hint {
+  margin: 0.1rem 0 0;
+  font-size: 0.78rem;
   color: rgb(255 255 255 / 0.55);
+}
+
+.screens-card__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.screens-card__item {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.65rem 0 0.65rem 0;
+  background: rgb(255 255 255 / 0.04);
+  border: 1px solid transparent;
+
+  &--selected {
+    background: rgb(245 158 11 / 0.07);
+    border-color: rgb(245 158 11 / 0.35);
+  }
+}
+
+.screens-card__dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.25);
+  flex-shrink: 0;
+}
+
+.screens-card__item-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.screens-card__item-name {
+  font-weight: 600;
+  font-size: 0.86rem;
+}
+
+.screens-card__item-sub {
+  font-size: 0.74rem;
+  color: rgb(255 255 255 / 0.5);
+}
+
+.screens-card__select-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border: none;
+  background: transparent;
+  color: #f59e0b;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.25rem 0.4rem;
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.9;
+  }
+}
+
+.screens-card__foot-hint {
+  margin: 0;
+  font-size: 0.74rem;
+  color: rgb(255 255 255 / 0.45);
 }
 
 .screens-card__routes {
@@ -363,17 +330,17 @@ function clientsLabel(count: number): string {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.35rem;
 }
 
 .screens-card__route {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  padding: 0.45rem 0.65rem;
-  border-radius: 0.65rem 0 0.65rem 0;
-  background: rgb(255 255 255 / 0.045);
-  font-size: 0.84rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.6rem 0 0.6rem 0;
+  background: rgb(255 255 255 / 0.035);
+  font-size: 0.82rem;
 }
 
 .screens-card__route-label {
@@ -388,159 +355,19 @@ function clientsLabel(count: number): string {
   background: rgb(20 20 20 / 0.9);
   color: #fff;
   font-size: 0.78rem;
-  padding: 0.3rem 0.5rem;
+  padding: 0.28rem 0.5rem;
   cursor: pointer;
+}
+
+.screens-card__hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: rgb(255 255 255 / 0.55);
 }
 
 .screens-card__note {
   margin: 0;
   font-size: 0.72rem;
-  color: rgb(255 255 255 / 0.45);
-}
-
-.screens-card__divider {
-  height: 1px;
-  background: rgb(255 255 255 / 0.08);
-  margin: 0.25rem 0;
-}
-
-.screens-card__tv-toggle {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  width: 100%;
-  border: none;
-  background: transparent;
-  color: #fff;
-  font-size: 0.88rem;
-  font-weight: 500;
-  cursor: pointer;
-  padding: 0.25rem 0;
-  text-align: left;
-}
-
-.screens-card__tv-title {
-  flex: 1;
-}
-
-.screens-card__tv-badge {
-  padding: 0.15rem 0.55rem;
-  border-radius: 999px;
-  font-size: 0.68rem;
-  font-weight: 600;
-  background: rgb(158 158 158 / 0.16);
-  color: rgb(255 255 255 / 0.55);
-}
-
-.screens-card__tv-badge--on {
-  background: rgb(76 175 80 / 0.18);
-  color: #81c784;
-}
-
-.screens-card__tv-chevron {
-  transition: transform 0.2s ease;
-}
-
-.screens-card__tv-chevron--open {
-  transform: rotate(180deg);
-}
-
-.screens-card__tv-body {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  padding-left: 1.4rem;
-}
-
-.screens-card__tv-hint {
-  margin: 0;
-  font-size: 0.78rem;
-  color: rgb(255 255 255 / 0.55);
-}
-
-.screens-card__summary {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.82rem;
-  color: rgb(255 255 255 / 0.72);
-}
-
-.screens-card__actions {
-  display: inline-flex;
-  gap: 0.4rem;
-  margin-left: auto;
-}
-
-.screens-card__btn {
-  border: 1px solid rgb(255 255 255 / 0.18);
-  border-radius: 999px;
-  padding: 0.3rem 0.85rem;
-  background: transparent;
-  color: #fff;
-  font-size: 0.76rem;
-  font-weight: 600;
-  cursor: pointer;
-
-  &:hover:not(:disabled) {
-    background: rgb(255 255 255 / 0.08);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: default;
-  }
-}
-
-.screens-card__btn--primary {
-  background: var(--ds-color-primary, #2196f3);
-  border-color: transparent;
-}
-
-.screens-card__slots {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.screens-card__slot {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.5rem 0.65rem;
-  border-radius: 0.65rem 0 0.65rem 0;
-  background: rgb(255 255 255 / 0.045);
-  font-size: 0.82rem;
-}
-
-.screens-card__slot-label {
-  flex: 1;
-  min-width: 0;
-  font-weight: 500;
-}
-
-.screens-card__slot-state {
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: rgb(255 255 255 / 0.5);
-}
-
-.screens-card__slot-state--on {
-  color: #81c784;
-}
-
-.screens-card__slot-clients {
-  font-size: 0.74rem;
-  color: rgb(255 255 255 / 0.6);
-}
-
-.screens-card__error {
-  margin: 0;
-  font-size: 0.78rem;
-  color: #ef9a9a;
+  color: rgb(255 255 255 / 0.4);
 }
 </style>
