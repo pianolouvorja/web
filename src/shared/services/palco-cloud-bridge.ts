@@ -20,9 +20,16 @@ let lastRelayModule: string | null = null
  * WT-5 exclusividade: a TV mostra UM módulo por vez (padrão do palco).
  * Ao publicar um módulo diferente do ativo, manda idle ANTES — o conteúdo
  * anterior sai da tela sem o operador precisar desligar (esquecidinhos).
+ * Clock: publica só se for o módulo ativo — ele emite a cada segundo e
+ * sobrescreveria o sorteio/hino da TV (caso real 01/09: '88' apagado).
  */
 export function publishToStageRelay(moduleId: string, payload: unknown): void {
   try {
+    const isActive = moduleId === lastRelayModule
+    if (!isActive && moduleId === 'clock' && lastRelayModule && lastRelayModule !== 'clock') {
+      // clock não é o módulo em projeção: ignorar — senão apaga o que está na TV
+      return
+    }
     if (lastRelayModule && lastRelayModule !== moduleId) {
       publish({ v: 2, type: 'idle', msg: '' })
     }
