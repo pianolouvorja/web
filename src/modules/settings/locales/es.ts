@@ -266,8 +266,6 @@ export default {
       cloudConnect: 'Conectar a la nube',
       cloudCreate: 'Crear sesión',
       cloudCodeLabel: 'Código de sesión — ingrésalo en el TV (botón rojo)',
-      cloudHowTo: 'El TV entra solo con este código. Aparece en pantalla al conectar.',
-      cloudQrAlt: 'Código QR con el enlace del receiver cloud',
       cloudEnd: 'Cerrar sesión cloud',
       cloudHint: '¿Sin desktop? Ingresa el código de sesión para proyectar vía nube.',
       tvHowTo: 'Conecta una TV con el receiver LouvorJA en la misma red.',

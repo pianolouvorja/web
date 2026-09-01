@@ -198,8 +198,6 @@ export default {
       cloudConnect: 'Conectar à nuvem',
       cloudCreate: 'Criar sessão',
       cloudCodeLabel: 'Código da sessão — digite na TV (tecla vermelha)',
-      cloudHowTo: 'A TV entra sozinha com esse código. Ela aparece no telão quando conectar.',
-      cloudQrAlt: 'QR code com o link do receiver cloud',
       cloudEnd: 'Encerrar sessão cloud',
       cloudHint: 'Sem desktop? Digite o código da sessão para projetar via nuvem.',
       addTv: 'Adicionar TV',

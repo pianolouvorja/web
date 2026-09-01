@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute, useRouter } from 'vue-router'
 
 import { GlassCard } from '@design-system/index'
 
@@ -48,15 +49,33 @@ const tvError = ref('')
 const relay = useStageRelay()
 const cloudInput = ref('')
 const cloudMode = computed(() => !desktopConnected.value)
-// WT-5 (criar sessão): web gera o código — TV só consome.
+// WT-5 (criar sessão): web gera o código — TV só consome. Com o fluxo
+// streaming a TV também pode criar (OK vazio) e mostrar o QR dela; aqui
+// fica só o criar manual + encerrar.
 const creatingSession = ref(false)
-const cloudQr = ref('')
 
 async function connectCloud(): Promise<void> {
   tvError.value = ''
   const ok = await relay.attachCode(cloudInput.value)
   if (!ok) tvError.value = t('settings.palco.statusError')
 }
+
+// WT-5 fluxo streaming: a TV mostra QR apontando pra cá (?palco=CODE).
+// Operador escaneia → web conecta como operator direto, zero digitação.
+const route = useRoute()
+const router = useRouter()
+void watch(
+  () => route.query.palco,
+  async (code) => {
+    if (typeof code !== 'string' || code.length !== 6) return
+    cloudInput.value = code.toUpperCase()
+    await connectCloud()
+    if (relay.connected.value) {
+      void router.replace({ query: { ...route.query, palco: undefined } })
+    }
+  },
+  { immediate: true },
+)
 
 async function createSession(): Promise<void> {
   tvError.value = ''
@@ -68,27 +87,6 @@ async function createSession(): Promise<void> {
     creatingSession.value = false
   }
 }
-
-// QR com a URL do receiver cloud — aponta a câmera do celular ou informa o
-// caminho; na TV o código se digita no overlay da tecla vermelha.
-watch(
-  () => [relay.connected.value, relay.code.value] as const,
-  async ([on, c]) => {
-    cloudQr.value = ''
-    if (!on || !c) return
-    try {
-      const { default: QRCode } = await import('qrcode')
-      const api = import.meta.env.DEV
-        ? 'http://localhost:5173'
-        : window.location.origin
-      cloudQr.value = await QRCode.toDataURL(`${api}/palco-receiver?code=${c}`, {
-        width: 132,
-        margin: 1,
-      })
-    } catch { /* QR é melhor-effort — código em texto sempre visível */ }
-  },
-  { immediate: true },
-)
 
 async function refreshTvs(): Promise<void> {
   if (tvLoading.value) return
@@ -309,21 +307,14 @@ onUnmounted(() => {
         </button>
       </div>
 
-      <!-- Sessão cloud ativa: código grande + QR pra digitar/scanear na TV -->
+      <!-- Sessão cloud ativa: código visível + encerrar (QR fica na TV) -->
       <div
         v-if="cloudMode && relay.connected.value && relay.code.value"
         class="palco-slots-card__cloud-active"
       >
-        <img
-          v-if="cloudQr"
-          :src="cloudQr"
-          :alt="t('settings.palco.cloudQrAlt')"
-          class="palco-slots-card__cloud-qr"
-        >
         <div class="palco-slots-card__cloud-info">
           <small>{{ t('settings.palco.cloudCodeLabel') }}</small>
           <strong class="palco-slots-card__cloud-code">{{ relay.code.value }}</strong>
-          <small>{{ t('settings.palco.cloudHowTo') }}</small>
         </div>
         <button
           type="button"
@@ -436,7 +427,6 @@ onUnmounted(() => {
 .palco-slots-card__cloud{display:flex;gap:8px;align-items:center;margin:8px 0}
 .palco-slots-card__cloud-input{width:110px;padding:8px 10px;border-radius:8px;border:1px solid var(--glass-border,rgba(255,255,255,.2));background:transparent;color:inherit;font:inherit;text-transform:uppercase;letter-spacing:3px;text-align:center}
 .palco-slots-card__cloud-active{display:flex;gap:14px;align-items:center;margin:10px 0;padding:12px 14px;border-radius:12px;border:1px solid var(--glass-border,rgba(255,255,255,.15));background:rgba(255,255,255,.04)}
-.palco-slots-card__cloud-qr{width:96px;height:96px;border-radius:8px;background:#fff;padding:4px;flex-shrink:0}
 .palco-slots-card__cloud-info{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
 .palco-slots-card__cloud-info small{font-size:.72rem;opacity:.7;color:var(--ds-color-on-surface-variant)}
 .palco-slots-card__cloud-code{font-size:1.6rem;font-weight:800;letter-spacing:.35em;color:var(--ds-color-primary);line-height:1.2}
