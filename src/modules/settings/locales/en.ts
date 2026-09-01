@@ -197,6 +197,7 @@ export default {
     },
     palco: {
       tvsPlain: 'Stage TVs',
+      tvHowTo: 'Connect a TV with the LouvorJA receiver on the same network.',
       addTv: 'Add TV',
       mainTv: 'Main TV',
       connected: '{count} TV connected',

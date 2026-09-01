@@ -196,6 +196,7 @@ export default {
     },
     palco: {
       tvsPlain: 'TVs del Escenario',
+      tvHowTo: 'Conecta una TV con el receiver LouvorJA en la misma red.',
       addTv: 'Agregar TV',
       mainTv: 'TV principal',
       connected: '{count} TV conectada',

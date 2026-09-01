@@ -281,7 +281,7 @@ onUnmounted(() => {
         v-else
         class="palco-slots-card__hint"
       >
-        {{ t('settings.screens.tvHowTo') }}
+        {{ t('settings.palco.tvHowTo') }}
       </p>
       <p
         v-if="tvError"
