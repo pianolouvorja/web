@@ -80,7 +80,23 @@ function applyModule(value: unknown) {
   moduleId.value = typeof value === 'string' ? value : ''
 }
 
+/**
+ * Módulo desta popup. Se a URL trouxe ?module=, a popup é DEDICADA — não
+ * segue o módulo global (roteamento por tela: hinos numa, bíblia noutra).
+ * Sem query, comporta-se como popup espelho (segue o storage global).
+ */
+const dedicatedModule = (() => {
+  const fromQuery = route.query.module
+  return typeof fromQuery === 'string' && fromQuery.length > 0 ? fromQuery : null
+})()
+
 function refreshModule() {
+  // Popup dedicada (?module= na URL): módulo é imutável.
+  if (dedicatedModule) {
+    applyModule(dedicatedModule)
+    return
+  }
+
   // Storage é a fonte de verdade (inclui limpar com ''). Query só no boot.
   const stored = getBrowserItem<string>(BROWSER_STORAGE_KEYS.popupModule, null)
   if (typeof stored === 'string') {
@@ -161,7 +177,7 @@ function handleMessage(event: MessageEvent) {
     return
   }
 
-  if ('param' in data && data.param === 'popup_module') {
+  if ('param' in data && data.param === 'popup_module' && !dedicatedModule) {
     applyModule(data.value)
   }
 }
@@ -176,7 +192,7 @@ function onChannelMessage(
     closeThisScreenIfNeeded()
     return
   }
-  if ('param' in data && data.param === 'popup_module') {
+  if ('param' in data && data.param === 'popup_module' && !dedicatedModule) {
     applyModule(data.value)
   }
 }
