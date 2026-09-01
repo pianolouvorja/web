@@ -179,6 +179,7 @@ export default {
       routeAria: 'Destino de projeção de {module}',
       noPopups: 'Nenhuma tela aberta. Use o botão de projetar em um módulo (hinos, bíblia...) para abrir as telas.',
       localNote: 'As telas funcionam neste navegador, sem precisar de mais nada.',
+      tvHowTo: 'Conecte uma TV com o receiver LouvorJA na mesma rede.',
       modules: {
         bible: 'Bíblia',
         media: 'Hinos',
@@ -191,6 +192,7 @@ export default {
     },
     palco: {
       tvsPlain: 'TVs do Palco',
+      tvHowTo: 'Conecte uma TV com o receiver LouvorJA na mesma rede.',
       addTv: 'Adicionar TV',
       mainTv: 'TV principal',
       connected: '{count} TV conectada',
