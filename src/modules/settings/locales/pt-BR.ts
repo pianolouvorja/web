@@ -179,8 +179,7 @@ export default {
       routeAria: 'Destino de projeção de {module}',
       noPopups: 'Nenhuma tela aberta. Use o botão de projetar em um módulo (hinos, bíblia...) para abrir as telas.',
       localNote: 'As telas funcionam neste navegador, sem precisar de mais nada.',
-      cloudConnect: 'Conectar à nuvem',
-      cloudHint: 'Sem desktop? Digite o código da sessão para projetar via nuvem.',
+      // cloudConnect/cloudHint moram em palco: (componente usa settings.palco.*)
       tvHowTo: 'Conecte uma TV com o receiver LouvorJA na mesma rede.',
       modules: {
         bible: 'Bíblia',
@@ -194,7 +193,10 @@ export default {
     },
     palco: {
       tvsPlain: 'TVs do Palco',
+      tv: 'TV',
       tvHowTo: 'Conecte uma TV com o receiver LouvorJA na mesma rede.',
+      cloudConnect: 'Conectar à nuvem',
+      cloudHint: 'Sem desktop? Digite o código da sessão para projetar via nuvem.',
       addTv: 'Adicionar TV',
       mainTv: 'TV principal',
       connected: '{count} TV conectada',

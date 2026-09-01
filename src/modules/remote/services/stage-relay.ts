@@ -48,7 +48,9 @@ export interface StageRelayState {
 const connected = ref(false)
 const code = ref<string | null>(null)
 let ws: WebSocket | null = null
-let apiBase = '/v1/palco'
+let apiBase = import.meta.env.DEV
+  ? 'http://localhost:3100/v1/palco'
+  : '/v1/palco'
 let keepalive: ReturnType<typeof setInterval> | null = null
 let lastState: PalcoStatusInfo | null = null
 let receivers = 0
