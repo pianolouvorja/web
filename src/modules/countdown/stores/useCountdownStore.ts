@@ -10,7 +10,9 @@ import {
 import {
   computeElapsedMs,
   computeRemainingMs,
+  formatElapsedMs,
 } from '../services/countdown-format'
+import { publishToStageRelay } from '@shared/services/palco-cloud-bridge'
 import {
   loadCountdownDisplayConfig,
   saveCountdownDisplayConfig,
@@ -108,6 +110,15 @@ export const useCountdownStore = defineStore('countdown', () => {
 
   function syncRuntime() {
     publishCountdownRuntime(runtime.value)
+    // WT-5: restante formatado vai pro relay (best-effort, no-op sem sessão).
+    const remaining = computeRemainingMs(
+      runtime.value.durationMs,
+      runtime.value.accumulatedMs,
+      runtime.value.segmentStartedAt,
+      runtime.value.status,
+      Date.now(),
+    )
+    publishToStageRelay('countdown', { display: formatElapsedMs(remaining, config.value.timeFormat) })
   }
 
   function hydrate() {

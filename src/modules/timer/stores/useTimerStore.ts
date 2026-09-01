@@ -7,7 +7,8 @@ import {
   openPopupModule,
 } from '@shared/services/popup-windows'
 
-import { computeElapsedMs } from '../services/timer-format'
+import { computeElapsedMs, formatElapsedMs } from '../services/timer-format'
+import { publishToStageRelay } from '@shared/services/palco-cloud-bridge'
 import {
   loadTimerDisplayConfig,
   saveTimerDisplayConfig,
@@ -57,6 +58,12 @@ export const useTimerStore = defineStore('timer', () => {
 
   function syncRuntime() {
     publishTimerRuntime(runtime.value)
+    // WT-5: display formatado vai pro relay (best-effort, no-op sem sessão).
+    const display = formatElapsedMs(
+      computeElapsedMs(runtime.value.accumulatedMs, runtime.value.segmentStartedAt, runtime.value.status, Date.now()),
+      config.value.timeFormat,
+    )
+    publishToStageRelay('timer', { display })
   }
 
   function hydrate() {

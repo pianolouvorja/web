@@ -11,13 +11,18 @@ describe('toReceiverMessage', () => {
     })
   })
 
-  it('serializa mídia sem footerRef de versículo', () => {
-    expect(toReceiverMessage('media', { title: 'Santo, Santo, Santo', artist: 'Hinário Adventista' })).toEqual({
+  it('serializa hino ativo: letra no text, título no footer (paridade receiver TV)', () => {
+    expect(toReceiverMessage('media', { active: true, title: 'Santo, Santo, Santo', lyric: 'Senhor Deus dos exércitos', subtitle: '' })).toEqual({
       v: 2,
       type: 'projection',
-      text: 'Santo, Santo, Santo',
-      footer: 'Hinário Adventista',
+      text: 'Senhor Deus dos exércitos',
+      footer: 'Santo, Santo, Santo',
     })
+  })
+
+  it('mídia inativa/sem letra → idle no receiver', () => {
+    expect(toReceiverMessage('media', { active: false, title: 'X', lyric: 'Y' })?.type).toBe('idle')
+    expect(toReceiverMessage('media', { active: true, title: 'X', lyric: '  ' })?.type).toBe('idle')
   })
 
   it('serializa relógio como timer', () => {

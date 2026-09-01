@@ -1,5 +1,6 @@
 import { emptySelection } from './scripture-format'
 import type { BibleSelection } from '../types/bible'
+import { publishToStageRelay } from '@shared/services/palco-cloud-bridge'
 
 export const BIBLE_RUNTIME_CHANNEL = 'louvorja-bible-runtime'
 export const BIBLE_RUNTIME_STORAGE_KEY = 'louvorja-bible-runtime-state'
@@ -74,6 +75,9 @@ export function publishBibleRuntime(state: BibleProjectionRuntime): void {
   } catch {
     // BroadcastChannel pode não existir em ambientes antigos
   }
+
+  // WT-5: espelha no relay cloud (no-op sem sessão ativa)
+  publishToStageRelay('bible', state)
 }
 
 export function publishBibleSelection(selection: BibleSelection = emptySelection()): void {
