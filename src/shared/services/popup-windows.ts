@@ -12,6 +12,7 @@ import {
   scheduleRestoreOnWindow,
 } from '@shared/services/popup-layout'
 import { getPopupCount, getTargetPopupSlots } from '@shared/services/projection-preferences'
+import { getPopupRoute, POPUP_ROUTABLE_MODULES, type PopupRoutableModule } from './popup-routing'
 import {
   getBrowserItem,
   setBrowserItem,
@@ -345,13 +346,26 @@ export async function openPopupModule(
   // Define o módulo antes de abrir, para a popup ler no boot (URL + storage).
   setActiveModule(moduleId)
 
+  // Roteamento por módulo (paridade palco-routing do desktop): sem override
+  // explícito, módulo com rota individual projeta SÓ no slot designado.
+  let effectiveSlots = options?.slots
+  if (!effectiveSlots && (POPUP_ROUTABLE_MODULES as readonly string[]).includes(moduleId)) {
+    const route = getPopupRoute(moduleId as PopupRoutableModule)
+    if (route !== 'mirror') {
+      const slot = Number.parseInt(route, 10)
+      if (!Number.isNaN(slot) && slot >= 1 && slot <= getPopupCount()) {
+        effectiveSlots = [slot]
+      }
+    }
+  }
+
   // Inicia a solicitação ainda no gesto do operador. NÃO await: window.open
   // também exige esse gesto e a Promise resolve depois para restaurar o monitor.
   const windowManagementPermission = requestWindowManagementPermission()
 
   // Critical: window.open precisa ocorrer ainda no gesto do usuário.
   // NÃO await antes de ensurePopups — browsers bloqueiam popup após await.
-  const popups = ensurePopups(moduleId, options?.slots)
+  const popups = ensurePopups(moduleId, effectiveSlots)
   if (popups.length === 0) {
     if (!isLiturgyControlOpen()) setActiveModule('')
     return false

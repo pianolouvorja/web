@@ -29,6 +29,15 @@ vi.mock('@shared/services/projection-preferences', () => ({
   getTargetPopupSlots: mocks.getTargetPopupSlots,
 }))
 
+const routingMocks = vi.hoisted(() => ({
+  getPopupRoute: vi.fn(() => 'mirror'),
+}))
+
+vi.mock('../popup-routing', () => ({
+  POPUP_ROUTABLE_MODULES: ['bible', 'media', 'liturgy-web', 'random', 'clock', 'timer', 'countdown'],
+  getPopupRoute: routingMocks.getPopupRoute,
+}))
+
 vi.mock('@shared/services/browser-storage', () => ({
   getBrowserItem: mocks.getBrowserItem,
   setBrowserItem: mocks.setBrowserItem,
@@ -58,7 +67,7 @@ describe('openPopupModule > Window Management', () => {
   })
 
   it('solicita Window Management antes de abrir a popup para preservar o gesto do operador', async () => {
-    const popup = { closed: false, name: 'PopupWindow1', focus: vi.fn(), postMessage: vi.fn() } as unknown as Window
+    const popup = { closed: false, close: vi.fn(), name: 'PopupWindow1', focus: vi.fn(), postMessage: vi.fn() } as unknown as Window
     const open = vi.spyOn(window, 'open').mockReturnValue(popup)
 
     await openPopupModule('media')
@@ -71,4 +80,24 @@ describe('openPopupModule > Window Management', () => {
 
     open.mockRestore()
   })
+
+  it('rota individual do módulo abre popup dedicada no slot designado', async () => {
+    routingMocks.getPopupRoute.mockReturnValue('2')
+    mocks.getPopupCount.mockReturnValue(2)
+
+    const popup = { closed: false, close: vi.fn(), name: 'PopupWindow2', focus: vi.fn(), postMessage: vi.fn() } as unknown as Window
+    const open = vi.spyOn(window, 'open').mockImplementation((url) => {
+      expect(String(url)).toContain('module=media')
+      expect(String(url)).toContain('slot=2')
+      return popup
+    })
+
+    await openPopupModule('media')
+
+    expect(open).toHaveBeenCalledOnce()
+
+    open.mockRestore()
+    routingMocks.getPopupRoute.mockReturnValue('mirror')
+  })
+
 })
