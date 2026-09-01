@@ -4,12 +4,6 @@ import { useI18n } from 'vue-i18n'
 
 import { GlassCard } from '@design-system/index'
 
-import {
-  POPUP_ROUTABLE_MODULES,
-  getPopupRoute,
-  setPopupRoute,
-  type PopupRoutableModule,
-} from '@shared/services/popup-routing'
 import { getPopupCount, setPopupCount } from '@shared/services/projection-preferences'
 import { getPopupRefs } from '@shared/services/popup-registry'
 import { closeScreenPopups, openPopupModule } from '@shared/services/popup-windows'
@@ -66,26 +60,6 @@ function toggleSlot(slotId: string): void {
   } else {
     void openPopupModule('media', { slots: [n] })
   }
-}
-
-const modules: PopupRoutableModule[] = [...POPUP_ROUTABLE_MODULES]
-
-const moduleLabelKeys: Record<PopupRoutableModule, string> = {
-  bible: 'bible',
-  media: 'media',
-  'liturgy-web': 'liturgy',
-  random: 'random',
-  clock: 'clock',
-  timer: 'timer',
-  countdown: 'countdown',
-}
-
-function routeOf(module: PopupRoutableModule): string {
-  return getPopupRoute(module)
-}
-
-function onRouteChange(module: PopupRoutableModule, event: Event): void {
-  setPopupRoute(module, (event.target as HTMLSelectElement).value)
 }
 
 let timer: ReturnType<typeof setInterval> | null = null
@@ -173,31 +147,6 @@ onUnmounted(() => {
       {{ t('settings.screens.moduleHint') }}
     </p>
 
-    <!-- Roteamento por módulo (Espelhar todas / tela individual) -->
-    <div class="palco-slots-card__routes">
-      <label
-        v-for="module in modules"
-        :key="module"
-        class="palco-slots-card__route"
-      >
-        <span>{{ t(`settings.screens.modules.${moduleLabelKeys[module]}`) }}</span>
-        <select
-          :value="routeOf(module)"
-          @change="onRouteChange(module, $event)"
-        >
-          <option value="mirror">
-            {{ t('settings.screens.mirror') }}
-          </option>
-          <option
-            v-for="slot in slots"
-            :key="slot.id"
-            :value="slot.id"
-          >
-            {{ slot.id === '1' ? t('settings.screens.mainScreen') : t('settings.screens.screenN', { n: slot.id }) }}
-          </option>
-        </select>
-      </label>
-    </div>
 
     <p class="palco-slots-card__foot">
       {{ t('settings.screens.localNote') }}
@@ -226,9 +175,6 @@ onUnmounted(() => {
 .palco-slot__remove:hover { color:#e65c66; }
 .palco-slots-card__note { padding:0 1.25rem .5rem; font-size:.75rem; color:var(--ds-color-on-surface-variant); }
 
-.palco-slots-card__routes { display:flex; flex-direction:column; gap:.35rem; padding:0 1.25rem .75rem; }
-.palco-slots-card__route { display:flex; align-items:center; justify-content:space-between; gap:.6rem; font-size:.78rem; color:var(--ds-color-on-surface); }
-.palco-slots-card__route select { max-width:9.5rem; padding:.28rem .45rem; border:1px solid color-mix(in srgb,var(--ds-color-on-surface) 18%,transparent); border-radius:.4rem 0 .4rem 0; background:var(--ds-color-surface); color:var(--ds-color-on-surface); font-size:.72rem; cursor:pointer; }
 
 .palco-slots-card__foot { padding:0 1.25rem 1rem; font-size:.7rem; color:var(--ds-color-on-surface-variant); opacity:.75; }
 </style>
