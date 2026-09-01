@@ -58,6 +58,27 @@ describe('stage-relay (WT-5c)', () => {
     expect(await relay.attachCode('ZZZZZZ')).toBe(false) // token 404
   })
 
+  it('createSession cria sessão na API e conecta como operator', async () => {
+    fetchMock.mockImplementationOnce(async () =>
+      ({ ok: true, json: async () => ({ code: 'XYZ789' }) }) as Response)
+    fetchMock.mockImplementationOnce(async () =>
+      ({ ok: true, json: async () => ({ token: 'tok-xyz' }) }) as Response)
+    expect(await relay.createSession()).toBe(true)
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/sessions'),
+      expect.objectContaining({ method: 'POST' }),
+    )
+    FakeWebSocket.instances[0].serverOpen()
+    expect(relay.connected.value).toBe(true)
+    expect(relay.code.value).toBe('XYZ789')
+  })
+
+  it('createSession falha graciosamente se a API não cria a sessão', async () => {
+    fetchMock.mockImplementationOnce(async () => ({ ok: false, json: async () => ({}) }) as Response)
+    expect(await relay.createSession()).toBe(false)
+    expect(FakeWebSocket.instances).toHaveLength(0)
+  })
+
   it('onopen conecta e expõe o código', async () => {
     await relay.attachCode('ABC234')
     const sock = FakeWebSocket.instances[0]

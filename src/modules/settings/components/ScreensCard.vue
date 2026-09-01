@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { GlassCard } from '@design-system/index'
@@ -48,12 +48,47 @@ const tvError = ref('')
 const relay = useStageRelay()
 const cloudInput = ref('')
 const cloudMode = computed(() => !desktopConnected.value)
+// WT-5 (criar sessão): web gera o código — TV só consome.
+const creatingSession = ref(false)
+const cloudQr = ref('')
 
 async function connectCloud(): Promise<void> {
   tvError.value = ''
   const ok = await relay.attachCode(cloudInput.value)
   if (!ok) tvError.value = t('settings.palco.statusError')
 }
+
+async function createSession(): Promise<void> {
+  tvError.value = ''
+  creatingSession.value = true
+  try {
+    const ok = await relay.createSession()
+    if (!ok) tvError.value = t('settings.palco.statusError')
+  } finally {
+    creatingSession.value = false
+  }
+}
+
+// QR com a URL do receiver cloud — aponta a câmera do celular ou informa o
+// caminho; na TV o código se digita no overlay da tecla vermelha.
+watch(
+  () => [relay.connected.value, relay.code.value] as const,
+  async ([on, c]) => {
+    cloudQr.value = ''
+    if (!on || !c) return
+    try {
+      const { default: QRCode } = await import('qrcode')
+      const api = import.meta.env.DEV
+        ? 'http://localhost:5173'
+        : window.location.origin
+      cloudQr.value = await QRCode.toDataURL(`${api}/palco-receiver?code=${c}`, {
+        width: 132,
+        margin: 1,
+      })
+    } catch { /* QR é melhor-effort — código em texto sempre visível */ }
+  },
+  { immediate: true },
+)
 
 async function refreshTvs(): Promise<void> {
   if (tvLoading.value) return
@@ -243,11 +278,21 @@ onUnmounted(() => {
         </button>
       </div>
 
-      <!-- Modo cloud: input do código da sessão -->
+      <!-- Modo cloud: sem código → criar sessão (gera o código) ou conectar
+           numa existente. Com código ativo → exibir código + QR pra TV. -->
       <div
         v-if="cloudMode && !relay.connected.value"
         class="palco-slots-card__cloud"
       >
+        <button
+          type="button"
+          class="palco-slots-card__add"
+          :disabled="creatingSession"
+          @click="createSession"
+        >
+          <i class="ti ti-qrcode" aria-hidden="true" />
+          {{ t('settings.palco.cloudCreate') }}
+        </button>
         <input
           v-model="cloudInput"
           class="palco-slots-card__cloud-input"
@@ -261,6 +306,32 @@ onUnmounted(() => {
           @click="connectCloud"
         >
           {{ t('settings.palco.cloudConnect') }}
+        </button>
+      </div>
+
+      <!-- Sessão cloud ativa: código grande + QR pra digitar/scanear na TV -->
+      <div
+        v-if="cloudMode && relay.connected.value && relay.code.value"
+        class="palco-slots-card__cloud-active"
+      >
+        <img
+          v-if="cloudQr"
+          :src="cloudQr"
+          :alt="t('settings.palco.cloudQrAlt')"
+          class="palco-slots-card__cloud-qr"
+        >
+        <div class="palco-slots-card__cloud-info">
+          <small>{{ t('settings.palco.cloudCodeLabel') }}</small>
+          <strong class="palco-slots-card__cloud-code">{{ relay.code.value }}</strong>
+          <small>{{ t('settings.palco.cloudHowTo') }}</small>
+        </div>
+        <button
+          type="button"
+          class="palco-slots-card__remove"
+          :aria-label="t('settings.palco.cloudEnd')"
+          @click="relay.detach()"
+        >
+          <i class="ti ti-x" aria-hidden="true" />
         </button>
       </div>
 
@@ -364,6 +435,11 @@ onUnmounted(() => {
 .palco-slots-card__tv { display:flex; flex-direction:column; gap:.5rem; padding:.75rem 1.25rem; border-top:1px solid color-mix(in srgb,var(--ds-color-on-surface) 8%,transparent); }
 .palco-slots-card__cloud{display:flex;gap:8px;align-items:center;margin:8px 0}
 .palco-slots-card__cloud-input{width:110px;padding:8px 10px;border-radius:8px;border:1px solid var(--glass-border,rgba(255,255,255,.2));background:transparent;color:inherit;font:inherit;text-transform:uppercase;letter-spacing:3px;text-align:center}
+.palco-slots-card__cloud-active{display:flex;gap:14px;align-items:center;margin:10px 0;padding:12px 14px;border-radius:12px;border:1px solid var(--glass-border,rgba(255,255,255,.15));background:rgba(255,255,255,.04)}
+.palco-slots-card__cloud-qr{width:96px;height:96px;border-radius:8px;background:#fff;padding:4px;flex-shrink:0}
+.palco-slots-card__cloud-info{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.palco-slots-card__cloud-info small{font-size:.72rem;opacity:.7;color:var(--ds-color-on-surface-variant)}
+.palco-slots-card__cloud-code{font-size:1.6rem;font-weight:800;letter-spacing:.35em;color:var(--ds-color-primary);line-height:1.2}
 .palco-slots-card__tv--off { opacity:.75; }
 .palco-slots-card__tv-head { display:flex; align-items:center; justify-content:space-between; gap:1rem; }
 .palco-slots-card__tv-label { display:inline-flex; align-items:center; gap:.5rem; font-size:.9rem; font-weight:600; color:var(--ds-color-on-surface); }

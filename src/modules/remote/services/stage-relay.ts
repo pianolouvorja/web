@@ -33,6 +33,7 @@ export interface StageRelayState {
   connected: import('vue').Ref<boolean>
   code: import('vue').Ref<string | null>
   attachCode: (code: string, apiBase?: string) => Promise<boolean>
+  createSession: () => Promise<boolean>
   detach: () => void
   fetchStatus: () => Promise<PalcoStatusInfo | null>
   fetchSlots: () => Promise<PalcoSlotInfo[]>
@@ -113,6 +114,24 @@ export function useStageRelay(): StageRelayState {
     }
   }
 
+  /**
+   * WT-5 (fluxo completo): cria a sessão no relay (POST /v1/palco/sessions)
+   * e já conecta como operator. Quem gera o código é o web operador — a TV
+   * só consome. Sem isso o operador precisaria de curl pra iniciar o culto.
+   */
+  async function createSession(): Promise<boolean> {
+    const http = apiBase.replace(/^ws/, 'http')
+    try {
+      const res = await fetch(`${http}/sessions`, { method: 'POST' })
+      if (!res.ok) return false
+      const body = (await res.json()) as { code: string }
+      if (!body.code) return false
+      return attachCode(body.code)
+    } catch {
+      return false
+    }
+  }
+
   let retryMs = 1000
   function scheduleReconnect(): void {
     const c = code.value
@@ -169,7 +188,7 @@ export function useStageRelay(): StageRelayState {
   async function startTv(): Promise<boolean> { return connected.value }
   async function stopTv(): Promise<boolean> { return connected.value }
 
-  return { connected, code, attachCode, detach, fetchStatus, fetchSlots, turnOn, turnOff, idle, createTv, removeTv, startTv, stopTv }
+  return { connected, code, attachCode, createSession, detach, fetchStatus, fetchSlots, turnOn, turnOff, idle, createTv, removeTv, startTv, stopTv }
 }
 
 void lastState
