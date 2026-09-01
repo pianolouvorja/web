@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { GlassCard } from '@design-system/index'
@@ -11,6 +11,8 @@ import {
   type PopupRoutableModule,
 } from '@shared/services/popup-routing'
 import { getPopupCount } from '@shared/services/projection-preferences'
+import { getPopupRefs } from '@shared/services/popup-registry'
+import { closeScreenPopups, openPopupModule } from '@shared/services/popup-windows'
 
 /**
  * Paridade 1:1 com PalcoCard + PalcoSlotsCard do desktop.
@@ -20,19 +22,42 @@ import { getPopupCount } from '@shared/services/projection-preferences'
  */
 
 const { t } = useI18n()
-
 const popupCount = ref(getPopupCount())
 const activeId = ref('1')
+const tick = ref(0)
+
+const aliveSlots = computed(() => {
+  void tick.value
+  return new Set(getPopupRefs().map((p) => String(p.__popupSlot ?? '')))
+})
 
 const slots = computed(() =>
   Array.from({ length: popupCount.value }, (_, i) => ({
     id: String(i + 1),
-    alive: false, // runtime check: BroadcastChannel heartbeat (WT-4b follow-up)
+    alive: aliveSlots.value.has(String(i + 1)),
   })),
 )
 
+let pollTimer: ReturnType<typeof setInterval> | null = null
+pollTimer = setInterval(() => {
+  popupCount.value = getPopupCount()
+  tick.value++
+}, 1500)
+onUnmounted(() => {
+  if (pollTimer) clearInterval(pollTimer)
+})
+
 function selectSlot(id: string): void {
   activeId.value = id
+}
+
+function toggleSlot(slotId: string): void {
+  const n = Number.parseInt(slotId, 10)
+  if (aliveSlots.value.has(slotId)) {
+    closeScreenPopups()
+  } else {
+    void openPopupModule('media', { slots: [n] })
+  }
 }
 
 const modules: PopupRoutableModule[] = [...POPUP_ROUTABLE_MODULES]
@@ -101,11 +126,12 @@ onUnmounted(() => {
         <button
           type="button"
           class="palco-slot__power"
-          :aria-label="t('settings.screens.openScreen')"
-          @click="selectSlot(slot.id)"
+          :aria-label="slot.alive ? t('settings.palco.stop') : t('settings.screens.openScreen')"
+          @click="toggleSlot(slot.id)"
         >
           <i
-            class="ti ti-player-play"
+            class="ti"
+            :class="slot.alive ? 'ti-player-stop' : 'ti-player-play'"
             aria-hidden="true"
           />
         </button>
