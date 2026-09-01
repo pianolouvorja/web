@@ -176,6 +176,8 @@ export default {
       waitingScreen: 'Lista para proyectar',
       selected: 'seleccionada',
       openScreen: 'Abrir pantalla',
+      addScreen: 'Agregar Pantalla',
+      removeScreen: 'Quitar Pantalla',
       moduleHint: 'En los módulos, elige Espejar (todas) o una pantalla individual.',
       mirror: 'Espejar todas',
       route: 'Destino de pantallas',

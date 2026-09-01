@@ -177,6 +177,8 @@ export default {
       waitingScreen: 'Ready to project',
       selected: 'selected',
       openScreen: 'Open screen',
+      addScreen: 'Add Screen',
+      removeScreen: 'Remove Screen',
       moduleHint: 'In modules, choose Mirror (all) or an individual screen.',
       mirror: 'Mirror all',
       route: 'Screen target',

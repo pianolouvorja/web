@@ -171,6 +171,8 @@ export default {
       waitingScreen: 'Pronta para projetar',
       selected: 'selecionada',
       openScreen: 'Abrir tela',
+      addScreen: 'Adicionar Tela',
+      removeScreen: 'Remover Tela',
       moduleHint: 'Nos módulos, escolha Espelhar (todas) ou uma tela individual.',
       mirror: 'Espelhar todas',
       route: 'Destino das telas',

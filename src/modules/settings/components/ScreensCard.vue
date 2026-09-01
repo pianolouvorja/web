@@ -10,7 +10,7 @@ import {
   setPopupRoute,
   type PopupRoutableModule,
 } from '@shared/services/popup-routing'
-import { getPopupCount } from '@shared/services/projection-preferences'
+import { getPopupCount, setPopupCount } from '@shared/services/projection-preferences'
 import { getPopupRefs } from '@shared/services/popup-registry'
 import { closeScreenPopups, openPopupModule } from '@shared/services/popup-windows'
 
@@ -46,6 +46,14 @@ pollTimer = setInterval(() => {
 onUnmounted(() => {
   if (pollTimer) clearInterval(pollTimer)
 })
+
+function addScreen(): void {
+  popupCount.value = setPopupCount(popupCount.value + 1)
+}
+
+function removeScreen(): void {
+  popupCount.value = setPopupCount(popupCount.value - 1)
+}
 
 function selectSlot(id: string): void {
   activeId.value = id
@@ -96,6 +104,17 @@ onUnmounted(() => {
         <h3>{{ t('settings.screens.screensOfStage') }}</h3>
         <p>{{ t('settings.screens.screensHint') }}</p>
       </div>
+      <button
+        type="button"
+        class="palco-slots-card__add"
+        @click="addScreen"
+      >
+        <i
+          class="ti ti-plus"
+          aria-hidden="true"
+        />
+        {{ t('settings.screens.addScreen') }}
+      </button>
     </div>
 
     <div class="palco-slots-card__list">
@@ -132,6 +151,18 @@ onUnmounted(() => {
           <i
             class="ti"
             :class="slot.alive ? 'ti-player-stop' : 'ti-player-play'"
+            aria-hidden="true"
+          />
+        </button>
+        <button
+          v-if="slot.id !== '1'"
+          type="button"
+          class="palco-slot__remove"
+          :aria-label="t('settings.screens.removeScreen')"
+          @click="removeScreen"
+        >
+          <i
+            class="ti ti-trash"
             aria-hidden="true"
           />
         </button>
@@ -190,6 +221,9 @@ onUnmounted(() => {
 .palco-slot__badge { color:var(--ds-color-primary); font-size:.65rem; }
 .palco-slot__power { display:flex; align-items:center; justify-content:center; width:1.8rem; height:1.8rem; border:0; border-radius:.35rem; background:transparent; color:var(--ds-color-on-surface-variant); cursor:pointer; }
 .palco-slot__power:hover { color:var(--ds-color-primary); background:color-mix(in srgb,var(--ds-color-primary) 12%,transparent); }
+.palco-slots-card__add { display:flex; align-items:center; gap:.35rem; padding:.45rem .7rem; border:1px solid color-mix(in srgb,var(--ds-color-primary) 50%,transparent); border-radius:.5rem 0 .5rem 0; background:transparent; color:var(--ds-color-primary); cursor:pointer; font-size:.75rem; }
+.palco-slot__remove { display:flex; align-items:center; justify-content:center; width:1.8rem; height:1.8rem; border:0; border-radius:.35rem; background:transparent; color:var(--ds-color-on-surface-variant); cursor:pointer; }
+.palco-slot__remove:hover { color:#e65c66; }
 .palco-slots-card__note { padding:0 1.25rem .5rem; font-size:.75rem; color:var(--ds-color-on-surface-variant); }
 
 .palco-slots-card__routes { display:flex; flex-direction:column; gap:.35rem; padding:0 1.25rem .75rem; }
