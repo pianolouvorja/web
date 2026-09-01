@@ -29,12 +29,11 @@ const {
   ampm,
 } = useClockDisplay(() => props.config)
 
-// WT-5: projetando (popup fullscreen, não preview do operador), espelha a
-// hora no relay cloud — receiver TV mostra como 'timer'. best-effort.
-// Publica na montagem (a hora pode não mudar por até 1s — sem isso a TV
-// ficava em idle até o próximo tick) e a cada mudança.
+// WT-5: espelha a hora no relay cloud em AMBOS os contextos — o preview do
+// operador (ClockView) é quem garante a TV receber MESMO sem popup aberto
+// (TV é destino independente, paridade app). best-effort, no-op sem sessão.
 watch(formattedTime, (time) => {
-  if (!props.preview) publishToStageRelay('clock', { time })
+  publishToStageRelay('clock', { time })
 }, { immediate: true })
 
 const digitalFontSize = computed(() => {
