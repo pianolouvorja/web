@@ -6,6 +6,7 @@ import {
   isPopupModuleOpen,
   openPopupModule,
 } from '@shared/services/popup-windows'
+import { getPopupRoute, type PopupRoutableModule } from '@shared/services/popup-routing'
 
 import {
   computeElapsedMs,
@@ -60,6 +61,10 @@ export const useCountdownStore = defineStore('countdown', () => {
     stopProjectionWatch()
     projectionWatchTimer = setInterval(() => {
       if (!isPopupModuleOpen('countdown')) {
+        // WT-5: rota 'Só TV (nuvem)' não tem popup — não é 'parado'
+        try {
+          if (getPopupRoute('countdown' as PopupRoutableModule) === 'tv') return
+        } catch { /* routing indisponível */ }
         isProjecting.value = false
         stopProjectionWatch()
       }
@@ -299,7 +304,8 @@ export const useCountdownStore = defineStore('countdown', () => {
   }
 
   async function toggleProjection() {
-    if (isProjecting.value && isPopupModuleOpen('countdown')) {
+    // WT-5: rota 'Só TV' não tem popup — desligar pelo estado, não pelo popup
+    if (isProjecting.value) {
       await clearProjection()
       return
     }

@@ -7,6 +7,7 @@ import {
   isPopupModuleOpen,
   openPopupModule,
 } from '@shared/services/popup-windows'
+import { getPopupRoute, type PopupRoutableModule } from '@shared/services/popup-routing'
 
 import {
   resolveNext,
@@ -66,6 +67,10 @@ export const useMediaStore = defineStore('media', () => {
   const lastErrorKey = ref<string | null>(null)
   const minimized = ref(true)
   const isProjecting = ref(false)
+  // WT-5: destino TV cloud é independente do popup — projeção ativa na TV
+  // mesmo com popup fechado (paridade app). 'parar' na UI desliga o destino
+  // que estiver ativo; a TV recebe idle explícito.
+  const isTvProjecting = ref(false)
   const showPlaylist = ref(true)
   const closeConfirmOpen = ref(false)
 
@@ -184,6 +189,10 @@ export const useMediaStore = defineStore('media', () => {
     }
     projectionWatchTimer = setInterval(() => {
       if (!isPopupModuleOpen('media')) {
+        // WT-5: rota 'Só TV (nuvem)' não tem popup — não é 'parado'
+        try {
+          if (getPopupRoute('media' as PopupRoutableModule) === 'tv') return
+        } catch { /* routing indisponível */ }
         isProjecting.value = false
         stopProjectionWatch()
       }
@@ -192,8 +201,9 @@ export const useMediaStore = defineStore('media', () => {
 
   function buildRuntime(): MediaProjectionRuntime {
     // WT-5: TV é destino independente do popup — conteúdo selecionado projeta
-    // na TV mesmo sem popup local aberto (paridade com o app).
-    const active = session.value != null
+    // na TV mesmo sem popup local aberto (paridade com o app). Parar a TV
+    // (isTvProjecting=false) tem prioridade sobre a sessão viva.
+    const active = session.value != null && isTvProjecting.value
     const slide = currentSlide.value
     if (!session.value || !slide) {
       return { ...DEFAULT_MEDIA_PROJECTION, active: false }
@@ -818,8 +828,11 @@ export const useMediaStore = defineStore('media', () => {
     if (isMobileOperatorViewport()) return false
     if (!session.value) return false
     const opened = await openPopupModule('media')
+    // rota 'Só TV (nuvem)': openPopupModule não abre popup mas retorna true
     isProjecting.value = opened
     if (opened) {
+      // popup abriu de fato? senão é TV-only
+      isTvProjecting.value = !isPopupModuleOpen('media')
       startProjectionWatch()
       publishProjectionState()
     }
@@ -833,7 +846,14 @@ export const useMediaStore = defineStore('media', () => {
     // WT-5: TV é destino independente — parar projeção tem que MANDAR idle
     // pro relay, senão o runtime republica o conteúdo (hino ficava preso na
     // TV mesmo com o botão desligado). Runtime inativo explícito:
+    isTvProjecting.value = false
     publishMediaRuntime({ ...DEFAULT_MEDIA_PROJECTION, active: false })
+  }
+
+  /** Para SÓ a TV (popup continua) — botão dedicado futuro / rota tv. */
+  function stopTvProjection(): void {
+    isTvProjecting.value = false
+    publishMediaRuntime(buildRuntime())
   }
 
   async function toggleProjection(): Promise<void> {

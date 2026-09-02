@@ -6,6 +6,7 @@ import {
   isPopupModuleOpen,
   openPopupModule,
 } from '@shared/services/popup-windows'
+import { getPopupRoute, type PopupRoutableModule } from '@shared/services/popup-routing'
 
 import { computeElapsedMs, formatElapsedMs } from '../services/timer-format'
 import { publishToStageRelay } from '@shared/services/palco-cloud-bridge'
@@ -50,6 +51,10 @@ export const useTimerStore = defineStore('timer', () => {
     stopProjectionWatch()
     projectionWatchTimer = setInterval(() => {
       if (!isPopupModuleOpen('timer')) {
+        // WT-5: rota 'Só TV (nuvem)' não tem popup — não é 'parado'
+        try {
+          if (getPopupRoute('timer' as PopupRoutableModule) === 'tv') return
+        } catch { /* routing indisponível */ }
         isProjecting.value = false
         stopProjectionWatch()
       }
@@ -207,7 +212,8 @@ export const useTimerStore = defineStore('timer', () => {
   }
 
   async function toggleProjection() {
-    if (isProjecting.value && isPopupModuleOpen('timer')) {
+    // WT-5: rota 'Só TV' não tem popup — desligar pelo estado, não pelo popup
+    if (isProjecting.value) {
       await clearProjection()
       return
     }

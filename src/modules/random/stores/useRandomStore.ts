@@ -6,6 +6,7 @@ import {
   isPopupModuleOpen,
   openPopupModule,
 } from '@shared/services/popup-windows'
+import { getPopupRoute, type PopupRoutableModule } from '@shared/services/popup-routing'
 
 import {
   buildNumberRange,
@@ -113,6 +114,10 @@ export const useRandomStore = defineStore('random', () => {
     stopProjectionWatch()
     projectionWatchTimer = setInterval(() => {
       if (!isPopupModuleOpen('random')) {
+        // WT-5: rota 'Só TV (nuvem)' não tem popup — não é 'parado'
+        try {
+          if (getPopupRoute('random' as PopupRoutableModule) === 'tv') return
+        } catch { /* routing indisponível */ }
         isProjecting.value = false
         stopProjectionWatch()
       }
@@ -385,7 +390,9 @@ export const useRandomStore = defineStore('random', () => {
   }
 
   async function toggleProjection() {
-    if (isProjecting.value && isPopupModuleOpen('random')) {
+    // WT-5: rota 'Só TV' não tem popup — isPopupModuleOpen é sempre false e
+    // o toggle antigo nunca desligava (reprojetava em vez de parar).
+    if (isProjecting.value) {
       await clearProjection()
       return
     }
