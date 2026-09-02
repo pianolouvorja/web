@@ -52,7 +52,9 @@ import type {
   MediaSession,
 } from '../types/media'
 import { DEFAULT_MEDIA_PROJECTION } from '../types/media'
-
+import { readEffectiveStageSettings } from '@modules/settings/services/stage-settings-runtime'
+import { resolveBackgroundImage } from '@modules/settings/types/stage-settings'
+import { publishToStageRelay } from '@shared/services/palco-cloud-bridge'
 /** Alinha com Vuetify `smAndDown` (width < md): sem projeção no mobile. */
 function isMobileOperatorViewport(): boolean {
   if (typeof window === 'undefined') return false
@@ -454,18 +456,28 @@ export const useMediaStore = defineStore('media', () => {
 
   // WT-5 áudio: espelha o estado do player pro receiver TV (case 'audio').
   // Áudio toca na TV pelo próprio receiver (url do streaming do catálogo).
+  // MP3 segue o padrão do app (palco-session.audioRouted): sem capa do hino,
+  // bg do escopo liturgy; fallback final é o bg-fallback.png do receiver.
   function mirrorAudioToTv(action: 'play' | 'pause' | 'stop', positionMs?: number): void {
     try {
       const sendAudio = (window as unknown as { __palcoRelayAudio?: (a: Record<string, unknown>) => void }).__palcoRelayAudio
       if (!sendAudio) return
       const ses = session.value
+      let background: string | undefined = resolvedSlideImageUrl.value ?? undefined
+      if (!background) {
+        try {
+          const st = readEffectiveStageSettings('liturgy')
+          background = resolveBackgroundImage(st.backgroundImage) ?? undefined
+        } catch { /* settings indisponíveis — receiver usa fallback */ }
+      }
       sendAudio({
         action,
         positionMs,
         url: ses?.audioUrl ?? undefined,
         title: ses?.title ?? undefined,
         subtitle: ses?.subtitle ?? undefined,
-        cover: resolvedSlideImageUrl.value ?? undefined,
+        cover: background,
+        background,
       })
     } catch { /* TV fora — áudio local segue */ }
   }
