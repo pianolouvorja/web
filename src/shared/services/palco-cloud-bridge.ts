@@ -141,13 +141,25 @@ export function toReceiverMessage(moduleId: string, payload: unknown): ReceiverM
     const customBg = resolveDataUrlBackground(st.backgroundImage)
     const cover = field(payload, 'imageUrl')
     const background = customBg ?? cover ?? undefined
+    // Paridade popup (showTitle): isCover mostra o TÍTULO como conteúdo
+    // grande (sem letra); normal mostra a letra e o título no footer.
+    const isCover = (payload as Record<string, unknown>)?.isCover === true
+    const title = field(payload, 'title') ?? ''
+    if (isCover) {
+      return {
+        v: 2,
+        type: 'projection',
+        text: title,
+        ...(background ? { background } : {}),
+        ...stageFields(moduleId, st),
+      }
+    }
     return {
       v: 2,
       type: 'projection',
       text: lyric,
-      footer: field(payload, 'title') ?? '',
+      footer: title,
       ...(field(payload, 'subtitle') ? { footerRef: field(payload, 'subtitle') as string } : {}),
-      isCover: (payload as Record<string, unknown>)?.isCover === true,
       ...(background ? { background } : {}),
       ...stageFields(moduleId, st),
     }

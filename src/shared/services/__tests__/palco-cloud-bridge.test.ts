@@ -27,9 +27,12 @@ describe('toReceiverMessage', () => {
       type: 'projection',
       text: 'Senhor Deus dos exércitos',
       footer: 'Santo, Santo, Santo',
-      isCover: false,
     })
     expect(msg).toHaveProperty('fontSize')
+    // isCover: título vira o CONTEÚDO (grande), sem letra — paridade popup
+    const cover = toReceiverMessage('media', { active: true, title: 'Santo, Santo, Santo', lyric: 'x', isCover: true })
+    expect(cover).toMatchObject({ v: 2, type: 'projection', text: 'Santo, Santo, Santo' })
+    expect(cover).not.toHaveProperty('footer')
   })
 
   it('mídia inativa/sem letra → idle no receiver', () => {
