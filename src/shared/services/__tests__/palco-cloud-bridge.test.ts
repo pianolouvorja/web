@@ -5,8 +5,8 @@ import { toReceiverMessage } from '../palco-cloud-bridge'
 // (fontSize/shadow/caixinha/cores/background) — os asserts usam
 // expect.objectContaining nos campos de conteúdo.
 describe('toReceiverMessage', () => {
-  it('serializa bíblia no envelope de projeção v2 com stage fields', () => {
-    const msg = toReceiverMessage('bible', { reference: 'João 3:16', text: 'Porque Deus amou...' })
+  it('serializa bíblia no envelope de projeção v2 com stage fields', async () => {
+    const msg = await toReceiverMessage('bible', { reference: 'João 3:16', text: 'Porque Deus amou...' })
     expect(msg).toMatchObject({
       v: 2,
       type: 'projection',
@@ -20,8 +20,8 @@ describe('toReceiverMessage', () => {
     expect(msg).toHaveProperty('footerRefColor')
   })
 
-  it('serializa hino ativo: letra no text, título no footer (paridade receiver TV)', () => {
-    const msg = toReceiverMessage('media', { active: true, title: 'Santo, Santo, Santo', lyric: 'Senhor Deus dos exércitos', subtitle: '', isCover: false })
+  it('serializa hino ativo: letra no text, título no footer (paridade receiver TV)', async () => {
+    const msg = await toReceiverMessage('media', { active: true, title: 'Santo, Santo, Santo', lyric: 'Senhor Deus dos exércitos', subtitle: '', isCover: false })
     expect(msg).toMatchObject({
       v: 2,
       type: 'projection',
@@ -30,25 +30,25 @@ describe('toReceiverMessage', () => {
     })
     expect(msg).toHaveProperty('fontSize')
     // isCover: título vira o CONTEÚDO (grande), sem letra — paridade popup
-    const cover = toReceiverMessage('media', { active: true, title: 'Santo, Santo, Santo', lyric: 'x', isCover: true })
+    const cover = await toReceiverMessage('media', { active: true, title: 'Santo, Santo, Santo', lyric: 'x', isCover: true })
     expect(cover).toMatchObject({ v: 2, type: 'projection', text: 'Santo, Santo, Santo' })
     expect(cover).not.toHaveProperty('footer')
   })
 
   it('mídia inativa/sem letra → idle no receiver', () => {
-    expect(toReceiverMessage('media', { active: false, title: 'X', lyric: 'Y' })?.type).toBe('idle')
-    expect(toReceiverMessage('media', { active: true, title: 'X', lyric: '  ' })?.type).toBe('idle')
+    expect((await toReceiverMessage('media', { active: false, title: 'X', lyric: 'Y' }))?.type).toBe('idle')
+    expect((await toReceiverMessage('media', { active: true, title: 'X', lyric: '  ' }))?.type).toBe('idle')
   })
 
-  it('serializa relógio como timer', () => {
-    expect(toReceiverMessage('clock', { time: '10:30' })).toMatchObject({ v: 2, type: 'timer', text: '10:30' })
+  it('serializa relógio como timer', async () => {
+    expect(await toReceiverMessage('clock', { time: '10:30' })).toMatchObject({ v: 2, type: 'timer', text: '10:30' })
   })
 
-  it.each(['timer', 'countdown'])('serializa %s como timer', (moduleId) => {
-    expect(toReceiverMessage(moduleId, { display: '05:00' })).toMatchObject({ v: 2, type: 'timer', text: '05:00' })
+  it.each(['timer', 'countdown'])('serializa %s como timer', async (moduleId) => {
+    expect(await toReceiverMessage(moduleId, { display: '05:00' })).toMatchObject({ v: 2, type: 'timer', text: '05:00' })
   })
 
-  it('retorna null para módulo desconhecido', () => {
-    expect(toReceiverMessage('desconhecido', { display: '7' })).toBeNull()
+  it('retorna null para módulo desconhecido', async () => {
+    expect(await toReceiverMessage('desconhecido', { display: '7' })).toBeNull()
   })
 })

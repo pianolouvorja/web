@@ -54,9 +54,11 @@ export function publishToStageRelay(moduleId: string, payload: unknown): void {
       send({ v: 2, type: 'idle', msg: '' })
     }
     lastRelayModule = moduleId
-    const msg = toReceiverMessage(moduleId, payload)
-    if (msg) send(msg as unknown as Record<string, unknown>)
-    else if (moduleId === lastRelayModule) lastRelayModule = null
+    void (async () => {
+      const msg = await toReceiverMessage(moduleId, payload)
+      if (msg) send(msg as unknown as Record<string, unknown>)
+      else if (moduleId === lastRelayModule) lastRelayModule = null
+    })()
   } catch {
     // relay indisponível — projeção local segue
   }
@@ -74,20 +76,35 @@ export function resetStageRelayModule(): void {
  */
 /** Lê o StageSettings EFETIVO do módulo. moduleId → scope do palco:
  *  media='hymns' (paridade APK), liturgy='liturgy', resto é 1:1. */
-function stageStyle(moduleId: string): StageSettings {
-  const scope = moduleId === 'media' ? 'hymns' : moduleId
-  return readEffectiveStageSettings(scope)
-}
-
-/** backgroundImage do palco pode ser data URL ou path de API — como o popup. */
-function resolveDataUrlBackground(raw: string | null | undefined): string | undefined {
+/** backgroundImage do palco → URL carregável pela TV.
+ *  - data URL (upload do usuário): passa direto.
+ *  - bg oficial ('official:bg-10'): o path /src/assets/... só existe no
+ *    bundle do operador — a TV (file://) não carrega. Fetch + data URL. */
+async function resolveTvBackground(raw: string | null | undefined): Promise<string | undefined> {
   if (!raw) return undefined
   try {
     const resolved = resolveBackgroundImage(raw)
-    return resolved ?? undefined
+    if (!resolved) return undefined
+    if (resolved.startsWith('data:')) return resolved
+    if (resolved.startsWith('http') || resolved.startsWith('//')) return resolved
+    // path relativo do bundle (oficial) → baixa e converte
+    const resp = await fetch(resolved)
+    if (!resp.ok) return undefined
+    const blob = await resp.blob()
+    return await new Promise<string>((resolve) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '')
+      reader.onerror = () => resolve('')
+      reader.readAsDataURL(blob)
+    }) || undefined
   } catch {
     return undefined
   }
+}
+
+function stageStyle(moduleId: string): StageSettings {
+  const scope = moduleId === 'media' ? 'hymns' : moduleId
+  return readEffectiveStageSettings(scope)
 }
 
 function stageFields(moduleId: string, s: StageSettings): Partial<ReceiverMessage & Record<string, unknown>> {
@@ -109,7 +126,7 @@ function stageFields(moduleId: string, s: StageSettings): Partial<ReceiverMessag
 }
 
 /** Serializa estados de projeção web para o protocolo do receiver cloud. */
-export function toReceiverMessage(moduleId: string, payload: unknown): ReceiverMessage | null {
+export async function toReceiverMessage(moduleId: string, payload: unknown): Promise<ReceiverMessage | null> {
   if (moduleId === 'bible') {
     const reference = field(payload, 'reference')
     const text = field(payload, 'text')
@@ -117,7 +134,7 @@ export function toReceiverMessage(moduleId: string, payload: unknown): ReceiverM
     if (!text.trim()) return { v: 2, type: 'idle', msg: '' }
     const st = stageStyle(moduleId)
     // Paridade popup: bg do usuário (backgroundImage do escopo bible) > cor.
-    const customBg = resolveDataUrlBackground(st.backgroundImage)
+    const customBg = await resolveTvBackground(st.backgroundImage)
     return {
       v: 2,
       type: 'projection',
@@ -143,7 +160,7 @@ export function toReceiverMessage(moduleId: string, payload: unknown): ReceiverM
     const st = stageStyle(moduleId)
     // Paridade popup: bg do usuário (backgroundImage) > capa do hino.
     // Fallback bg-fallback.png só quando não há nenhum dos dois (MP3).
-    const customBg = resolveDataUrlBackground(st.backgroundImage)
+    const customBg = await resolveTvBackground(st.backgroundImage)
     const cover = field(payload, 'imageUrl')
     const background = customBg ?? cover ?? undefined
     // Paridade popup (showTitle): isCover mostra o TÍTULO como conteúdo
