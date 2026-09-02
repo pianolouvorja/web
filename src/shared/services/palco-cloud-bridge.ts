@@ -116,6 +116,8 @@ export function toReceiverMessage(moduleId: string, payload: unknown): ReceiverM
     if (reference === null || text === null) return null
     if (!text.trim()) return { v: 2, type: 'idle', msg: '' }
     const st = stageStyle(moduleId)
+    // Paridade popup: bg do usuário (backgroundImage do escopo bible) > cor.
+    const customBg = resolveDataUrlBackground(st.backgroundImage)
     return {
       v: 2,
       type: 'projection',
@@ -126,6 +128,9 @@ export function toReceiverMessage(moduleId: string, payload: unknown): ReceiverM
       fontWeight: st.bibleFontWeight,
       textColor: st.bibleTextColor,
       footerRefColor: st.footerRefColor,
+      footerColor: st.footerRefColor,
+      footerWeight: st.footerRefWeight,
+      ...(customBg ? { background: customBg } : {}),
     }
   }
 
