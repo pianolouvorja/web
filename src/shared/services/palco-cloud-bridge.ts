@@ -133,6 +133,7 @@ export function toReceiverMessage(moduleId: string, payload: unknown): ReceiverM
   if (moduleId === 'clock') {
     const time = field(payload, 'time')
     if (time === null) return null
+    if (!time.trim()) return { v: 2, type: 'idle', msg: 'Aguardando conteúdo…' }
     return { v: 2, type: 'timer', text: time, ...stageFields(moduleId, stageStyle(moduleId)) }
   }
 
