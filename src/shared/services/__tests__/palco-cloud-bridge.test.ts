@@ -35,7 +35,7 @@ describe('toReceiverMessage', () => {
     expect(cover).not.toHaveProperty('footer')
   })
 
-  it('mídia inativa/sem letra → idle no receiver', () => {
+  it('mídia inativa/sem letra → idle no receiver', async () => {
     expect((await toReceiverMessage('media', { active: false, title: 'X', lyric: 'Y' }))?.type).toBe('idle')
     expect((await toReceiverMessage('media', { active: true, title: 'X', lyric: '  ' }))?.type).toBe('idle')
   })
