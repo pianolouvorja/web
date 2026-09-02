@@ -1,5 +1,6 @@
 import * as popupRouting from '@shared/services/popup-routing'
 import { readEffectiveStageSettings } from '@modules/settings/services/stage-settings-runtime'
+import { resolveBackgroundImage } from '@modules/settings/types/stage-settings'
 import type { StageSettings } from '@modules/settings/types/stage-settings'
 
 export type ReceiverMessage = {
@@ -78,8 +79,21 @@ function stageStyle(moduleId: string): StageSettings {
   return readEffectiveStageSettings(scope)
 }
 
+/** backgroundImage do palco pode ser data URL ou path de API — como o popup. */
+function resolveDataUrlBackground(raw: string | null | undefined): string | undefined {
+  if (!raw) return undefined
+  try {
+    const resolved = resolveBackgroundImage(raw)
+    return resolved ?? undefined
+  } catch {
+    return undefined
+  }
+}
+
 function stageFields(moduleId: string, s: StageSettings): Partial<ReceiverMessage & Record<string, unknown>> {
   const out: Record<string, unknown> = {
+    // Paridade de escala com os popups (px@1920 → cqw): o receiver converte
+    // px→vw com divisor 19.2 (não 10.8 — deixava a fonte ~78% maior).
     fontSize: s.fontSize,
     fontWeight: s.fontWeight,
     textShadow: s.textShadow,
@@ -90,7 +104,7 @@ function stageFields(moduleId: string, s: StageSettings): Partial<ReceiverMessag
     boxBorder: s.boxBorder,
     textColor: s.textColor,
   }
-  if (s.backgroundColor) out.background = s.backgroundColor
+  if (s.backgroundColor) out.backgroundColor = s.backgroundColor
   return out
 }
 
@@ -121,6 +135,12 @@ export function toReceiverMessage(moduleId: string, payload: unknown): ReceiverM
     if (!active || lyric === null || !lyric.trim()) {
       return { v: 2, type: 'idle', msg: 'Aguardando conteúdo…' }
     }
+    const st = stageStyle(moduleId)
+    // Paridade popup: bg do usuário (backgroundImage) > capa do hino.
+    // Fallback bg-fallback.png só quando não há nenhum dos dois (MP3).
+    const customBg = resolveDataUrlBackground(st.backgroundImage)
+    const cover = field(payload, 'imageUrl')
+    const background = customBg ?? cover ?? undefined
     return {
       v: 2,
       type: 'projection',
@@ -128,7 +148,8 @@ export function toReceiverMessage(moduleId: string, payload: unknown): ReceiverM
       footer: field(payload, 'title') ?? '',
       ...(field(payload, 'subtitle') ? { footerRef: field(payload, 'subtitle') as string } : {}),
       isCover: (payload as Record<string, unknown>)?.isCover === true,
-      ...stageFields(moduleId, stageStyle(moduleId)),
+      ...(background ? { background } : {}),
+      ...stageFields(moduleId, st),
     }
   }
 
