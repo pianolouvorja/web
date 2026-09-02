@@ -85,12 +85,24 @@ async function resolveTvBackground(raw: string | null | undefined): Promise<stri
   try {
     const resolved = resolveBackgroundImage(raw)
     if (!resolved) return undefined
-    // Relay limita mensagens a 64KB. Data URLs de imagens (inclusive BG
-    // oficial convertido) ultrapassam o limite e fazem a API descartar TODA
-    // a projection como msg_too_large. Só URLs já públicas são seguras aqui.
+    // Data URL (upload do usuário): autocontida, a TV carrega direto — mas o
+    // relay limita mensagens a 64KB; data URL grande descarta TODA a
+    // projection como msg_too_large. Aceita só as pequenas.
+    if (resolved.startsWith('data:')) {
+      return resolved.length <= 60_000 ? resolved : undefined
+    }
+    // URL já pública (capa, bg servido pela API): segura.
     if (resolved.startsWith('http') || resolved.startsWith('//')) return resolved
-    // BG oficial / upload local: não bloqueia a projection. O receiver usa
-    // backgroundColor hoje; servir assets oficiais via API é o próximo passo.
+    // Path relativo (bg oficial: /src/assets/... em dev, /assets/... em prod):
+    // é servido pelo MESMO origin do operador — a TV carrega via rede local.
+    // Torna ABSOLUTO (location.origin) porque a TV roda em file://.
+    if (resolved.startsWith('/')) {
+      if (typeof location !== 'undefined' && location.origin && location.origin !== 'null') {
+        return location.origin + resolved
+      }
+      return undefined
+    }
+    return undefined
   } catch {
     return undefined
   }
@@ -132,7 +144,8 @@ export async function toReceiverMessage(moduleId: string, payload: unknown): Pro
     return {
       v: 2,
       type: 'projection',
-      footerRef: reference,
+      // Paridade popup: showBibleVersion=false esconde a referência na TV.
+      ...(st.showBibleVersion ? { footerRef: reference } : {}),
       text,
       ...stageFields(moduleId, st),
       fontSize: st.bibleFontSize,
@@ -141,6 +154,10 @@ export async function toReceiverMessage(moduleId: string, payload: unknown): Pro
       footerRefColor: st.footerRefColor,
       footerColor: st.footerRefColor,
       footerWeight: st.footerRefWeight,
+      // Paridade popup: alinhamentos do palco (o receiver aplica no layout).
+      textAlign: st.textAlign,
+      textVerticalAlign: st.textVerticalAlign,
+      padding: st.margin,
       ...(customBg ? { background: customBg } : {}),
     }
   }
