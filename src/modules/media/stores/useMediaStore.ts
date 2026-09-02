@@ -404,6 +404,8 @@ export const useMediaStore = defineStore('media', () => {
     } catch {
       // ignore
     }
+    // WT-5: hino anterior sai do receiver da TV
+    mirrorAudioToTv('stop')
 
     session.value = {
       musicId,
@@ -449,6 +451,24 @@ export const useMediaStore = defineStore('media', () => {
     return { ok: true, warningKey }
   }
 
+  // WT-5 áudio: espelha o estado do player pro receiver TV (case 'audio').
+  // Áudio toca na TV pelo próprio receiver (url do streaming do catálogo).
+  function mirrorAudioToTv(action: 'play' | 'pause' | 'stop', positionMs?: number): void {
+    try {
+      const sendAudio = (window as unknown as { __palcoRelayAudio?: (a: Record<string, unknown>) => void }).__palcoRelayAudio
+      if (!sendAudio) return
+      const ses = session.value
+      sendAudio({
+        action,
+        positionMs,
+        url: ses?.audioUrl ?? undefined,
+        title: ses?.title ?? undefined,
+        subtitle: ses?.subtitle ?? undefined,
+        cover: resolvedSlideImageUrl.value ?? undefined,
+      })
+    } catch { /* TV fora — áudio local segue */ }
+  }
+
   async function play(): Promise<void> {
     if (!session.value?.audioUrl) return
     const seq = ++playPauseSeq
@@ -466,6 +486,7 @@ export const useMediaStore = defineStore('media', () => {
     const played = await fadeInMediaAudio(audio, volume.value)
     if (seq !== playPauseSeq) return
     status.value = played ? 'playing' : 'paused'
+    if (played) mirrorAudioToTv('play', Math.round(audio.currentTime * 1000))
   }
 
   async function pause(): Promise<void> {
@@ -483,6 +504,7 @@ export const useMediaStore = defineStore('media', () => {
     await fadeVolumeMediaAudio(audio, 0)
     if (seq !== playPauseSeq) return
     pauseMediaAudio(audio)
+    mirrorAudioToTv('pause', Math.round(audio.currentTime * 1000))
   }
 
   async function togglePlay(): Promise<void> {
@@ -499,6 +521,7 @@ export const useMediaStore = defineStore('media', () => {
     )
     audio.currentTime = clamped
     currentTimeSec.value = clamped
+    if (isPlaying.value) mirrorAudioToTv('play', Math.round(clamped * 1000))
   }
 
   function seekRatio(ratio: number): void {

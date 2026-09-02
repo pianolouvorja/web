@@ -98,6 +98,26 @@ export async function attachStoredSession(): Promise<boolean> {
   }
 }
 
+/**
+ * WT-5 áudio: espelha play/pause/seek/stop do áudio pro receiver TV
+ * (case 'audio' do receiver — sincroniza positionMs antes do play).
+ * Sem exclusividade de módulo: áudio acompanha a projection do hino.
+ * Sem socket ou fora de sessão: no-op silencioso.
+ */
+export function publishAudio(payload: {
+  action: 'play' | 'pause' | 'stop'
+  url?: string
+  title?: string
+  subtitle?: string
+  cover?: string
+  positionMs?: number
+}): void {
+  try {
+    if (!ws || ws.readyState !== WebSocket.OPEN || !code.value) return
+    ws.send(JSON.stringify({ v: 2, type: 'audio', ...payload }))
+  } catch { /* relay indisponível — áudio local segue */ }
+}
+
 export function useStageRelay(): StageRelayState {
   // WT-5 race fix: attachCode é async (token) — dois attach em voo (ex. usuário
   // conecta código novo enquanto reconnect da sessão velha dispara) faziam o
@@ -146,6 +166,8 @@ export function useStageRelay(): StageRelayState {
         // do bridge pegava instância connected:false — hinos não projetavam).
         ;(window as unknown as { __palcoRelaySend?: (s: Record<string, unknown>) => void }).__palcoRelaySend =
           (state) => { if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ v: 2, ...state })) }
+        ;(window as unknown as { __palcoRelayAudio?: (a: Record<string, unknown>) => void }).__palcoRelayAudio =
+          (audio) => { if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ v: 2, type: 'audio', ...audio })) }
       }
       ws.onmessage = (ev) => {
         if (gen !== attachGen) return
@@ -167,6 +189,7 @@ export function useStageRelay(): StageRelayState {
         connected.value = false
         stopKeepalive()
         try { delete (window as unknown as { __palcoRelaySend?: unknown }).__palcoRelaySend } catch { /* ignore */ }
+        try { delete (window as unknown as { __palcoRelayAudio?: unknown }).__palcoRelayAudio } catch { /* ignore */ }
         if (ev.code !== 4404 && ev.code !== 1000) scheduleReconnect()
       }
       ws.onerror = () => { /* onclose dispara depois */ }
