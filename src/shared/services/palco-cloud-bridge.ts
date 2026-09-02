@@ -85,18 +85,12 @@ async function resolveTvBackground(raw: string | null | undefined): Promise<stri
   try {
     const resolved = resolveBackgroundImage(raw)
     if (!resolved) return undefined
-    if (resolved.startsWith('data:')) return resolved
+    // Relay limita mensagens a 64KB. Data URLs de imagens (inclusive BG
+    // oficial convertido) ultrapassam o limite e fazem a API descartar TODA
+    // a projection como msg_too_large. Só URLs já públicas são seguras aqui.
     if (resolved.startsWith('http') || resolved.startsWith('//')) return resolved
-    // path relativo do bundle (oficial) → baixa e converte
-    const resp = await fetch(resolved)
-    if (!resp.ok) return undefined
-    const blob = await resp.blob()
-    return await new Promise<string>((resolve) => {
-      const reader = new FileReader()
-      reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '')
-      reader.onerror = () => resolve('')
-      reader.readAsDataURL(blob)
-    }) || undefined
+    // BG oficial / upload local: não bloqueia a projection. O receiver usa
+    // backgroundColor hoje; servir assets oficiais via API é o próximo passo.
   } catch {
     return undefined
   }
