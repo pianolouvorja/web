@@ -70,18 +70,29 @@ describe('toReceiverMessage — bíblia: aceite de personalização do palco', (
     localStorage.setItem('user_data', JSON.stringify({
       'stage.settings.bible': { bg: '#0A0E1A', bgImg: 'official:bg-01' },
     }))
+    // hostname LAN (TV não resolve localhost)
+    Object.defineProperty(window, 'location', { value: { ...window.location, hostname: '192.168.1.10', host: '192.168.1.10:5173', protocol: 'http:' }, writable: true })
     const msg = await toReceiverMessage('bible', { reference: 'Sl 23:1', text: 'O Senhor é o meu pastor' })
-    // TV roda em file:// ou outra origem — path relativo é inacessível.
-    expect(msg?.background).toMatch(/^https?:\/\/|^\/\//)
+    expect((msg as Record<string, unknown>)?.background).toMatch(/^https?:\/\/192\.168\.1\.10/)
+  })
+
+  it('C1: operador em localhost → bg é omitido (TV não alcança localhost)', async () => {
+    localStorage.setItem('user_data', JSON.stringify({
+      'stage.settings.bible': { bg: '#0A0E1A', bgImg: 'official:bg-01' },
+    }))
+    Object.defineProperty(window, 'location', { value: { ...window.location, hostname: 'localhost', host: 'localhost:5173', protocol: 'http:' }, writable: true })
+    const msg = await toReceiverMessage('bible', { reference: 'Sl 23:1', text: 'x' })
+    expect(msg).not.toHaveProperty('background')
   })
 
   it('C1: data URL (upload do usuário) do escopo bible passa direto', async () => {
+    Object.defineProperty(window, 'location', { value: { ...window.location, hostname: '192.168.1.10', host: '192.168.1.10:5173', protocol: 'http:' }, writable: true })
     const dataUrl = 'data:image/png;base64,iVBORw0KGgo='
     localStorage.setItem('user_data', JSON.stringify({
       'stage.settings.bible': { bgImg: dataUrl },
     }))
     const msg = await toReceiverMessage('bible', { reference: 'Sl 23:1', text: 'x' })
-    expect(msg?.background).toBe(dataUrl)
+    expect((msg as Record<string, unknown>)?.background).toBe(dataUrl)
   })
 
   it('C1: sem bg configurado no escopo bible, NÃO vai background (cor pinta a TV)', async () => {

@@ -94,11 +94,13 @@ async function resolveTvBackground(raw: string | null | undefined): Promise<stri
     // URL já pública (capa, bg servido pela API): segura.
     if (resolved.startsWith('http') || resolved.startsWith('//')) return resolved
     // Path relativo (bg oficial: /src/assets/... em dev, /assets/... em prod):
-    // é servido pelo MESMO origin do operador — a TV carrega via rede local.
-    // Torna ABSOLUTO (location.origin) porque a TV roda em file://.
+    // é servido pelo MESMO host do operador — a TV carrega via rede local.
+    // Torna ABSOLUTO usando o HOSTNAME da URL do operador (se Rafael acessa
+    // o web de outra máquina, hostname já é o IP da LAN — nunca localhost,
+    // que a TV não resolve).
     if (resolved.startsWith('/')) {
-      if (typeof location !== 'undefined' && location.origin && location.origin !== 'null') {
-        return location.origin + resolved
+      if (typeof location !== 'undefined' && location.hostname && !/^(localhost|127\.)/.test(location.hostname)) {
+        return `${location.protocol}//${location.host}${resolved}`
       }
       return undefined
     }
