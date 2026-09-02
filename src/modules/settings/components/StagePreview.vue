@@ -45,6 +45,10 @@ const containerStyle = computed(() => {
         : s.textAlign === 'right'
           ? 'flex-end'
           : 'center',
+    // Rodapé de referência (bíblia) é absoluto em bottom:2.2cqw — o texto
+    // NUNCA pode descer até ele (vAlign=bottom colidia, caso real 02/09).
+    paddingBottom: props.module === 'bible' && s.showBibleVersion ? '7cqw' : undefined,
+    boxSizing: 'border-box',
   } as Record<string, string>
 })
 
