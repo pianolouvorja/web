@@ -71,9 +71,11 @@ export function resetStageRelayModule(): void {
  * popup usa) ao envelope do receiver — fontSize, shadow, caixinha, cores,
  * background. O receiver TV já consome esses campos (protocolo v2 do palco).
  */
-/** Lê o StageSettings EFETIVO do módulo (override > global > defaults). */
+/** Lê o StageSettings EFETIVO do módulo. moduleId → scope do palco:
+ *  media='hymns' (paridade APK), liturgy='liturgy', resto é 1:1. */
 function stageStyle(moduleId: string): StageSettings {
-  return readEffectiveStageSettings(moduleId)
+  const scope = moduleId === 'media' ? 'hymns' : moduleId
+  return readEffectiveStageSettings(scope)
 }
 
 function stageFields(moduleId: string, s: StageSettings): Partial<ReceiverMessage & Record<string, unknown>> {
