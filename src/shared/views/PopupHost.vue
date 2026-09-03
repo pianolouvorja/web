@@ -34,6 +34,14 @@ const popupRole = computed(() => {
 
 const isControlPopup = computed(() => popupRole.value === 'control')
 
+/** Overlay de ativação visível enquanto o fullscreen não foi obtido. */
+const fullscreenPending = ref(false)
+
+/** Sai do overlay quando o documento entra em fullscreen por qualquer via. */
+function onFullscreenChange(): void {
+  if (document.fullscreenElement) fullscreenPending.value = false
+}
+
 const slotIndex = computed(() => {
   if (isControlPopup.value) return 0
   const fromQuery = Number.parseInt(String(route.query.slot ?? ''), 10)
@@ -213,6 +221,7 @@ onMounted(() => {
   window.addEventListener('resize', reportBounds)
   window.addEventListener('storage', onStorage)
   window.addEventListener('beforeunload', reportBounds)
+  document.addEventListener('fullscreenchange', onFullscreenChange)
 
   void restoreLayout()
   reportBounds()
@@ -230,10 +239,8 @@ onMounted(() => {
       req().catch(() => {
         // Sem activation (ex.: reload da popup): aproxima de tela cheia.
         try {
-          window.moveTo(
-            window.screen.availLeft ?? 0,
-            window.screen.availTop ?? 0,
-          )
+          const scr = window.screen as Screen & { availLeft?: number; availTop?: number }
+          window.moveTo(scr.availLeft ?? 0, scr.availTop ?? 0)
           window.resizeTo(window.screen.availWidth, window.screen.availHeight)
         } catch {
           // ignore — ambiente sem controle de janela
@@ -260,7 +267,51 @@ onMounted(() => {
       // ignore
     }
   }
+
+  // WT-5F: garantir tela cheia. O Chrome não transfere a user activation
+  // do clique que abriu a popup, então requestFullscreen no boot costuma
+  // dar NotAllowedError. Tentamos mesmo assim; se bloquear, armamos um
+  // overlay "clique para tela cheia" que consome o PRIMEIRO gesto dentro
+  // da popup (click ou qualquer tecla) e entra em fullscreen.
+  if (!isControlPopup.value) {
+    enterFullscreenOrArm().catch(() => {})
+  }
 })
+
+/**
+ * Tenta fullscreen; se o browser negar, arma overlay de ativação.
+ * Resolve quando o documento entra em fullscreen.
+ */
+async function enterFullscreenOrArm(): Promise<void> {
+  const el = document.documentElement
+  try {
+    await el.requestFullscreen()
+    return
+  } catch {
+    // Sem activation — seguir com overlay.
+  }
+
+  fullscreenPending.value = true
+
+  const activate = (): void => {
+    if (document.fullscreenElement) return
+    void el
+      .requestFullscreen()
+      .catch(() => {
+        // Tentativa de novo no próximo gesto — o listener permanece.
+      })
+      .finally(() => {
+        if (document.fullscreenElement) {
+          fullscreenPending.value = false
+          window.removeEventListener('click', activate)
+          window.removeEventListener('keydown', activate)
+        }
+      })
+  }
+
+  window.addEventListener('click', activate)
+  window.addEventListener('keydown', activate)
+}
 
 onUnmounted(() => {
   reportBounds()
@@ -268,6 +319,7 @@ onUnmounted(() => {
   window.removeEventListener('resize', reportBounds)
   window.removeEventListener('storage', onStorage)
   window.removeEventListener('beforeunload', reportBounds)
+  document.removeEventListener('fullscreenchange', onFullscreenChange)
 
   if (layoutInterval) {
     clearInterval(layoutInterval)
@@ -289,6 +341,18 @@ onUnmounted(() => {
       :is="activeView"
       v-if="activeView"
     />
+
+    <!-- WT-5F: overlay de ativação — some no 1º gesto (vira fullscreen). -->
+    <div
+      v-if="fullscreenPending"
+      class="popup-host__fullscreen-hint"
+    >
+      <i
+        class="ti ti-maximize"
+        aria-hidden="true"
+      />
+      <span>Clique para tela cheia</span>
+    </div>
   </div>
 </template>
 
@@ -299,9 +363,32 @@ onUnmounted(() => {
   overflow: hidden;
   background: #000;
   color: #fff;
+  position: relative;
 }
 
 .popup-host--control {
   background: #0c0c0e;
+}
+
+.popup-host__fullscreen-hint {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: rgb(0 0 0 / 78%);
+  color: rgb(255 255 255 / 92%);
+  font-family: inherit;
+  font-size: clamp(18px, 2.4vmin, 34px);
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+
+  .ti {
+    font-size: clamp(32px, 5vmin, 72px);
+  }
 }
 </style>
