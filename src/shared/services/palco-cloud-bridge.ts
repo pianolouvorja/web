@@ -160,6 +160,8 @@ export async function toReceiverMessage(moduleId: string, payload: unknown): Pro
       textAlign: st.textAlign,
       textVerticalAlign: st.textVerticalAlign,
       padding: st.margin,
+      // Capitalização do versículo (receiver aplica CSS text-transform).
+      ...(st.bibleTextTransform !== 'none' ? { textTransform: st.bibleTextTransform } : {}),
       ...(customBg ? { background: customBg } : {}),
     }
   }

@@ -153,6 +153,12 @@ const bibleWeightOptions: { value: StageSettings['bibleFontWeight']; label: stri
   { value: 700, label: t('settings.stage.weightStrong') },
 ]
 
+const bibleTransformOptions: { value: StageSettings['bibleTextTransform']; label: string }[] = [
+  { value: 'none', label: t('settings.stage.transformNone') },
+  { value: 'uppercase', label: t('settings.stage.transformUppercase') },
+  { value: 'capitalize', label: t('settings.stage.transformCapitalize') },
+]
+
 const alignOptions = [
   { value: 'left', label: t('settings.stage.alignLeft') },
   { value: 'center', label: t('settings.stage.alignCenter') },
@@ -456,10 +462,28 @@ const hasDraft = computed(() => draft.value !== null)
             :key="opt.value"
             type="button"
             role="radio"
-            :aria-checked="settings.bibleFontWeight === opt.value"
+            :aria-checked="effectiveSettings.bibleFontWeight === opt.value"
             class="stage-custom__segment-btn"
-            :class="{ 'stage-custom__segment-btn--active': settings.bibleFontWeight === opt.value }"
+            :class="{ 'stage-custom__segment-btn--active': effectiveSettings.bibleFontWeight === opt.value }"
             @click="draftPatch({ bibleFontWeight: opt.value })"
+          >
+            {{ opt.label }}
+          </button>
+        </div>
+
+        <p class="stage-custom__label stage-custom__label--sub">
+          {{ t('settings.stage.bibleTextTransform') }}
+        </p>
+        <div class="stage-custom__segment" role="radiogroup">
+          <button
+            v-for="opt in bibleTransformOptions"
+            :key="opt.value"
+            type="button"
+            role="radio"
+            :aria-checked="effectiveSettings.bibleTextTransform === opt.value"
+            class="stage-custom__segment-btn"
+            :class="{ 'stage-custom__segment-btn--active': effectiveSettings.bibleTextTransform === opt.value }"
+            @click="draftPatch({ bibleTextTransform: opt.value })"
           >
             {{ opt.label }}
           </button>
