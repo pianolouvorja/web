@@ -185,17 +185,24 @@ onUnmounted(() => {
         <div
           v-if="showContent"
           :key="contentKey"
-          class="bible-projection__content"
-          :style="verseBoxStyle"
+          class="bible-projection__stack"
+          :style="stageAlign"
         >
-          <p
-            v-if="runtime.text"
-            ref="textEl"
-            class="bible-projection__text"
-            :style="verseStyle"
+          <div
+            class="bible-projection__content"
+            :style="verseBoxStyle"
           >
-            {{ runtime.text }}
-          </p>
+            <p
+              v-if="runtime.text"
+              ref="textEl"
+              class="bible-projection__text"
+              :style="verseStyle"
+            >
+              {{ runtime.text }}
+            </p>
+          </div>
+          <!-- WT-5f: referência FORA da caixinha de texto, com gap (Rafael) —
+               o content (caixinha) abraça só o texto; a reference é irmã. -->
           <p
             v-if="runtime.reference && stage.showBibleVersion"
             class="bible-projection__reference"
@@ -234,10 +241,18 @@ onUnmounted(() => {
   padding: clamp(1.5rem, 6vmin, 4rem);
 }
 
+/* WT-5f: stack column (caixinha do texto + referência FORA dela) — herda o
+   alinhamento do palco via stageAlign e dá o gap entre caixinha e ref. */
+.bible-projection__stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4vmin;
+  max-width: 100%;
+}
+
 .bible-projection__content {
   display: flex;
   flex-direction: column;
-  gap: 0.6em;
   width: 100%;
   max-width: fit-content;
 }
