@@ -189,7 +189,7 @@ const referenceStyle = computed(() => ({
   flex-direction: column;
   gap: 0.6em;
   width: 100%;
-  max-width: 56rem;
+  max-width: fit-content;
 }
 
 .bible-projection__text {
