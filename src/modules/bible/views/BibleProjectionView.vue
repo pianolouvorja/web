@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { ProjectionBackground } from '@design-system/index'
 
@@ -60,6 +60,12 @@ const contentKey = computed(
   () => `${runtime.value.text}|${runtime.value.reference}`,
 )
 
+// Re-aplica o fit quando o bloco de conteúdo (re)aparece (a Transition
+// troca o elemento — o textEl troca de nó, o fit antigo não serve).
+watch(showContent, (v) => {
+  if (v) void nextTick(applyFit)
+})
+
 // ===== Personalização do Palco (escopo bible — paridade APK) =====
 const stage = ref<StageSettings>(readEffectiveStageSettings('bible'))
 let unsubStage: (() => void) | null = null
@@ -96,7 +102,7 @@ const stageAlign = computed(() => ({
 
 const verseStyle = computed(() => ({
   color: stage.value.bibleTextColor,
-  fontSize: `${(stage.value.bibleFontSize / 1920) * 100}cqw`,
+  fontSize: `${((stage.value.bibleFontSize / 1920) * 100 * fitScale.value).toFixed(3)}cqw`,
   fontWeight: String(stage.value.bibleFontWeight),
   textAlign: stage.value.textAlign,
   textTransform:
@@ -120,6 +126,47 @@ const referenceStyle = computed(() => ({
   color: stage.value.footerRefColor,
   fontWeight: String(stage.value.footerRefWeight),
 }))
+
+// ===== Auto-fit (WT-5f): texto SEMPRE dentro da área útil =====
+// Versículos múltiplos (Gn 1:1–3) geram texto longo que estoura a tela com
+// a fonte configurada. Mede e reduz o fitScale até caber (paridade com o
+// auto-fit do receiver). O scale entra no verseStyle (cqw).
+const textEl = ref<HTMLParagraphElement | null>(null)
+const fitScale = ref(1)
+
+function applyFit() {
+  const el = textEl.value
+  if (!el) return
+  // área útil: altura do palco menos rodapé/padding (~12%)
+  const palco = el.closest('.bible-projection') as HTMLElement | null
+  const maxH = (palco?.clientHeight ?? window.innerHeight) * 0.86
+  const base = stage.value.bibleFontSize / 1920 * 100 // cqw alvo
+  let scale = 1
+  let guard = 0
+  // medir: aplicar o scale candidato direto e checar overflow
+  while (guard < 30) {
+    el.style.fontSize = `${(base * scale).toFixed(3)}cqw`
+    if (el.scrollHeight <= maxH) break
+    scale *= 0.94
+    guard++
+  }
+  fitScale.value = scale
+  // limpa o style inline (verseStyle assume pelo computed)
+  el.style.fontSize = ''
+}
+
+watch(
+  () => [runtime.value.text, stage.value.bibleFontSize, stage.value.bibleTextTransform],
+  () => void nextTick(applyFit),
+  { flush: 'post' },
+)
+onMounted(() => {
+  applyFit()
+  window.addEventListener('resize', applyFit)
+})
+onUnmounted(() => {
+  window.removeEventListener('resize', applyFit)
+})
 </script>
 
 <template>
@@ -143,6 +190,7 @@ const referenceStyle = computed(() => ({
         >
           <p
             v-if="runtime.text"
+            ref="textEl"
             class="bible-projection__text"
             :style="verseStyle"
           >
