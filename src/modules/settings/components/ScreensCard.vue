@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -9,6 +9,13 @@ import { getPopupCount, setPopupCount } from '@shared/services/projection-prefer
 import { getPopupRefs } from '@shared/services/popup-registry'
 import { closeScreenPopups, openPopupModule } from '@shared/services/popup-windows'
 import { resetStageRelayModule } from '@shared/services/palco-cloud-bridge'
+import {
+  identifyScreens,
+  listScreens,
+  requestScreenAccess,
+  subscribeScreensChanged,
+  type WebScreen,
+} from '@shared/services/display-service-web'
 import {
   useDesktopPalcoSession,
   type PalcoSlotInfo,
@@ -27,6 +34,46 @@ const { t } = useI18n()
 const popupCount = ref(getPopupCount())
 const activeId = ref('1')
 const tick = ref(0)
+
+// WT-5H: monitores REAIS do navegador (Window Management API), não slots
+// fictícios. O fallback limitado mantém a tela atual até o usuário permitir.
+const detectedScreens = ref<WebScreen[]>([])
+const screensLimited = ref(true)
+const screensSupported = ref(false)
+const detectingScreens = ref(false)
+let unsubscribeScreensChanged: (() => void) | null = null
+
+async function refreshDetectedScreens(requestPermission = false): Promise<void> {
+  const result = requestPermission ? await requestScreenAccess() : await listScreens()
+  detectedScreens.value = result.screens
+  screensLimited.value = result.limited
+  screensSupported.value = result.supported
+}
+
+async function detectScreens(): Promise<void> {
+  detectingScreens.value = true
+  try {
+    await refreshDetectedScreens(true)
+  } finally {
+    detectingScreens.value = false
+  }
+}
+
+function identifyDetectedScreens(): void {
+  identifyScreens(detectedScreens.value)
+}
+
+onMounted(() => {
+  void refreshDetectedScreens()
+  unsubscribeScreensChanged = subscribeScreensChanged(() => {
+    void refreshDetectedScreens()
+  })
+})
+
+onUnmounted(() => {
+  unsubscribeScreensChanged?.()
+  unsubscribeScreensChanged = null
+})
 
 const {
   connected: desktopConnected,
@@ -208,6 +255,33 @@ onUnmounted(() => {
         {{ t('settings.screens.addScreen') }}
       </button>
     </div>
+
+    <!-- WT-5H: inventário real do SO/browser. O card de slots abaixo segue
+         temporariamente como compatibilidade até o launcher kiosk por tela. -->
+    <section class="palco-slots-card__detected">
+      <div class="palco-slots-card__detected-head">
+        <div>
+          <strong>{{ t('settings.screens.detectedTitle') }}</strong>
+          <small v-if="screensLimited">{{ t(screensSupported ? 'settings.screens.permissionHint' : 'settings.screens.unsupportedHint') }}</small>
+          <small v-else>{{ t('settings.screens.detectedHint') }}</small>
+        </div>
+        <div class="palco-slots-card__detected-actions">
+          <button type="button" class="palco-slots-card__add" :disabled="detectingScreens" @click="detectScreens">
+            <i class="ti ti-monitor-search" aria-hidden="true" />
+            {{ t('settings.screens.detect') }}
+          </button>
+          <button v-if="!screensLimited" type="button" class="palco-slots-card__power" :aria-label="t('settings.screens.identify')" @click="identifyDetectedScreens">
+            <i class="ti ti-numbers" aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+      <div class="palco-slots-card__detected-list">
+        <div v-for="(screen, index) in detectedScreens" :key="screen.id" class="palco-slots-card__detected-item">
+          <i class="ti ti-device-desktop" aria-hidden="true" />
+          <span><strong>{{ screen.label || t('settings.screens.monitorN', { n: index + 1 }) }}</strong><small>{{ screen.width }} × {{ screen.height }}{{ screen.isPrimary ? ` · ${t('settings.screens.primary')}` : '' }}</small></span>
+        </div>
+      </div>
+    </section>
 
     <div class="palco-slots-card__list">
       <div
@@ -452,6 +526,17 @@ onUnmounted(() => {
 .palco-slots-card__tv-label .ti-device-tv { color:var(--ds-color-primary); }
 .palco-slots-card__tv .palco-slot__select strong { font-size:.86rem; }
 .palco-slots-card__note { padding:0 1.25rem .5rem; font-size:.75rem; color:var(--ds-color-on-surface-variant); }
+
+.palco-slots-card__detected { display:flex; flex-direction:column; gap:.6rem; padding: .9rem 1.25rem; border-top:1px solid color-mix(in srgb,var(--ds-color-on-surface) 8%,transparent); }
+.palco-slots-card__detected-head { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; }
+.palco-slots-card__detected-head strong { display:block; font-size:.9rem; color:var(--ds-color-on-surface); }
+.palco-slots-card__detected-head small { display:block; margin-top:.2rem; font-size:.7rem; color:var(--ds-color-on-surface-variant); max-width:34ch; }
+.palco-slots-card__detected-actions { display:flex; align-items:center; gap:.4rem; }
+.palco-slots-card__detected-list { display:flex; flex-wrap:wrap; gap:.45rem; }
+.palco-slots-card__detected-item { display:flex; align-items:center; gap:.5rem; padding:.5rem .7rem; border-radius:.5rem 0 .5rem 0; background:color-mix(in srgb,var(--ds-color-on-surface) 6%,transparent); }
+.palco-slots-card__detected-item .ti-device-desktop { color:var(--ds-color-primary); }
+.palco-slots-card__detected-item strong { display:block; font-size:.8rem; color:var(--ds-color-on-surface); }
+.palco-slots-card__detected-item small { display:block; margin-top:.1rem; font-size:.68rem; color:var(--ds-color-on-surface-variant); }
 
 
 .palco-slots-card__foot { padding:0 1.25rem 1rem; font-size:.7rem; color:var(--ds-color-on-surface-variant); opacity:.75; }

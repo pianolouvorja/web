@@ -184,6 +184,12 @@ export default {
       routeAria: 'Destino de projeção de {module}',
       noPopups: 'Nenhuma tela aberta. Use o botão de projetar em um módulo (hinos, bíblia...) para abrir as telas.',
       localNote: 'As telas funcionam neste navegador, sem precisar de mais nada.',
+      detectedTitle: 'Telas detectadas',
+      permissionHint: 'Permissão concedida, mas apenas esta tela foi detectada. Certifique-se de que todos os monitores estão conectados e visíveis.',
+      unsupportedHint: 'Seu navegador não suporta a detecção automática de monitores. Use o modo espelho ou conecte monitores adicionais manualmente.',
+      detectedHint: 'Telas detectadas via Window Management API. Use "Identificar" para ver números em cada monitor.',
+      monitorN: 'Monitor {n}',
+      detect: 'Detectar telas',
       // cloudConnect/cloudHint moram em palco: (componente usa settings.palco.*)
       tvHowTo: 'Conecte uma TV com o receiver LouvorJA na mesma rede.',
       modules: {
