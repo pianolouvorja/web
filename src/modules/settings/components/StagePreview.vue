@@ -61,6 +61,9 @@ const textStyle = computed(() => {
     fontSize: `${((isBible ? s.bibleFontSize : s.fontSize) / 1920) * 100}cqw`,
     fontWeight: String(isBible ? s.bibleFontWeight : s.fontWeight),
     textAlign: s.textAlign,
+    // WT-5f: capitalização configurável do versículo (bíblia)
+    textTransform:
+      isBible && s.bibleTextTransform !== 'none' ? s.bibleTextTransform : 'none',
     textShadow: s.textShadow
       ? `0 0 ${(s.shadowBlur / 108) * 100}cqw rgba(0,0,0,${s.shadowIntensity})`
       : 'none',
