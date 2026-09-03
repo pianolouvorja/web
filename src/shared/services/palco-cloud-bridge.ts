@@ -231,5 +231,41 @@ export async function toReceiverMessage(moduleId: string, payload: unknown): Pro
     return { v: 2, type: 'timer', text: display, ...stageFields(moduleId, stageStyle(moduleId)) }
   }
 
+  // WT-5G: liturgia-web (site/vídeo/imagem/pdf) — antes sem wire pro relay,
+  // TVs/kiosk ficavam pretos. Receiver já tem case 'video' (url HTTP direta),
+  // 'image' e 'pdf' via iframe? Ver receiver: video+audio suportados; site/pdf
+  // viram aviso honesto (receiver não navega). blob: do operador não é
+  // acessível pela TV — idle com aviso, nunca tela preta sem explicação.
+  if (moduleId === 'liturgy-web') {
+    const p = (payload ?? {}) as Record<string, unknown>
+    const active = p.active === true
+    const kind = typeof p.kind === 'string' ? p.kind : 'site'
+    if (!active) return { v: 2, type: 'idle', msg: '' }
+    if (kind === 'video' || kind === 'youtube' || kind === 'vimeo') {
+      const url = typeof p.url === 'string' ? p.url.trim() : ''
+      if (!url) return { v: 2, type: 'idle', msg: '' }
+      // YouTube/Vimeo = página, não arquivo — receiver <video> não toca.
+      if (kind !== 'video') {
+        return { v: 2, type: 'idle', msg: 'Vídeo online: abra no popup do operador (TV não reproduz links de página).' }
+      }
+      if (url.startsWith('blob:')) {
+        return { v: 2, type: 'idle', msg: 'Vídeo local: indisponível para TV via browser (arquivo só no computador do operador).' }
+      }
+      return {
+        v: 2,
+        type: 'video',
+        url,
+        title: typeof p.title === 'string' ? p.title : '',
+        action: 'play',
+      }
+    }
+    const title = typeof p.title === 'string' ? p.title : ''
+    return {
+      v: 2,
+      type: 'idle',
+      msg: title ? `${title} — abra no popup do operador` : 'Conteúdo não projetável nesta tela',
+    }
+  }
+
   return null
 }
