@@ -104,6 +104,19 @@ function openPopupWindow(slot: number, moduleId?: string): PopupWindowRef | null
 
   if (win) {
     win.__popupSlot = slot
+
+    // WT-5F: Chrome só aceita fullscreen dentro da activation ORIGINAL do
+    // clique do operador. Chamar na PopupHost (mount) já é tarde: a janela
+    // filha perdeu activation. Aqui ainda estamos na call stack de window.open
+    // e o about:blank inicial é same-origin — fullscreen fica ativo após a
+    // navegação para /popup. Sem overlay, sem clique extra.
+    try {
+      void win.document.documentElement.requestFullscreen().catch(() => {
+        // Browser/ambiente sem Fullscreen API: mantém popup maximizada via features.
+      })
+    } catch {
+      // API ausente/síncrona indisponível.
+    }
   }
 
   return win

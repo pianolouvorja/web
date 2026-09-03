@@ -217,19 +217,6 @@ onMounted(() => {
   void restoreLayout()
   reportBounds()
 
-  // WT-5F: fullscreen automático SEM overlay quando possível. Se o browser
-  // negar (popup sem activation própria), NÃO mostramos o overlay — o
-  // conteúdo já abre cobrindo a área útil e o fullscreen entra no 1º gesto
-  // sem precisar de overlay visível.
-  if (!isControlPopup.value) {
-    const el = document.documentElement
-    el.requestFullscreen?.().catch(() => {
-      // Sem activation — sem overlay; 1º clique/tecla na janela entra em
-      // fullscreen silenciosamente.
-      armSilentFullscreen(el)
-    })
-  }
-
   layoutInterval = setInterval(() => {
     reportBounds()
   }, 2000)
@@ -250,26 +237,6 @@ onMounted(() => {
   }
 
 })
-
-/**
- * Tenta fullscreen; se o browser negar, arma captura de gesto silenciosa.
- * SEM overlay: o primeiro clique/tecla na janela ativa o fullscreen.
- */
-function armSilentFullscreen(el: HTMLElement): void {
-  const activate = (): void => {
-    if (document.fullscreenElement) {
-      cleanup()
-      return
-    }
-    void el.requestFullscreen().finally(() => cleanup())
-  }
-  const cleanup = (): void => {
-    window.removeEventListener('click', activate)
-    window.removeEventListener('keydown', activate)
-  }
-  window.addEventListener('click', activate)
-  window.addEventListener('keydown', activate)
-}
 
 onUnmounted(() => {
   reportBounds()
