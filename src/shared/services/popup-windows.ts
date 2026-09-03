@@ -385,14 +385,13 @@ export async function openPopupModule(
 
   scheduleSync(popups)
 
-  // Após o consentimento, reaplica layout na tela salva.
+  // Projeções abrem fullscreen (getOpenFeatures). NÃO restaurar bounds
+  // salvos aqui: restore colocaria a janela de volta em tamanho normal,
+  // desfazendo o fullscreen do window.open. Só reporta bounds p/ layout.
   void windowManagementPermission.then(() => {
     popups.forEach((popup) => {
       if (!popup || popup.closed) return
-      const slot = popup.__popupSlot
-      if (!slot) return
-      const entry = resolveBoundsForSlot(getPopupSlotId(slot))
-      if (entry) scheduleRestoreOnWindow(popup, entry)
+      requestBoundsReport(popup)
     })
   })
 

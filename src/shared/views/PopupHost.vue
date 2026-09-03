@@ -114,6 +114,10 @@ function refreshModule() {
 }
 
 async function restoreLayout() {
+  // WT-5F: telas de projeção NÃO se restauram — abrem fullscreen via
+  // getOpenFeatures e qualquer restore aqui encolheria de volta pra janela
+  // normal. Restore só para a janela de controle da liturgia.
+  if (!isControlPopup.value) return
   const entry = resolveBoundsForSlot(slotId.value)
   if (!entry) return
   await requestWindowManagementPermission()
