@@ -49,9 +49,21 @@ export interface StageRelayState {
 const connected = ref(false)
 const code = ref<string | null>(null)
 let ws: WebSocket | null = null
-let apiBase = import.meta.env.DEV
-  ? 'http://localhost:3100/v1/palco'
-  : '/v1/palco'
+// WT-5G: base da API configurável p/ testes remotos (túnel) — query
+// ?palcoApi=https://tunnel/v1/palco ou localStorage 'palcoApiBase' vence.
+// Default: localhost em dev, same-origin em prod.
+function resolveDefaultApiBase(): string {
+  try {
+    const q = new URLSearchParams(window.location.search).get('palcoApi')
+    if (q) return q
+    const stored = localStorage.getItem('palcoApiBase')
+    if (stored) return stored
+  } catch { /* SSR/privacy mode */ }
+  return import.meta.env.DEV
+    ? 'http://localhost:3100/v1/palco'
+    : '/v1/palco'
+}
+let apiBase = resolveDefaultApiBase()
 let keepalive: ReturnType<typeof setInterval> | null = null
 let lastState: PalcoStatusInfo | null = null
 let receivers = 0
