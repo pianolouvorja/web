@@ -14,7 +14,8 @@ export default {
     nameJa: 'JA'
   },
   common: {
-    comingSoon: 'Coming soon'
+    comingSoon: 'Coming soon',
+    apply: 'Apply'
   },
   monitors: {
     selectScreens: 'Select screens',
