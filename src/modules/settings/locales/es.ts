@@ -180,7 +180,7 @@ export default {
       removeScreen: 'Quitar Pantalla',
       moduleHint: 'En los módulos, elige Espejar (todas) o una pantalla individual.',
       mirror: 'Espejar todas',
-      routeTv: 'Solo TV (nube)',
+      routeTv: 'Solo escenario (TV/monitor)',
       route: 'Destino de pantallas',
       routeAria: 'Destino de proyección de {module}',
       noPopups: 'Ninguna pantalla abierta. Usa el botón de proyectar en un módulo (hinos, biblia...) para abrir las pantallas.',

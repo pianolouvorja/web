@@ -181,7 +181,7 @@ export default {
       removeScreen: 'Remove Screen',
       moduleHint: 'In modules, choose Mirror (all) or an individual screen.',
       mirror: 'Mirror all',
-      routeTv: 'TV only (cloud)',
+      routeTv: 'Stage only (TV/monitor)',
       route: 'Screen target',
       routeAria: 'Projection target for {module}',
       noPopups: 'No screen open. Use the project button in a module (hymns, bible...) to open screens.',

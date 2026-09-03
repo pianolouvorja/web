@@ -11,8 +11,8 @@ import { getPopupCount } from '@shared/services/projection-preferences'
 
 /**
  * Paridade do PalcoRouteSelect do desktop: seletor compact no header de cada
- * módulo. No web os destinos são as popups deste navegador. Sempre visível
- * (não depende de nada externo).
+ * módulo. 'Só Palco (TV/monitor)' usa receivers relay (TV ou Chrome kiosk)
+ * e evita popup local; 'Espelhar todas' preserva popup + relay.
  */
 const props = defineProps<{ module: PopupRoutableModule; compact?: boolean }>()
 
