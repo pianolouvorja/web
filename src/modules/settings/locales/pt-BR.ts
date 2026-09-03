@@ -189,6 +189,7 @@ export default {
       unsupportedHint: 'Seu navegador não suporta a detecção automática de monitores. Use o modo espelho ou conecte monitores adicionais manualmente.',
       detectedHint: 'Telas detectadas via Window Management API. Use "Identificar" para ver números em cada monitor.',
       monitorN: 'Monitor {n}',
+      primary: 'Principal',
       detect: 'Detectar telas',
       copyDiagnostics: 'Copiar diagnóstico (cole de volta no chat para o time investigar)',
       // cloudConnect/cloudHint moram em palco: (componente usa settings.palco.*)
