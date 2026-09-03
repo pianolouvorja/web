@@ -9,6 +9,8 @@ export type ReceiverMessage = {
   text?: string
   footer?: string
   footerRef?: string
+  /** Envelope do receiver evolui por módulo; campos extras são intencionais. */
+  [key: string]: unknown
 }
 
 /**

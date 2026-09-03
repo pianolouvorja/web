@@ -127,7 +127,7 @@ const moduleTimeFormat = computed(() => {
 })
 
 const randomTransformOptions = [
-  { value: 'none' as const, label: t('settings.stage.transformNone') },
+  { value: 'none' as const, label: t('settings.stage.bibleTransformNone') },
   { value: 'uppercase' as const, label: 'AA' },
   { value: 'lowercase' as const, label: 'aa' },
 ]
@@ -154,9 +154,9 @@ const bibleWeightOptions: { value: StageSettings['bibleFontWeight']; label: stri
 ]
 
 const bibleTransformOptions: { value: StageSettings['bibleTextTransform']; label: string }[] = [
-  { value: 'none', label: t('settings.stage.transformNone') },
-  { value: 'uppercase', label: t('settings.stage.transformUppercase') },
-  { value: 'capitalize', label: t('settings.stage.transformCapitalize') },
+  { value: 'none', label: t('settings.stage.bibleTransformNone') },
+  { value: 'uppercase', label: t('settings.stage.bibleTransformUppercase') },
+  { value: 'capitalize', label: t('settings.stage.bibleTransformCapitalize') },
 ]
 
 const alignOptions = [
