@@ -253,12 +253,8 @@ function ensurePopups(
   )
 
   popups.forEach((popup) => {
-    const slot = popup.__popupSlot
-    if (!slot) return
-    const entry = resolveBoundsForSlot(getPopupSlotId(slot))
-    if (entry) {
-      scheduleRestoreOnWindow(popup, entry)
-    }
+    // Projeções sempre iniciam fullscreen (getOpenFeatures). Não restaurar
+    // bounds antigos aqui — restaurar janela normal desfaria o fullscreen.
     requestBoundsReport(popup)
   })
 
