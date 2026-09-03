@@ -217,6 +217,31 @@ onMounted(() => {
   void restoreLayout()
   reportBounds()
 
+  // WT-5F: fullscreen REAL no Chrome. O feature `fullscreen=yes` do
+  // window.open é IGNORADO por navegadores (só o Electron respeita) —
+  // barra de endereço + título continuavam. A Fullscreen API esconde
+  // tudo; a popup herda a user activation do clique do operador que a
+  // abriu, então requestFullscreen é permitido. Fallback: maximiza via
+  // resizeTo/moveTo (cobre a área útil, sem chrome removido).
+  if (!isControlPopup.value) {
+    const el = document.documentElement
+    const req = el.requestFullscreen?.bind(el)
+    if (req) {
+      req().catch(() => {
+        // Sem activation (ex.: reload da popup): aproxima de tela cheia.
+        try {
+          window.moveTo(
+            window.screen.availLeft ?? 0,
+            window.screen.availTop ?? 0,
+          )
+          window.resizeTo(window.screen.availWidth, window.screen.availHeight)
+        } catch {
+          // ignore — ambiente sem controle de janela
+        }
+      })
+    }
+  }
+
   layoutInterval = setInterval(() => {
     reportBounds()
   }, 2000)
