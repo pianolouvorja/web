@@ -92,6 +92,8 @@ export async function attachStoredSession(): Promise<boolean> {
   try {
     const stored = localStorage.getItem(SESSION_CODE_KEY)
     if (!stored || !/^[A-Z0-9]{6}$/.test(stored)) return false
+    // AppShell e ScreensCard podem montar na mesma sessão; não abre outro WS.
+    if (connected.value && code.value === stored) return true
     return await useStageRelay().attachCode(stored)
   } catch {
     return false
