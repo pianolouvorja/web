@@ -11,6 +11,7 @@ import { closeScreenPopups, openPopupModule } from '@shared/services/popup-windo
 import { resetStageRelayModule } from '@shared/services/palco-cloud-bridge'
 import {
   identifyScreens,
+  isScreenEnumerationSupported,
   listScreens,
   requestScreenAccess,
   subscribeScreensChanged,
@@ -61,6 +62,36 @@ async function detectScreens(): Promise<void> {
 
 function identifyDetectedScreens(): void {
   identifyScreens(detectedScreens.value)
+}
+
+// WT-5H validação: diagnóstico exportável — Ezequias copia e cola de volta.
+// Coleta browser/OS, suporte à API, estado da permissão e o inventário
+// detectado, para reproduzir falha em qualquer SO sem adivinhação.
+const diagnosisCopied = ref(false)
+async function copyDiagnostics(): Promise<void> {
+  let permission = 'desconhecida'
+  try {
+    permission = await navigator.permissions.query({
+      name: 'window-management' as PermissionName,
+    }).then((s) => s.state, () => 'não suportada')
+  } catch {
+    // Firefox/Safari: sem queryPermissions p/ window-management
+  }
+  const report = [
+    'PIANO Web — diagnóstico de telas (WT-5H)',
+    `userAgent: ${navigator.userAgent}`,
+    `platform: ${navigator.platform ?? 'n/d'}`,
+    `getScreenDetails suportada: ${isScreenEnumerationSupported()}`,
+    `permissão window-management: ${permission}`,
+    `inventário: ${detectedScreens.value.length} tela(s), limitado=${screensLimited.value}`,
+    ...detectedScreens.value.map(
+      (s) =>
+        `  - ${s.label}: ${s.width}x${s.height} @(${s.left},${s.top}) primary=${s.isPrimary} internal=${s.isInternal}`,
+    ),
+  ].join('\n')
+  await navigator.clipboard.writeText(report).catch(() => {})
+  diagnosisCopied.value = true
+  window.setTimeout(() => (diagnosisCopied.value = false), 2500)
 }
 
 onMounted(() => {
@@ -272,6 +303,9 @@ onUnmounted(() => {
           </button>
           <button v-if="!screensLimited" type="button" class="palco-slots-card__power" :aria-label="t('settings.screens.identify')" @click="identifyDetectedScreens">
             <i class="ti ti-numbers" aria-hidden="true" />
+          </button>
+          <button type="button" class="palco-slots-card__power" :aria-label="t('settings.screens.copyDiagnostics')" :title="t('settings.screens.copyDiagnostics')" @click="copyDiagnostics">
+            <i :class="diagnosisCopied ? 'ti ti-check' : 'ti ti-clipboard-text'" aria-hidden="true" />
           </button>
         </div>
       </div>
