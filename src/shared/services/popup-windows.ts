@@ -17,6 +17,7 @@ import {
   getTargetPopupSlots,
 } from '@shared/services/projection-preferences'
 import { getPopupRoute, POPUP_ROUTABLE_MODULES, type PopupRoutableModule } from './popup-routing'
+import { loadSlotAssignments } from '@shared/services/slot-monitors'
 import {
   getBrowserItem,
   setBrowserItem,
@@ -30,6 +31,42 @@ import {
 
 export const POPUP_STATE_CHANNEL = 'louvorja-popup-state'
 export const LITURGY_CONTROL_WINDOW_NAME = 'LiturgyWebControl'
+
+// WT-5I: sob o desktop Electron, popups com `monitor=<displayId>` nas features
+// ganham fullscreen NATIVO no display certo (main.mjs aplica borderless +
+// setBounds + alwaysOnTop — imune a EWMH/Wayland). Cache carregado ANTES do
+// clique: window.open precisa permanecer no gesto do operador, sem await.
+interface LouvorjaElectronBridge {
+  isElectron?: boolean
+  displays?: { list: () => Promise<Array<{ id: number; bounds: { x: number; y: number } }>> }
+}
+let electronDisplays: Array<{ id: number; bounds: { x: number; y: number } }> = []
+
+function primeElectronDisplays(): void {
+  const bridge = (window as unknown as { louvorja?: LouvorjaElectronBridge }).louvorja
+  if (!bridge?.isElectron || !bridge.displays) return
+  void bridge.displays
+    .list()
+    .then((displays) => {
+      electronDisplays = displays
+    })
+    .catch(() => {
+      // bridge indisponível: popup segue pelo caminho de coordenadas web.
+    })
+}
+
+/** Mapeia slot atribuído (screenId "left:top") → displayId do Electron. */
+function electronMonitorIdForSlot(slotId: string): number | null {
+  if (!(window as unknown as { louvorja?: LouvorjaElectronBridge }).louvorja?.isElectron) return null
+  const screenId = loadSlotAssignments()[slotId]
+  if (!screenId) return null
+  const [leftRaw, topRaw] = screenId.split(':')
+  const left = Number.parseInt(leftRaw ?? '', 10)
+  const top = Number.parseInt(topRaw ?? '', 10)
+  if (Number.isNaN(left) || Number.isNaN(top)) return null
+  const display = electronDisplays.find((d) => d.bounds.x === left && d.bounds.y === top)
+  return display ? display.id : null
+}
 
 export type PopupSyncPayload = {
   param: string
@@ -100,10 +137,18 @@ function buildControlUrl(moduleId: string): string {
 }
 
 function openPopupWindow(slot: number, moduleId?: string): PopupWindowRef | null {
+  // WT-5I: sob Electron, monitor=<displayId> nas features dispara fullscreen
+  // NATIVO no display certo (main.mjs: borderless + setBounds + alwaysOnTop).
+  // Path web (requestFullscreen) continua como fallback do browser puro.
+  const monitorId = electronMonitorIdForSlot(String(slot))
+  const features = monitorId != null
+    ? `${getOpenFeatures(slot)},monitor=${monitorId}`
+    : getOpenFeatures(slot)
+
   const win = window.open(
     buildPopupUrl(slot, moduleId, 'screen'),
     getPopupSlotId(slot),
-    getOpenFeatures(slot),
+    features,
   ) as PopupWindowRef | null
 
   if (win) {
@@ -448,6 +493,10 @@ let openerBridgeInstalled = false
 export function installPopupOpenerBridge(): void {
   if (openerBridgeInstalled || typeof window === 'undefined') return
   openerBridgeInstalled = true
+
+  // WT-5I: cache de displays do Electron p/ mapear monitor=<displayId> nas
+  // features do window.open — o gesto do clique não pode esperar IPC.
+  primeElectronDisplays()
 
   window.addEventListener('message', (event: MessageEvent) => {
     if (event.origin !== window.location.origin) return
