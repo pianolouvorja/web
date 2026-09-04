@@ -43,6 +43,11 @@ type DetailedScreen = {
 
 type ScreenDetails = { screens: DetailedScreen[] }
 
+/** ScreenDetailed do TS lib não declara todos os campos — cast via unknown. */
+function asScreenDetails(value: unknown): ScreenDetails {
+  return value as ScreenDetails
+}
+
 function mapScreen(s: DetailedScreen, index: number): WebScreen {
   return {
     id: `${s.availLeft}:${s.availTop}`,
@@ -57,11 +62,12 @@ function mapScreen(s: DetailedScreen, index: number): WebScreen {
 }
 
 function mapFallback(): WebScreen {
+  const scr = window.screen as Screen & { availLeft?: number; availTop?: number }
   return {
-    id: `${window.screen.availLeft}:${window.screen.availTop}`,
+    id: `${scr.availLeft ?? 0}:${scr.availTop ?? 0}`,
     label: 'Esta tela',
-    left: window.screen.availLeft ?? 0,
-    top: window.screen.availTop ?? 0,
+    left: scr.availLeft ?? 0,
+    top: scr.availTop ?? 0,
     width: window.screen.availWidth || window.screen.width,
     height: window.screen.availHeight || window.screen.height,
     isPrimary: true,
@@ -79,8 +85,8 @@ export async function listScreens(): Promise<ScreenListResult> {
     return { screens: [mapFallback()], limited: true, supported: false }
   }
   try {
-    const details = (await window.getScreenDetails()) as ScreenDetails
-    const mapped = details.screens.map(mapScreen)
+    const details = asScreenDetails(await window.getScreenDetails?.())
+    const mapped = (details?.screens ?? []).map(mapScreen)
     if (mapped.length === 0) {
       return { screens: [mapFallback()], limited: true, supported: true }
     }
@@ -100,8 +106,8 @@ export async function requestScreenAccess(): Promise<ScreenListResult> {
     return { screens: [mapFallback()], limited: true, supported: false }
   }
   try {
-    const details = (await window.getScreenDetails()) as ScreenDetails
-    const mapped = details.screens.map(mapScreen)
+    const details = asScreenDetails(await window.getScreenDetails?.())
+    const mapped = (details?.screens ?? []).map(mapScreen)
     return {
       screens: mapped.length > 0 ? mapped : [mapFallback()],
       limited: mapped.length === 0,

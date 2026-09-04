@@ -50,6 +50,15 @@ export default {
       tipLight: 'O Modo Claro oferece melhor legibilidade em ambientes muito iluminados durante cultos diurnos.'
     },
     projection: {
+      monitors: {
+        title: 'Arranjo de Monitores',
+        identify: 'Identificar Monitores',
+        primary: 'Principal',
+        extended: 'Estendido',
+        empty: 'Nenhum monitor detectado.',
+        resetLayout: 'Restaurar disposição',
+        hint: 'Arraste os monitores para reorganizar a posição física.',
+      },
       popupScreens: 'Telas de Projeção (popups deste navegador)',
       popupScreensDesc: 'Quantidade de telas disponíveis para projeção (como monitores estendidos). Nos módulos, escolha quais delas recebem o conteúdo.',
       popupCountLabel: 'Número de telas',
