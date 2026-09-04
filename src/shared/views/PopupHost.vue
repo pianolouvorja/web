@@ -206,6 +206,22 @@ function onStorage(event: StorageEvent) {
   refreshModule()
 }
 
+// WT-5K: fullscreen no primeiro gesto. Chromium só aceita requestFullscreen
+// dentro de clique/tecla NESTA janela — popup web pura nunca entra fullscreen
+// sozinha (WT-5F). Um clique em qualquer lugar da projeção resolve; fica
+// fullscreen até fechar a aba (Esc sai). Sempre tenta: se o usuário sair do
+// fullscreen com Esc, o próximo clique volta.
+function requestFullscreenOnGesture(): void {
+  if (isControlPopup.value) return
+  if (document.fullscreenElement) return
+  const root = document.documentElement
+  try {
+    void root.requestFullscreen().catch(() => { /* sem permissão de gesto */ })
+  } catch {
+    // API ausente
+  }
+}
+
 onMounted(() => {
   refreshModule()
 
@@ -213,6 +229,10 @@ onMounted(() => {
   window.addEventListener('resize', reportBounds)
   window.addEventListener('storage', onStorage)
   window.addEventListener('beforeunload', reportBounds)
+  window.addEventListener('click', requestFullscreenOnGesture)
+  window.addEventListener('keydown', (event) => {
+    if (event.key === 'f' || event.key === 'F') requestFullscreenOnGesture()
+  })
 
   void restoreLayout()
   reportBounds()
