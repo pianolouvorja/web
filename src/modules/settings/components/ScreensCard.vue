@@ -90,6 +90,21 @@ function identifyDetectedScreens(): void {
 // esses bounds ao abrir a popup do slot — projeção inteira (mirror, rotas)
 // passa a nascer no monitor certo, sem mudar popup-windows.
 const slotAssignments = ref<Record<string, string>>({}) // slotId ('1','2'...) -> WebScreen.id
+// Receiver cloud não é uma TV. Associação é escolhida pelo operador porque
+// browsers não expõem o monitor físico de outra máquina/aba.
+const RECEIVER_MONITORS_KEY = 'louvorja-receiver-monitors-v1'
+const receiverMonitorAssignments = ref<Record<string, string>>({})
+try { receiverMonitorAssignments.value = JSON.parse(localStorage.getItem(RECEIVER_MONITORS_KEY) ?? '{}') } catch { /* defaults */ }
+function assignReceiverToScreen(receiverId: string, event: Event): void {
+  const monitorId = (event.target as HTMLSelectElement).value
+  if (monitorId) receiverMonitorAssignments.value[receiverId] = monitorId
+  else delete receiverMonitorAssignments.value[receiverId]
+  try { localStorage.setItem(RECEIVER_MONITORS_KEY, JSON.stringify(receiverMonitorAssignments.value)) } catch { /* private mode */ }
+}
+function receiverMonitor(receiverId: string): string | null {
+  const screen = detectedScreens.value.find((item) => item.id === receiverMonitorAssignments.value[receiverId])
+  return screen?.label ?? null
+}
 
 function assignSlotToScreen(slotId: string, screen: WebScreen): void {
   assignScreenToSlot(slotId, screen)
@@ -473,15 +488,15 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <!-- ═══ TVs (desktop OU cloud WT-5c) ═══ -->
+    <!-- TVs físicas via desktop; receiver cloud é tratado como monitor. -->
     <div
       class="palco-slots-card__tv"
       :class="{ 'palco-slots-card__tv--off': !desktopConnected && !relay.connected.value }"
     >
       <div class="palco-slots-card__tv-head">
         <span class="palco-slots-card__tv-label">
-          <i class="ti ti-device-tv" aria-hidden="true" />
-          {{ t('settings.palco.tvsPlain') }}
+          <i :class="cloudMode ? 'ti ti-device-desktop' : 'ti ti-device-tv'" aria-hidden="true" />
+          {{ cloudMode ? t('settings.palco.receiversPlain') : t('settings.palco.tvsPlain') }}
           <span
             class="palco-slot__dot"
             :class="{ 'palco-slot__dot--on': desktopConnected || relay.connected.value }"
@@ -536,7 +551,7 @@ onUnmounted(() => {
         class="palco-slots-card__cloud-active"
       >
         <div class="palco-slots-card__cloud-info">
-          <small>{{ t('settings.palco.cloudCodeLabel') }}</small>
+          <small>{{ cloudMode ? t('settings.palco.receiverCodeLabel') : t('settings.palco.cloudCodeLabel') }}</small>
           <strong class="palco-slots-card__cloud-code">{{ relay.code.value }}</strong>
         </div>
         <button type="button" class="palco-slots-card__add" :title="receiverUrl" @click="copyReceiverUrl">
@@ -575,11 +590,23 @@ onUnmounted(() => {
               <strong>{{ slot.id === '0' ? t('settings.palco.mainTv') : slot.label }}</strong>
               <!-- cloud: httpPort=0 e TV sempre ativa quando conectada -->
               <small v-if="slot.httpPort">:{{ slot.httpPort }} · {{ slot.clients ? t('settings.palco.connected', { count: slot.clients }) : t('settings.palco.waiting') }}</small>
-              <small v-else>{{ t('settings.palco.connected', { count: 1 }) }} · {{ t('settings.palco.cloudAlwaysOn') }}</small>
+              <small v-else>{{ t('settings.palco.receiverConnected') }} · {{ t('settings.palco.cloudAlwaysOn') }}</small>
+              <small v-if="cloudMode && receiverMonitor(slot.id)">{{ t('settings.palco.assignedMonitor', { monitor: receiverMonitor(slot.id) }) }}</small>
             </span>
           </button>
-          <!-- WT-5: TV cloud não tem slot ligável/desligável — o conteúdo é
-               controlado pelo módulo (projetar/idle). Play/stop só no desktop. -->
+          <select
+            v-if="cloudMode && detectedScreens.length"
+            class="palco-slot__monitor-select"
+            :value="receiverMonitorAssignments[slot.id] ?? ''"
+            :aria-label="t('settings.palco.assignReceiverMonitor')"
+            @change="assignReceiverToScreen(slot.id, $event)"
+          >
+            <option value="">{{ t('settings.screens.monitorAuto') }}</option>
+            <option v-for="screen in detectedScreens" :key="screen.id" :value="screen.id">
+              {{ screen.label || t('settings.screens.monitorN', { n: detectedScreens.indexOf(screen) + 1 }) }}
+            </option>
+          </select>
+          <!-- TV física tem slot ligável/desligável; receiver cloud é sempre ativo. -->
           <button
             v-if="desktopConnected"
             type="button"
