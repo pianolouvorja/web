@@ -59,6 +59,8 @@ function resolveDefaultApiBase(): string {
     const stored = localStorage.getItem('palcoApiBase')
     if (stored) return stored
   } catch { /* SSR/privacy mode */ }
+  const configured = import.meta.env.VITE_PALCO_API_URL
+  if (configured) return `${configured.replace(/\/$/, '')}/v1/palco`
   return import.meta.env.DEV
     ? 'http://localhost:3100/v1/palco'
     : '/v1/palco'

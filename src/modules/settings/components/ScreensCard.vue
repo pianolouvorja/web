@@ -204,7 +204,7 @@ const cloudInput = ref('')
 const cloudMode = computed(() => !desktopConnected.value)
 const receiverUrl = computed(() => {
   if (!relay.code.value) return ''
-  const configured = new URLSearchParams(window.location.search).get('palcoApi') || localStorage.getItem('palcoApiBase') || window.location.origin
+  const configured = new URLSearchParams(window.location.search).get('palcoApi') || localStorage.getItem('palcoApiBase') || import.meta.env.VITE_PALCO_API_URL || window.location.origin
   const origin = new URL(configured, window.location.origin).origin
   return `${origin}/palco/?code=${encodeURIComponent(relay.code.value)}`
 })

@@ -203,6 +203,13 @@ export const useBibleStore = defineStore('bible', () => {
     }
 
     publishProjectionState(projection.value)
+    // Destino receiver/monitor cloud não tem popup. Projetar já publicou no
+    // relay; abrir popup aqui reintroduzia a janela indevida.
+    if (getPopupRoute('bible') === 'tv') {
+      isProjecting.value = true
+      startProjectionWatch()
+      return true
+    }
     const opened = await openPopupModule('bible')
     isProjecting.value = opened
     if (opened) startProjectionWatch()
@@ -218,7 +225,7 @@ export const useBibleStore = defineStore('bible', () => {
   }
 
   async function toggleProjection() {
-    if (isProjecting.value && isPopupModuleOpen('bible')) {
+    if (isProjecting.value) {
       await clearProjectionWindow()
       return false
     }
