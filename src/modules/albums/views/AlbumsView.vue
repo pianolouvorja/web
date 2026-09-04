@@ -213,6 +213,13 @@ function clearHubSearch() {
   hubSearchQuery.value = ''
 }
 
+function playSingleHubResult(): void {
+  if (hubSearchResults.value.length !== 1) return
+  const hit = hubSearchResults.value[0]
+  if (!hit) return
+  void runAction(hit.musicId, () => playSung(hit.musicId))
+}
+
 async function runAction(
   musicId: number,
   action: () => Promise<boolean | void>,
@@ -257,6 +264,7 @@ async function runAction(
             type="search"
             :placeholder="t('albums.hubSearchPlaceholder')"
             :aria-label="t('albums.hubSearchPlaceholder')"
+            @keydown.enter.prevent="playSingleHubResult"
           >
           <button
             v-if="isHubSearching"
