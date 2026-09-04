@@ -198,6 +198,8 @@ export default {
       unsupportedHint: 'Seu navegador não suporta a detecção automática de monitores. Use o modo espelho ou conecte monitores adicionais manualmente.',
       detectedHint: 'Telas detectadas via Window Management API. Use "Identificar" para ver números em cada monitor.',
       monitorN: 'Monitor {n}',
+      operatorMonitor: 'Monitor do operador',
+      operatorNone: 'Nenhum — todos podem projetar',
       primary: 'Principal',
       detect: 'Detectar telas',
       detecting: 'Detectando…',

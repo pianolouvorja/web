@@ -14,6 +14,7 @@ import {
 import type { WebScreen } from '@shared/services/display-service-web'
 
 const KEY = 'louvorja-slot-monitors'
+const OPERATOR_MONITOR_KEY = 'louvorja-operator-monitor'
 
 export type SlotMonitorMap = Record<string, string> // slotId ('1','2'...) -> WebScreen.id
 
@@ -63,6 +64,26 @@ export function findSlotForScreen(screenId: string): string | null {
   const map = loadSlotAssignments()
   const slotId = Object.keys(map).find((slot) => map[slot] === screenId)
   return slotId ?? null
+}
+
+/** Monitor onde fica a janela do operador; nunca recebe popup de projeção. */
+export function getOperatorMonitor(): string | null {
+  const saved = getBrowserItem<unknown>(OPERATOR_MONITOR_KEY)
+  return typeof saved === 'string' && saved ? saved : null
+}
+
+export function setOperatorMonitor(screenId: string | null): void {
+  if (screenId) setBrowserItem(OPERATOR_MONITOR_KEY, screenId)
+  else setBrowserItem(OPERATOR_MONITOR_KEY, '')
+  window.dispatchEvent(new Event('louvorja-slot-monitors-changed'))
+}
+
+/** Filtra slots cujo monitor físico é o PC do operador. */
+export function excludeOperatorSlots(slots: number[]): number[] {
+  const operator = getOperatorMonitor()
+  if (!operator) return slots
+  const assignments = loadSlotAssignments()
+  return slots.filter((slot) => assignments[String(slot)] !== operator)
 }
 
 /**

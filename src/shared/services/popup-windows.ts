@@ -17,7 +17,7 @@ import {
   getTargetPopupSlots,
 } from '@shared/services/projection-preferences'
 import { getPopupRoute, POPUP_ROUTABLE_MODULES, type PopupRoutableModule } from './popup-routing'
-import { loadSlotAssignments } from '@shared/services/slot-monitors'
+import { excludeOperatorSlots, loadSlotAssignments } from '@shared/services/slot-monitors'
 import {
   getBrowserItem,
   setBrowserItem,
@@ -263,7 +263,9 @@ function ensurePopups(
   slotOverride?: number[],
 ): PopupWindowRef[] {
   const availableCount = getPopupCount()
-  const targetSlots = (slotOverride ?? getTargetPopupSlots()).filter(
+  // Operador é uma tela de controle, nunca destino de projeção. Ao clicar
+  // Projetar, abre imediatamente TODOS os slots selecionados restantes.
+  const targetSlots = excludeOperatorSlots(slotOverride ?? getTargetPopupSlots()).filter(
     (slot) => slot >= 1 && slot <= availableCount,
   )
   let popups = getPopupRefs()

@@ -9,12 +9,16 @@ import { getPopupCount, setPopupCount } from '@shared/services/projection-prefer
 import { getPopupRefs } from '@shared/services/popup-registry'
 import {
   closeScreenPopups,
+  hasLivePopups,
   openPopupModule,
+  syncPopupWindows,
 } from '@shared/services/popup-windows'
 import {
   assignScreenToSlot,
   clearScreenAssignment,
+  getOperatorMonitor,
   loadSlotAssignments,
+  setOperatorMonitor,
 } from '@shared/services/slot-monitors'
 import { resetStageRelayModule } from '@shared/services/palco-cloud-bridge'
 import {
@@ -90,6 +94,15 @@ function identifyDetectedScreens(): void {
 // esses bounds ao abrir a popup do slot — projeção inteira (mirror, rotas)
 // passa a nascer no monitor certo, sem mudar popup-windows.
 const slotAssignments = ref<Record<string, string>>({}) // slotId ('1','2'...) -> WebScreen.id
+const operatorMonitorId = ref<string | null>(getOperatorMonitor())
+function setOperatorScreen(event: Event): void {
+  const value = (event.target as HTMLSelectElement).value || null
+  setOperatorMonitor(value)
+  operatorMonitorId.value = value
+  // Se já projeta, remove a tela do operador e abre os outros selecionados
+  // no mesmo clique — não exige desmarcar/marcar de novo (Ezequias #53680).
+  if (hasLivePopups()) syncPopupWindows()
+}
 // Receiver cloud não é uma TV. Associação é escolhida pelo operador porque
 // browsers não expõem o monitor físico de outra máquina/aba.
 const RECEIVER_MONITORS_KEY = 'louvorja-receiver-monitors-v1'
@@ -411,6 +424,16 @@ onUnmounted(() => {
           </button>
         </div>
       </div>
+      <label v-if="detectedScreens.length" class="palco-slots-card__operator-select">
+        <i class="ti ti-user-screen" aria-hidden="true" />
+        <span>{{ t('settings.screens.operatorMonitor') }}</span>
+        <select :value="operatorMonitorId ?? ''" @change="setOperatorScreen">
+          <option value="">{{ t('settings.screens.operatorNone') }}</option>
+          <option v-for="screen in detectedScreens" :key="screen.id" :value="screen.id">
+            {{ screen.label || t('settings.screens.monitorN', { n: detectedScreens.indexOf(screen) + 1 }) }}
+          </option>
+        </select>
+      </label>
       <div class="palco-slots-card__detected-list" :class="{ 'palco-slots-card__detected-list--refreshed': listRefreshed }">
         <div v-for="(screen, index) in detectedScreens" :key="screen.id" class="palco-slots-card__detected-item" :class="{ 'palco-slots-card__detected-item--assigned': assignedSlotsForScreen(screen).length > 0 }">
           <i class="ti ti-device-desktop" aria-hidden="true" />
@@ -682,6 +705,7 @@ onUnmounted(() => {
 .palco-slots-card__add { display:flex; align-items:center; gap:.35rem; padding:.45rem .7rem; border:1px solid color-mix(in srgb,var(--ds-color-primary) 50%,transparent); border-radius:.5rem 0 .5rem 0; background:transparent; color:var(--ds-color-primary); cursor:pointer; font-size:.75rem; }
 .palco-slot__remove { display:flex; align-items:center; justify-content:center; width:1.8rem; height:1.8rem; border:0; border-radius:.35rem; background:transparent; color:var(--ds-color-on-surface-variant); cursor:pointer; }
 .palco-slot__remove:hover { color:#e65c66; }
+.palco-slots-card__operator-select{display:flex;align-items:center;gap:.5rem;margin:.75rem 0;color:var(--ds-color-on-surface-variant);font-size:.78rem}.palco-slots-card__operator-select .ti{color:var(--ds-color-primary);font-size:1rem}.palco-slots-card__operator-select select{min-width:0;flex:1;padding:.35rem .5rem;border:1px solid color-mix(in srgb,var(--ds-color-primary) 28%,transparent);border-radius:.4rem;background:color-mix(in srgb,var(--ds-color-on-surface) 6%,transparent);color:var(--ds-color-on-surface);font:inherit}
 .palco-slots-card__tv { display:flex; flex-direction:column; gap:.5rem; padding:.75rem 1.25rem; border-top:1px solid color-mix(in srgb,var(--ds-color-on-surface) 8%,transparent); }
 .palco-slots-card__cloud{display:flex;gap:8px;align-items:center;margin:8px 0}
 .palco-slots-card__cloud-input{width:110px;padding:8px 10px;border-radius:8px;border:1px solid var(--glass-border,rgba(255,255,255,.2));background:transparent;color:inherit;font:inherit;text-transform:uppercase;letter-spacing:3px;text-align:center}
