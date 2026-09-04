@@ -53,6 +53,24 @@ describe('toReceiverMessage', () => {
   })
 })
 
+// ===== WT-6: áudio da liturgia via relay =====
+describe('toReceiverMessage — liturgia-web audio', () => {
+  it('áudio local com URL acessível → type video (receiver <video> toca MP3) com action play', async () => {
+    const msg = await toReceiverMessage('liturgy-web', { active: true, kind: 'audio', url: 'https://cdn.exemplo.com/hino.mp3', title: 'Especial' })
+    expect(msg).toMatchObject({ v: 2, type: 'video', url: 'https://cdn.exemplo.com/hino.mp3', action: 'play', title: 'Especial' })
+  })
+
+  it('áudio blob: → idle com aviso honesto (arquivo só no computador do operador)', async () => {
+    const msg = await toReceiverMessage('liturgy-web', { active: true, kind: 'audio', url: 'blob:xyz', title: 'Especial' })
+    expect(msg).toMatchObject({ type: 'idle' })
+    expect((msg as { msg?: string }).msg).toContain('Áudio local')
+  })
+
+  it('áudio inativo → idle limpo', async () => {
+    expect(await toReceiverMessage('liturgy-web', { active: false, kind: 'audio', url: 'https://x/y.mp3' })).toMatchObject({ type: 'idle' })
+  })
+})
+
 // ===== Aceite WT-5f: personalização do palco na BÍBLIA via relay =====
 // Condições: (1) bg idêntico ao configurado, (2) font-size idêntico,
 // (3) toda personalização aplicada quando houver, (4) sem personalização

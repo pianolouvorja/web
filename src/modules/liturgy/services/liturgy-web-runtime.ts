@@ -10,6 +10,7 @@ export type LiturgyWebKind =
   | 'youtube'
   | 'vimeo'
   | 'site'
+  | 'audio'
   | 'video'
   | 'image'
   | 'pdf'
@@ -174,6 +175,7 @@ export function normalizeLiturgyWebRuntime(
     kindRaw === 'youtube' ||
     kindRaw === 'vimeo' ||
     kindRaw === 'site' ||
+    kindRaw === 'audio' ||
     kindRaw === 'video' ||
     kindRaw === 'image' ||
     kindRaw === 'pdf'

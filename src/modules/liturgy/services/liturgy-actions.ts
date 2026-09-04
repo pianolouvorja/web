@@ -8,12 +8,14 @@ import { INTERNAL_FILE_TYPES } from '../types/liturgy'
 import { isExecutableItem } from './liturgy-item-helpers'
 import { isBrowsableMediaUrl } from './liturgy-web-runtime'
 import {
+  openLiturgyLocalAudioControl,
   openLiturgyLocalImageControl,
   openLiturgyLocalPdfControl,
   openLiturgyLocalVideoControl,
   openLiturgySiteControl,
   openLiturgySiteOnScreens,
   openLiturgyVideoControl,
+  playLiturgyLocalAudioOnScreens,
   playLiturgyLocalImageOnScreens,
   playLiturgyLocalPdfOnScreens,
   playLiturgyLocalVideoOnScreens,
@@ -122,15 +124,20 @@ async function executeVerseItem(item: LiturgyItem, router: Router): Promise<Litu
 
 async function executeFileItem(
   item: LiturgyItem,
-  type: 'video' | 'images' | 'pdf', // NOSONAR
+  type: 'audio' | 'video' | 'images' | 'pdf', // NOSONAR
 ): Promise<LiturgyActionResult> {
   const filePath = item.filePath?.trim()
   if (!filePath) return FAIL_DESKTOP
 
-  if (type === 'video' || type === 'pdf') {
+  if (type === 'audio' || type === 'video' || type === 'pdf') {
     const check = requireBrowsableFile(filePath)
     if (check) return check
-    const openFn = type === 'video' ? openLiturgyLocalVideoControl : openLiturgyLocalPdfControl
+    const openFn =
+      type === 'audio'
+        ? openLiturgyLocalAudioControl
+        : type === 'video'
+          ? openLiturgyLocalVideoControl
+          : openLiturgyLocalPdfControl
     return tryOpenOnScreens(() => openFn(filePath, labelOrFallback(item, filePath)))
   }
 
@@ -167,10 +174,11 @@ export async function executeLiturgyItem(
       return executeVerseItem(item, router)
     case 'online_video':
       return executeUrlItem(item, 'online_video')
+    case 'audio':
     case 'video':
     case 'pdf':
     case 'images':
-      return executeFileItem(item, item.type as 'video' | 'images' | 'pdf')
+      return executeFileItem(item, item.type as 'audio' | 'video' | 'images' | 'pdf')
     case 'presentation':
       return item.filePath?.trim()
         ? { ok: false, messageKey: 'liturgy.messages.presentationWebUnsupported' }
@@ -185,7 +193,7 @@ export async function executeLiturgyItem(
 /** Abre o controle (se preciso) e dá play — telas (popups) seguem. */
 async function playFileOnScreens(
   item: LiturgyItem,
-  type: 'video' | 'images' | 'pdf',
+  type: 'audio' | 'video' | 'images' | 'pdf', // NOSONAR
 ): Promise<LiturgyActionResult> {
   if (type === 'images') {
     const paths = resolveImagePaths(item)
@@ -198,7 +206,11 @@ async function playFileOnScreens(
   const check = requireBrowsableFile(item.filePath)
   if (check) return check
   const playFn =
-    type === 'video' ? playLiturgyLocalVideoOnScreens : playLiturgyLocalPdfOnScreens
+    type === 'audio'
+      ? playLiturgyLocalAudioOnScreens
+      : type === 'video'
+        ? playLiturgyLocalVideoOnScreens
+        : playLiturgyLocalPdfOnScreens
   return tryOpenOnScreens(() => playFn(item.filePath!.trim(), labelOrFallback(item, item.filePath!.trim())))
 }
 
@@ -208,10 +220,11 @@ export async function playLiturgyItemOnScreens(
   switch (item.type) {
     case 'music':
       return openLiturgyMusicOnScreens(item)
+    case 'audio':
     case 'video':
     case 'images':
     case 'pdf':
-      return playFileOnScreens(item, item.type as 'video' | 'images' | 'pdf')
+      return playFileOnScreens(item, item.type as 'audio' | 'video' | 'images' | 'pdf')
     case 'presentation':
       return item.filePath?.trim()
         ? { ok: false, messageKey: 'liturgy.messages.presentationWebUnsupported' }

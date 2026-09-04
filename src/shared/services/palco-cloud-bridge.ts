@@ -241,15 +241,17 @@ export async function toReceiverMessage(moduleId: string, payload: unknown): Pro
     const active = p.active === true
     const kind = typeof p.kind === 'string' ? p.kind : 'site'
     if (!active) return { v: 2, type: 'idle', msg: '' }
-    if (kind === 'video' || kind === 'youtube' || kind === 'vimeo') {
+    // WT-6: áudio local usa o mesmo contrato de vídeo (receiver <audio>/<video>).
+    if (kind === 'audio' || kind === 'video' || kind === 'youtube' || kind === 'vimeo') {
       const url = typeof p.url === 'string' ? p.url.trim() : ''
       if (!url) return { v: 2, type: 'idle', msg: '' }
       // YouTube/Vimeo = página, não arquivo — receiver <video> não toca.
-      if (kind !== 'video') {
+      if (kind !== 'video' && kind !== 'audio') {
         return { v: 2, type: 'idle', msg: 'Vídeo online: abra no popup do operador (TV não reproduz links de página).' }
       }
       if (url.startsWith('blob:')) {
-        return { v: 2, type: 'idle', msg: 'Vídeo local: indisponível para TV via browser (arquivo só no computador do operador).' }
+        const what = kind === 'audio' ? 'Áudio local' : 'Vídeo local'
+        return { v: 2, type: 'idle', msg: `${what}: indisponível para TV via browser (arquivo só no computador do operador).` }
       }
       return {
         v: 2,
