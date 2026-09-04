@@ -12,11 +12,10 @@ import {
   openPopupModule,
 } from '@shared/services/popup-windows'
 import {
-  clearSlotBounds,
-  getPopupSlotId,
-  saveSlotBounds,
-} from '@shared/services/popup-layout'
-import { getBrowserItem, setBrowserItem } from '@shared/services/browser-storage'
+  assignScreenToSlot,
+  clearScreenAssignment,
+  loadSlotAssignments,
+} from '@shared/services/slot-monitors'
 import { resetStageRelayModule } from '@shared/services/palco-cloud-bridge'
 import {
   identifyScreens,
@@ -52,6 +51,7 @@ const screensLimited = ref(true)
 const screensSupported = ref(false)
 const detectingScreens = ref(false)
 let unsubscribeScreensChanged: (() => void) | null = null
+const onSlotMonitorsChanged = () => refreshSlotAssignments()
 
 async function refreshDetectedScreens(requestPermission = false): Promise<void> {
   const result = requestPermission ? await requestScreenAccess() : await listScreens()
@@ -91,31 +91,14 @@ function identifyDetectedScreens(): void {
 // passa a nascer no monitor certo, sem mudar popup-windows.
 const slotAssignments = ref<Record<string, string>>({}) // slotId ('1','2'...) -> WebScreen.id
 
-function buildMonitorBounds(screen: WebScreen) {
-  return {
-    left: screen.left,
-    top: screen.top,
-    width: screen.width,
-    height: screen.height,
-    screenLeft: screen.left,
-    screenTop: screen.top,
-    screenWidth: screen.width,
-    screenHeight: screen.height,
-  }
-}
-
 function assignSlotToScreen(slotId: string, screen: WebScreen): void {
-  saveSlotBounds(getPopupSlotId(Number(slotId)), buildMonitorBounds(screen))
-  slotAssignments.value = { ...slotAssignments.value, [slotId]: screen.id }
-  setBrowserItem('louvorja-slot-monitors', slotAssignments.value)
+  assignScreenToSlot(slotId, screen)
+  slotAssignments.value = loadSlotAssignments()
 }
 
 function clearSlotAssignment(slotId: string): void {
-  clearSlotBounds(getPopupSlotId(Number(slotId)))
-  const next = { ...slotAssignments.value }
-  delete next[slotId]
-  slotAssignments.value = next
-  setBrowserItem('louvorja-slot-monitors', next)
+  clearScreenAssignment(slotId)
+  slotAssignments.value = loadSlotAssignments()
 }
 
 function isSlotAssignedTo(slotId: string, screen: WebScreen): boolean {
@@ -148,9 +131,8 @@ function onMonitorSelect(slotId: string, event: Event): void {
   if (screen) assignSlotToScreen(slotId, screen)
 }
 
-function loadSlotAssignments(): void {
-  const saved = getBrowserItem<Record<string, string>>('louvorja-slot-monitors')
-  slotAssignments.value = saved && typeof saved === 'object' ? saved : {}
+function refreshSlotAssignments(): void {
+  slotAssignments.value = loadSlotAssignments()
 }
 
 // WT-5H validação: diagnóstico exportável — Ezequias copia e cola de volta.
@@ -184,7 +166,8 @@ async function copyDiagnostics(): Promise<void> {
 }
 
 onMounted(() => {
-  loadSlotAssignments()
+  refreshSlotAssignments()
+  window.addEventListener('louvorja-slot-monitors-changed', onSlotMonitorsChanged)
   void refreshDetectedScreens()
   unsubscribeScreensChanged = subscribeScreensChanged(() => {
     void refreshDetectedScreens()
@@ -192,6 +175,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  window.removeEventListener('louvorja-slot-monitors-changed', onSlotMonitorsChanged)
   unsubscribeScreensChanged?.()
   unsubscribeScreensChanged = null
 })

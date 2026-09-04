@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import {
@@ -8,6 +8,12 @@ import {
   type PopupRoutableModule,
 } from '@shared/services/popup-routing'
 import { getPopupCount } from '@shared/services/projection-preferences'
+import { listScreens, type WebScreen } from '@shared/services/display-service-web'
+import {
+  assignScreenToSlot,
+  loadSlotAssignments,
+  pickSlotForScreen,
+} from '@shared/services/slot-monitors'
 
 /**
  * Paridade do PalcoRouteSelect do desktop: seletor compact no header de cada
@@ -19,9 +25,39 @@ const props = defineProps<{ module: PopupRoutableModule; compact?: boolean }>()
 const { t } = useI18n()
 
 const popupCount = computed(() => getPopupCount())
+const selectedRoute = ref(getPopupRoute(props.module))
+const detectedScreens = ref<WebScreen[]>([])
+
+function slotLabel(slotId: number): string {
+  const base = slotId === 1
+    ? t('settings.screens.mainScreen')
+    : t('settings.screens.screenN', { n: slotId })
+  const screenId = loadSlotAssignments()[String(slotId)]
+  const screen = detectedScreens.value.find((item) => item.id === screenId)
+  return screen ? `${base} — ${screen.label || t('settings.screens.monitorN', { n: detectedScreens.value.indexOf(screen) + 1 })}` : base
+}
+
+onMounted(() => {
+  void listScreens().then((result) => {
+    // Sem permissão a API devolve somente a tela atual; não duplicar o slot.
+    if (!result.limited) detectedScreens.value = result.screens
+  })
+})
 
 function update(value: string): void {
-  setPopupRoute(props.module, value)
+  if (!value.startsWith('monitor:')) {
+    selectedRoute.value = value
+    setPopupRoute(props.module, value)
+    return
+  }
+
+  const screen = detectedScreens.value.find((item) => item.id === value.slice('monitor:'.length))
+  if (!screen) return
+  const slotId = pickSlotForScreen(screen.id, popupCount.value)
+  assignScreenToSlot(slotId, screen)
+  // O módulo passa a projetar só no slot que acabou de receber o monitor.
+  selectedRoute.value = slotId
+  setPopupRoute(props.module, slotId)
 }
 </script>
 
@@ -36,7 +72,7 @@ function update(value: string): void {
     />
     <span>{{ t('settings.screens.route') }}</span>
     <select
-      :value="getPopupRoute(props.module)"
+      :value="selectedRoute"
       @change="update(($event.target as HTMLSelectElement).value)"
     >
       <option value="mirror">
@@ -54,7 +90,19 @@ function update(value: string): void {
           :key="slot"
           :value="String(slot)"
         >
-          {{ slot === 1 ? t('settings.screens.mainScreen') : t('settings.screens.screenN', { n: slot }) }}
+          {{ slotLabel(slot) }}
+        </option>
+      </optgroup>
+      <optgroup
+        v-if="detectedScreens.length > 1"
+        :label="t('settings.screens.detectedTitle')"
+      >
+        <option
+          v-for="(screen, index) in detectedScreens"
+          :key="screen.id"
+          :value="`monitor:${screen.id}`"
+        >
+          {{ screen.label || t('settings.screens.monitorN', { n: index + 1 }) }} · {{ screen.width }} × {{ screen.height }}
         </option>
       </optgroup>
     </select>
