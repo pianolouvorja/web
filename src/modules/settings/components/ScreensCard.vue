@@ -202,6 +202,19 @@ const tvError = ref('')
 const relay = useStageRelay()
 const cloudInput = ref('')
 const cloudMode = computed(() => !desktopConnected.value)
+const receiverUrl = computed(() => {
+  if (!relay.code.value) return ''
+  const configured = new URLSearchParams(window.location.search).get('palcoApi') || localStorage.getItem('palcoApiBase') || window.location.origin
+  const origin = new URL(configured, window.location.origin).origin
+  return `${origin}/palco/?code=${encodeURIComponent(relay.code.value)}`
+})
+const receiverUrlCopied = ref(false)
+async function copyReceiverUrl(): Promise<void> {
+  if (!receiverUrl.value) return
+  await navigator.clipboard.writeText(receiverUrl.value).catch(() => {})
+  receiverUrlCopied.value = true
+  window.setTimeout(() => (receiverUrlCopied.value = false), 2000)
+}
 // WT-5 (criar sessão): web gera o código — TV só consome. Com o fluxo
 // streaming a TV também pode criar (OK vazio) e mostrar o QR dela; aqui
 // fica só o criar manual + encerrar.
@@ -526,6 +539,10 @@ onUnmounted(() => {
           <small>{{ t('settings.palco.cloudCodeLabel') }}</small>
           <strong class="palco-slots-card__cloud-code">{{ relay.code.value }}</strong>
         </div>
+        <button type="button" class="palco-slots-card__add" :title="receiverUrl" @click="copyReceiverUrl">
+          <i :class="receiverUrlCopied ? 'ti ti-check' : 'ti ti-copy'" aria-hidden="true" />
+          {{ receiverUrlCopied ? t('settings.palco.receiverUrlCopied') : t('settings.palco.addReceiver') }}
+        </button>
         <button
           type="button"
           class="palco-slots-card__remove"
