@@ -198,7 +198,10 @@ export default {
       identifying: 'Identifying…',
       unchanged: 'Inventory rechecked — no change. If a monitor is missing, check its connection or the system display settings.',
       assignSlot: 'Assign Screen {n} to this monitor',
+      assignSlotAria: 'Screen {n} monitor',
+      monitorAuto: 'Automatic (current monitor)',
       clearAssignment: 'Remove this screen assignment',
+      slotsAssigned: 'Screens: {slots}',
       copyDiagnostics: 'Copy diagnostics (paste back into the chat for the team to investigate)',
       modules: {
         bible: 'Bible',

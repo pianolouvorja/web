@@ -197,7 +197,10 @@ export default {
       identifying: 'Identificando…',
       unchanged: 'Inventario reverificado — sin cambios. Si falta un monitor, revisa su conexión o la configuración de pantalla del sistema.',
       assignSlot: 'Asignar Pantalla {n} a este monitor',
+      assignSlotAria: 'Monitor de la Pantalla {n}',
+      monitorAuto: 'Automático (monitor actual)',
       clearAssignment: 'Quitar esta asignación de pantalla',
+      slotsAssigned: 'Pantallas: {slots}',
       copyDiagnostics: 'Copiar diagnóstico (pega de vuelta en el chat para que el equipo investigue)',
       modules: {
         bible: 'Biblia',

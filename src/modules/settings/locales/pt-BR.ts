@@ -196,7 +196,10 @@ export default {
       identifying: 'Identificando…',
       unchanged: 'Inventário reavaliado — nenhuma mudança. Se um monitor não aparece, verifique a conexão ou as configurações de exibição do sistema.',
       assignSlot: 'Atribuir Tela {n} a este monitor',
+      assignSlotAria: 'Monitor da Tela {n}',
+      monitorAuto: 'Automático (monitor atual)',
       clearAssignment: 'Remover atribuição desta tela',
+      slotsAssigned: 'Telas: {slots}',
       copyDiagnostics: 'Copiar diagnóstico (cole de volta no chat para o time investigar)',
       // cloudConnect/cloudHint moram em palco: (componente usa settings.palco.*)
       tvHowTo: 'Conecte uma TV com o receiver LouvorJA na mesma rede.',

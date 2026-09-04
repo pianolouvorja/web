@@ -128,6 +128,26 @@ function assignedSlotsForScreen(screen: WebScreen): string[] {
   return slotIds.value.filter((slotId) => slotAssignments.value[slotId] === screen.id)
 }
 
+/** Label do monitor atribuído ao slot (ou null = automático). */
+function monitorForSlot(slotId: string): string | null {
+  const monitorId = slotAssignments.value[slotId]
+  if (!monitorId) return null
+  const screen = detectedScreens.value.find((s) => s.id === monitorId)
+  if (!screen) return null
+  return screen.label || t('settings.screens.monitorN', { n: detectedScreens.value.indexOf(screen) + 1 })
+}
+
+/** Change do <select> de monitor na linha do slot. */
+function onMonitorSelect(slotId: string, event: Event): void {
+  const value = (event.target as HTMLSelectElement).value
+  if (!value) {
+    clearSlotAssignment(slotId)
+    return
+  }
+  const screen = detectedScreens.value.find((s) => s.id === value)
+  if (screen) assignSlotToScreen(slotId, screen)
+}
+
 function loadSlotAssignments(): void {
   const saved = getBrowserItem<Record<string, string>>('louvorja-slot-monitors')
   slotAssignments.value = saved && typeof saved === 'object' ? saved : {}
@@ -382,20 +402,7 @@ onUnmounted(() => {
       <div class="palco-slots-card__detected-list" :class="{ 'palco-slots-card__detected-list--refreshed': listRefreshed }">
         <div v-for="(screen, index) in detectedScreens" :key="screen.id" class="palco-slots-card__detected-item" :class="{ 'palco-slots-card__detected-item--assigned': assignedSlotsForScreen(screen).length > 0 }">
           <i class="ti ti-device-desktop" aria-hidden="true" />
-          <span><strong>{{ screen.label || t('settings.screens.monitorN', { n: index + 1 }) }}</strong><small>{{ screen.width }} × {{ screen.height }}{{ screen.isPrimary ? ` · ${t('settings.screens.primary')}` : '' }}</small></span>
-          <div class="palco-slots-card__detected-item-slots">
-            <button
-              v-for="slotId in slotIds"
-              :key="slotId"
-              type="button"
-              class="palco-slots-card__detected-slot-chip"
-              :class="{ 'palco-slots-card__detected-slot-chip--active': isSlotAssignedTo(slotId, screen) }"
-              :title="isSlotAssignedTo(slotId, screen) ? t('settings.screens.clearAssignment') : t('settings.screens.assignSlot', { n: slotId })"
-              @click="isSlotAssignedTo(slotId, screen) ? clearSlotAssignment(slotId) : assignSlotToScreen(slotId, screen)"
-            >
-              {{ slotId }}
-            </button>
-          </div>
+          <span><strong>{{ screen.label || t('settings.screens.monitorN', { n: index + 1 }) }}</strong><small>{{ screen.width }} × {{ screen.height }}{{ screen.isPrimary ? ` · ${t('settings.screens.primary')}` : '' }}<template v-if="assignedSlotsForScreen(screen).length"> · {{ t('settings.screens.slotsAssigned', { slots: assignedSlotsForScreen(screen).join(', ') }) }}</template></small></span>
         </div>
         <small v-if="listRefreshed && detectedScreens.length === detectedCountBefore" class="palco-slots-card__detected-unchanged">
           {{ t('settings.screens.unchanged') }}
@@ -421,9 +428,23 @@ onUnmounted(() => {
           />
           <span>
             <strong>{{ slot.id === '1' ? t('settings.screens.mainScreen') : t('settings.screens.screenN', { n: slot.id }) }}</strong>
-            <small>{{ t('settings.screens.waitingScreen') }}</small>
+            <small>{{ monitorForSlot(slot.id) ? monitorForSlot(slot.id) : t('settings.screens.waitingScreen') }}</small>
           </span>
         </button>
+        <!-- WT-5H: seleção do monitor real na própria linha do slot. Chips só
+             aparecem quando há monitores detectados (permissão concedida). -->
+        <select
+          v-if="detectedScreens.length > 1"
+          class="palco-slot__monitor-select"
+          :value="slotAssignments[slot.id] ?? ''"
+          :aria-label="t('settings.screens.assignSlotAria', { n: slot.id })"
+          @change="onMonitorSelect(slot.id, $event)"
+        >
+          <option value="">{{ t('settings.screens.monitorAuto') }}</option>
+          <option v-for="screen in detectedScreens" :key="screen.id" :value="screen.id">
+            {{ screen.label || t('settings.screens.monitorN', { n: detectedScreens.indexOf(screen) + 1 }) }}
+          </option>
+        </select>
         <span
           v-if="activeId === slot.id"
           class="palco-slot__badge"
@@ -660,9 +681,7 @@ onUnmounted(() => {
 @keyframes spin { to { transform: rotate(360deg); } }
 .palco-slots-card__detected-item { display:flex; align-items:center; gap:.5rem; padding:.5rem .7rem; border-radius:.5rem 0 .5rem 0; background:color-mix(in srgb,var(--ds-color-on-surface) 6%,transparent); }
 .palco-slots-card__detected-item--assigned { outline:1px solid color-mix(in srgb,var(--ds-color-primary) 55%,transparent); }
-.palco-slots-card__detected-item-slots { display:flex; gap:.25rem; margin-left:auto; }
-.palco-slots-card__detected-slot-chip { min-width:1.7rem; height:1.7rem; padding:0 .35rem; border:1px solid color-mix(in srgb,var(--ds-color-on-surface) 18%,transparent); border-radius:.35rem; background:transparent; color:var(--ds-color-on-surface-variant); font:700 .72rem/1 inherit; cursor:pointer; }
-.palco-slots-card__detected-slot-chip--active { border-color:var(--ds-color-primary); background:var(--ds-color-primary); color:var(--ds-color-on-primary); }
+.palco-slot__monitor-select { max-width:11rem; height:1.9rem; padding:0 .4rem; border:1px solid color-mix(in srgb,var(--ds-color-on-surface) 18%,transparent); border-radius:.4rem; background:color-mix(in srgb,var(--ds-color-on-surface) 5%,transparent); color:var(--ds-color-on-surface); font-size:.74rem; cursor:pointer; }
 .palco-slots-card__detected-item .ti-device-desktop { color:var(--ds-color-primary); }
 .palco-slots-card__detected-item strong { display:block; font-size:.8rem; color:var(--ds-color-on-surface); }
 .palco-slots-card__detected-item small { display:block; margin-top:.1rem; font-size:.68rem; color:var(--ds-color-on-surface-variant); }
