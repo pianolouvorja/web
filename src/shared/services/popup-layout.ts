@@ -174,6 +174,15 @@ export function saveSlotBounds(slotId: string, bounds: Partial<PopupBounds>): vo
   setBrowserItem(BROWSER_STORAGE_KEYS.popupLayout, layout)
 }
 
+/** Remove a atribuição persistida; próximo open volta ao monitor atual/default. */
+export function clearSlotBounds(slotId: string): void {
+  if (!slotId) return
+  const layout = getLayout()
+  if (!(slotId in layout)) return
+  delete layout[slotId]
+  setBrowserItem(BROWSER_STORAGE_KEYS.popupLayout, layout)
+}
+
 export function captureCurrentBounds(targetWindow: Window = window): PopupBounds | null {
   const bounds = normalizeBounds({
     left: targetWindow.screenX,

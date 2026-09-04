@@ -197,6 +197,8 @@ export default {
       identify: 'Identify screens',
       identifying: 'Identifying…',
       unchanged: 'Inventory rechecked — no change. If a monitor is missing, check its connection or the system display settings.',
+      assignSlot: 'Assign Screen {n} to this monitor',
+      clearAssignment: 'Remove this screen assignment',
       copyDiagnostics: 'Copy diagnostics (paste back into the chat for the team to investigate)',
       modules: {
         bible: 'Bible',

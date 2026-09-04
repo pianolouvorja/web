@@ -7,7 +7,16 @@ import { GlassCard } from '@design-system/index'
 
 import { getPopupCount, setPopupCount } from '@shared/services/projection-preferences'
 import { getPopupRefs } from '@shared/services/popup-registry'
-import { closeScreenPopups, openPopupModule } from '@shared/services/popup-windows'
+import {
+  closeScreenPopups,
+  openPopupModule,
+} from '@shared/services/popup-windows'
+import {
+  clearSlotBounds,
+  getPopupSlotId,
+  saveSlotBounds,
+} from '@shared/services/popup-layout'
+import { getBrowserItem, setBrowserItem } from '@shared/services/browser-storage'
 import { resetStageRelayModule } from '@shared/services/palco-cloud-bridge'
 import {
   identifyScreens,
@@ -76,6 +85,54 @@ function identifyDetectedScreens(): void {
   identifyScreens(detectedScreens.value)
 }
 
+// WT-5H: atribuição slot → monitor real. Salva os bounds do monitor na
+// persistência de layout (popup-layout); getProjectionFullscreenBounds lê
+// esses bounds ao abrir a popup do slot — projeção inteira (mirror, rotas)
+// passa a nascer no monitor certo, sem mudar popup-windows.
+const slotAssignments = ref<Record<string, string>>({}) // slotId ('1','2'...) -> WebScreen.id
+
+function buildMonitorBounds(screen: WebScreen) {
+  return {
+    left: screen.left,
+    top: screen.top,
+    width: screen.width,
+    height: screen.height,
+    screenLeft: screen.left,
+    screenTop: screen.top,
+    screenWidth: screen.width,
+    screenHeight: screen.height,
+  }
+}
+
+function assignSlotToScreen(slotId: string, screen: WebScreen): void {
+  saveSlotBounds(getPopupSlotId(Number(slotId)), buildMonitorBounds(screen))
+  slotAssignments.value = { ...slotAssignments.value, [slotId]: screen.id }
+  setBrowserItem('louvorja-slot-monitors', slotAssignments.value)
+}
+
+function clearSlotAssignment(slotId: string): void {
+  clearSlotBounds(getPopupSlotId(Number(slotId)))
+  const next = { ...slotAssignments.value }
+  delete next[slotId]
+  slotAssignments.value = next
+  setBrowserItem('louvorja-slot-monitors', next)
+}
+
+function isSlotAssignedTo(slotId: string, screen: WebScreen): boolean {
+  return slotAssignments.value[slotId] === screen.id
+}
+
+const slotIds = computed(() => Array.from({ length: popupCount.value }, (_, i) => String(i + 1)))
+
+function assignedSlotsForScreen(screen: WebScreen): string[] {
+  return slotIds.value.filter((slotId) => slotAssignments.value[slotId] === screen.id)
+}
+
+function loadSlotAssignments(): void {
+  const saved = getBrowserItem<Record<string, string>>('louvorja-slot-monitors')
+  slotAssignments.value = saved && typeof saved === 'object' ? saved : {}
+}
+
 // WT-5H validação: diagnóstico exportável — Ezequias copia e cola de volta.
 // Coleta browser/OS, suporte à API, estado da permissão e o inventário
 // detectado, para reproduzir falha em qualquer SO sem adivinhação.
@@ -107,6 +164,7 @@ async function copyDiagnostics(): Promise<void> {
 }
 
 onMounted(() => {
+  loadSlotAssignments()
   void refreshDetectedScreens()
   unsubscribeScreensChanged = subscribeScreensChanged(() => {
     void refreshDetectedScreens()
@@ -322,9 +380,22 @@ onUnmounted(() => {
         </div>
       </div>
       <div class="palco-slots-card__detected-list" :class="{ 'palco-slots-card__detected-list--refreshed': listRefreshed }">
-        <div v-for="(screen, index) in detectedScreens" :key="screen.id" class="palco-slots-card__detected-item">
+        <div v-for="(screen, index) in detectedScreens" :key="screen.id" class="palco-slots-card__detected-item" :class="{ 'palco-slots-card__detected-item--assigned': assignedSlotsForScreen(screen).length > 0 }">
           <i class="ti ti-device-desktop" aria-hidden="true" />
           <span><strong>{{ screen.label || t('settings.screens.monitorN', { n: index + 1 }) }}</strong><small>{{ screen.width }} × {{ screen.height }}{{ screen.isPrimary ? ` · ${t('settings.screens.primary')}` : '' }}</small></span>
+          <div class="palco-slots-card__detected-item-slots">
+            <button
+              v-for="slotId in slotIds"
+              :key="slotId"
+              type="button"
+              class="palco-slots-card__detected-slot-chip"
+              :class="{ 'palco-slots-card__detected-slot-chip--active': isSlotAssignedTo(slotId, screen) }"
+              :title="isSlotAssignedTo(slotId, screen) ? t('settings.screens.clearAssignment') : t('settings.screens.assignSlot', { n: slotId })"
+              @click="isSlotAssignedTo(slotId, screen) ? clearSlotAssignment(slotId) : assignSlotToScreen(slotId, screen)"
+            >
+              {{ slotId }}
+            </button>
+          </div>
         </div>
         <small v-if="listRefreshed && detectedScreens.length === detectedCountBefore" class="palco-slots-card__detected-unchanged">
           {{ t('settings.screens.unchanged') }}
@@ -588,6 +659,10 @@ onUnmounted(() => {
 .palco-slots-card__spin { animation: spin 1s linear infinite; display:inline-block; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .palco-slots-card__detected-item { display:flex; align-items:center; gap:.5rem; padding:.5rem .7rem; border-radius:.5rem 0 .5rem 0; background:color-mix(in srgb,var(--ds-color-on-surface) 6%,transparent); }
+.palco-slots-card__detected-item--assigned { outline:1px solid color-mix(in srgb,var(--ds-color-primary) 55%,transparent); }
+.palco-slots-card__detected-item-slots { display:flex; gap:.25rem; margin-left:auto; }
+.palco-slots-card__detected-slot-chip { min-width:1.7rem; height:1.7rem; padding:0 .35rem; border:1px solid color-mix(in srgb,var(--ds-color-on-surface) 18%,transparent); border-radius:.35rem; background:transparent; color:var(--ds-color-on-surface-variant); font:700 .72rem/1 inherit; cursor:pointer; }
+.palco-slots-card__detected-slot-chip--active { border-color:var(--ds-color-primary); background:var(--ds-color-primary); color:var(--ds-color-on-primary); }
 .palco-slots-card__detected-item .ti-device-desktop { color:var(--ds-color-primary); }
 .palco-slots-card__detected-item strong { display:block; font-size:.8rem; color:var(--ds-color-on-surface); }
 .palco-slots-card__detected-item small { display:block; margin-top:.1rem; font-size:.68rem; color:var(--ds-color-on-surface-variant); }
