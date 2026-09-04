@@ -60,6 +60,18 @@ async function detectScreens(): Promise<void> {
   }
 }
 
+// WT-5H: prova visual de refresh — a lista pisca quando o inventário
+// é reavaliado. Sem isso, clique com permissão já granted e resultado
+// idêntico parece "botão não funciona" (relato Ezequias 03/09).
+const listRefreshed = ref(false)
+const detectedCountBefore = ref(0)
+async function detectScreensWithFeedback(): Promise<void> {
+  detectedCountBefore.value = detectedScreens.value.length
+  await detectScreens()
+  listRefreshed.value = true
+  window.setTimeout(() => (listRefreshed.value = false), 1200)
+}
+
 function identifyDetectedScreens(): void {
   identifyScreens(detectedScreens.value)
 }
@@ -297,9 +309,9 @@ onUnmounted(() => {
           <small v-else>{{ t('settings.screens.detectedHint') }}</small>
         </div>
         <div class="palco-slots-card__detected-actions">
-          <button type="button" class="palco-slots-card__add" :disabled="detectingScreens" @click="detectScreens">
-            <i class="ti ti-monitor-search" aria-hidden="true" />
-            {{ t('settings.screens.detect') }}
+          <button type="button" class="palco-slots-card__add" :disabled="detectingScreens" @click="detectScreensWithFeedback">
+            <i :class="detectingScreens ? 'ti ti-loader-2 palco-slots-card__spin' : 'ti ti-monitor-search'" aria-hidden="true" />
+            {{ detectingScreens ? t('settings.screens.detecting') : t('settings.screens.detect') }}
           </button>
           <button v-if="!screensLimited" type="button" class="palco-slots-card__power" :aria-label="t('settings.screens.identify')" @click="identifyDetectedScreens">
             <i class="ti ti-numbers" aria-hidden="true" />
@@ -309,11 +321,14 @@ onUnmounted(() => {
           </button>
         </div>
       </div>
-      <div class="palco-slots-card__detected-list">
+      <div class="palco-slots-card__detected-list" :class="{ 'palco-slots-card__detected-list--refreshed': listRefreshed }">
         <div v-for="(screen, index) in detectedScreens" :key="screen.id" class="palco-slots-card__detected-item">
           <i class="ti ti-device-desktop" aria-hidden="true" />
           <span><strong>{{ screen.label || t('settings.screens.monitorN', { n: index + 1 }) }}</strong><small>{{ screen.width }} × {{ screen.height }}{{ screen.isPrimary ? ` · ${t('settings.screens.primary')}` : '' }}</small></span>
         </div>
+        <small v-if="listRefreshed && detectedScreens.length === detectedCountBefore" class="palco-slots-card__detected-unchanged">
+          {{ t('settings.screens.unchanged') }}
+        </small>
       </div>
     </section>
 
@@ -567,6 +582,11 @@ onUnmounted(() => {
 .palco-slots-card__detected-head small { display:block; margin-top:.2rem; font-size:.7rem; color:var(--ds-color-on-surface-variant); max-width:34ch; }
 .palco-slots-card__detected-actions { display:flex; align-items:center; gap:.4rem; }
 .palco-slots-card__detected-list { display:flex; flex-wrap:wrap; gap:.45rem; }
+.palco-slots-card__detected-list--refreshed { animation: detected-refresh .6s ease; }
+@keyframes detected-refresh { 0% { opacity:.25; } 100% { opacity:1; } }
+.palco-slots-card__detected-unchanged { width:100%; font-size:.7rem; color:var(--ds-color-on-surface-variant); }
+.palco-slots-card__spin { animation: spin 1s linear infinite; display:inline-block; }
+@keyframes spin { to { transform: rotate(360deg); } }
 .palco-slots-card__detected-item { display:flex; align-items:center; gap:.5rem; padding:.5rem .7rem; border-radius:.5rem 0 .5rem 0; background:color-mix(in srgb,var(--ds-color-on-surface) 6%,transparent); }
 .palco-slots-card__detected-item .ti-device-desktop { color:var(--ds-color-primary); }
 .palco-slots-card__detected-item strong { display:block; font-size:.8rem; color:var(--ds-color-on-surface); }
