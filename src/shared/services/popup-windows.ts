@@ -11,7 +11,11 @@ import {
   saveSlotBounds,
   scheduleRestoreOnWindow,
 } from '@shared/services/popup-layout'
-import { getPopupCount, getTargetPopupSlots } from '@shared/services/projection-preferences'
+import {
+  getPopupCount,
+  getProjectionFullscreenMode,
+  getTargetPopupSlots,
+} from '@shared/services/projection-preferences'
 import { getPopupRoute, POPUP_ROUTABLE_MODULES, type PopupRoutableModule } from './popup-routing'
 import {
   getBrowserItem,
@@ -106,16 +110,16 @@ function openPopupWindow(slot: number, moduleId?: string): PopupWindowRef | null
     win.__popupSlot = slot
 
     // WT-5F: Chrome só aceita fullscreen dentro da activation ORIGINAL do
-    // clique do operador. Chamar na PopupHost (mount) já é tarde: a janela
-    // filha perdeu activation. Aqui ainda estamos na call stack de window.open
-    // e o about:blank inicial é same-origin — fullscreen fica ativo após a
-    // navegação para /popup. Sem overlay, sem clique extra.
-    try {
-      void win.document.documentElement.requestFullscreen().catch(() => {
-        // Browser/ambiente sem Fullscreen API: mantém popup maximizada via features.
-      })
-    } catch {
-      // API ausente/síncrona indisponível.
+    // clique do operador. A preferência controla as PRÓXIMAS popups; uma
+    // popup já aberta não pode entrar em fullscreen sem gesto nela.
+    if (getProjectionFullscreenMode()) {
+      try {
+        void win.document.documentElement.requestFullscreen().catch(() => {
+          // Browser/ambiente sem Fullscreen API: mantém popup maximizada via features.
+        })
+      } catch {
+        // API ausente/síncrona indisponível.
+      }
     }
   }
 

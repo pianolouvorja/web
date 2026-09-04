@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   permission: vi.fn<() => Promise<void>>(),
   scheduleRestore: vi.fn(),
   getPopupCount: vi.fn(() => 1),
+  getProjectionFullscreenMode: vi.fn(() => true),
   getTargetPopupSlots: vi.fn(() => [1]),
   getBrowserItem: vi.fn(() => ''),
   setBrowserItem: vi.fn(),
@@ -26,6 +27,7 @@ vi.mock('@shared/services/popup-layout', () => ({
 
 vi.mock('@shared/services/projection-preferences', () => ({
   getPopupCount: mocks.getPopupCount,
+  getProjectionFullscreenMode: mocks.getProjectionFullscreenMode,
   getTargetPopupSlots: mocks.getTargetPopupSlots,
 }))
 
@@ -59,6 +61,7 @@ describe('openPopupModule > Window Management', () => {
     mocks.permission.mockReset().mockResolvedValue()
     mocks.scheduleRestore.mockReset()
     mocks.getPopupCount.mockReturnValue(1)
+    mocks.getProjectionFullscreenMode.mockReturnValue(true)
     mocks.getTargetPopupSlots.mockReturnValue([1])
     vi.stubGlobal('BroadcastChannel', class {
       postMessage() {}
@@ -78,6 +81,25 @@ describe('openPopupModule > Window Management', () => {
       open.mock.invocationCallOrder[0],
     )
 
+    open.mockRestore()
+  })
+
+  it('não tenta fullscreen quando a preferência está desligada', async () => {
+    mocks.getProjectionFullscreenMode.mockReturnValue(false)
+    const requestFullscreen = vi.fn()
+    const popup = {
+      closed: false,
+      close: vi.fn(),
+      name: 'PopupWindow1',
+      focus: vi.fn(),
+      postMessage: vi.fn(),
+      document: { documentElement: { requestFullscreen } },
+    } as unknown as Window
+    const open = vi.spyOn(window, 'open').mockReturnValue(popup)
+
+    await openPopupModule('media')
+
+    expect(requestFullscreen).not.toHaveBeenCalled()
     open.mockRestore()
   })
 
