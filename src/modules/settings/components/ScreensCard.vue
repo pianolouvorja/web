@@ -1,0 +1,771 @@
+<script setup lang="ts">
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useRoute, useRouter } from 'vue-router'
+
+import { GlassCard } from '@design-system/index'
+
+import { getPopupCount, setPopupCount } from '@shared/services/projection-preferences'
+import { getPopupRefs } from '@shared/services/popup-registry'
+import {
+  closeScreenPopups,
+  hasLivePopups,
+  openPopupModule,
+  syncPopupWindows,
+} from '@shared/services/popup-windows'
+import {
+  assignScreenToSlot,
+  clearScreenAssignment,
+  getOperatorMonitor,
+  loadSlotAssignments,
+  setOperatorMonitor,
+} from '@shared/services/slot-monitors'
+import { resetStageRelayModule } from '@shared/services/palco-cloud-bridge'
+import {
+  identifyScreens,
+  isScreenEnumerationSupported,
+  listScreens,
+  requestScreenAccess,
+  subscribeScreensChanged,
+  type WebScreen,
+} from '@shared/services/display-service-web'
+import {
+  useDesktopPalcoSession,
+  type PalcoSlotInfo,
+  type PalcoStatusInfo,
+} from '../../remote/services/desktop-palco-session'
+import { attachStoredSession, useStageRelay } from '../../remote/services/stage-relay'
+
+/**
+ * Paridade 1:1 com PalcoCard + PalcoSlotsCard do desktop.
+ * No web as "telas" são popups deste navegador: dot verde quando a popup
+ * está aberta, selecionada = alvo do projeto, play = abrir/fechar popup.
+ * Roteamento por módulo embaixo, igual "Espelhar (todas) ou uma tela".
+ */
+
+const { t } = useI18n()
+const popupCount = ref(getPopupCount())
+const activeId = ref('1')
+const tick = ref(0)
+
+// WT-5H: monitores REAIS do navegador (Window Management API), não slots
+// fictícios. O fallback limitado mantém a tela atual até o usuário permitir.
+const detectedScreens = ref<WebScreen[]>([])
+const screensLimited = ref(true)
+const screensSupported = ref(false)
+const detectingScreens = ref(false)
+let unsubscribeScreensChanged: (() => void) | null = null
+const onSlotMonitorsChanged = () => refreshSlotAssignments()
+
+async function refreshDetectedScreens(requestPermission = false): Promise<void> {
+  const result = requestPermission ? await requestScreenAccess() : await listScreens()
+  detectedScreens.value = result.screens
+  screensLimited.value = result.limited
+  screensSupported.value = result.supported
+}
+
+async function detectScreens(): Promise<void> {
+  detectingScreens.value = true
+  try {
+    await refreshDetectedScreens(true)
+  } finally {
+    detectingScreens.value = false
+  }
+}
+
+// WT-5H: prova visual de refresh — a lista pisca quando o inventário
+// é reavaliado. Sem isso, clique com permissão já granted e resultado
+// idêntico parece "botão não funciona" (relato Ezequias 03/09).
+const listRefreshed = ref(false)
+const detectedCountBefore = ref(0)
+async function detectScreensWithFeedback(): Promise<void> {
+  detectedCountBefore.value = detectedScreens.value.length
+  await detectScreens()
+  listRefreshed.value = true
+  window.setTimeout(() => (listRefreshed.value = false), 1200)
+}
+
+function identifyDetectedScreens(): void {
+  identifyScreens(detectedScreens.value)
+}
+
+// WT-5H: atribuição slot → monitor real. Salva os bounds do monitor na
+// persistência de layout (popup-layout); getProjectionFullscreenBounds lê
+// esses bounds ao abrir a popup do slot — projeção inteira (mirror, rotas)
+// passa a nascer no monitor certo, sem mudar popup-windows.
+const slotAssignments = ref<Record<string, string>>({}) // slotId ('1','2'...) -> WebScreen.id
+const operatorMonitorId = ref<string | null>(getOperatorMonitor())
+function setOperatorScreen(event: Event): void {
+  const value = (event.target as HTMLSelectElement).value || null
+  setOperatorMonitor(value)
+  operatorMonitorId.value = value
+  // Se já projeta, remove a tela do operador e abre os outros selecionados
+  // no mesmo clique — não exige desmarcar/marcar de novo (Ezequias #53680).
+  if (hasLivePopups()) syncPopupWindows()
+}
+// Receiver cloud não é uma TV. Associação é escolhida pelo operador porque
+// browsers não expõem o monitor físico de outra máquina/aba.
+const RECEIVER_MONITORS_KEY = 'louvorja-receiver-monitors-v1'
+const receiverMonitorAssignments = ref<Record<string, string>>({})
+try { receiverMonitorAssignments.value = JSON.parse(localStorage.getItem(RECEIVER_MONITORS_KEY) ?? '{}') } catch { /* defaults */ }
+function assignReceiverToScreen(receiverId: string, event: Event): void {
+  const monitorId = (event.target as HTMLSelectElement).value
+  if (monitorId) receiverMonitorAssignments.value[receiverId] = monitorId
+  else delete receiverMonitorAssignments.value[receiverId]
+  try { localStorage.setItem(RECEIVER_MONITORS_KEY, JSON.stringify(receiverMonitorAssignments.value)) } catch { /* private mode */ }
+}
+function receiverMonitor(receiverId: string): string | null {
+  const screen = detectedScreens.value.find((item) => item.id === receiverMonitorAssignments.value[receiverId])
+  return screen?.label ?? null
+}
+
+function assignSlotToScreen(slotId: string, screen: WebScreen): void {
+  assignScreenToSlot(slotId, screen)
+  slotAssignments.value = loadSlotAssignments()
+}
+
+function clearSlotAssignment(slotId: string): void {
+  clearScreenAssignment(slotId)
+  slotAssignments.value = loadSlotAssignments()
+}
+
+function isSlotAssignedTo(slotId: string, screen: WebScreen): boolean {
+  return slotAssignments.value[slotId] === screen.id
+}
+
+const slotIds = computed(() => Array.from({ length: popupCount.value }, (_, i) => String(i + 1)))
+
+function assignedSlotsForScreen(screen: WebScreen): string[] {
+  return slotIds.value.filter((slotId) => slotAssignments.value[slotId] === screen.id)
+}
+
+/** Label do monitor atribuído ao slot (ou null = automático). */
+function monitorForSlot(slotId: string): string | null {
+  const monitorId = slotAssignments.value[slotId]
+  if (!monitorId) return null
+  const screen = detectedScreens.value.find((s) => s.id === monitorId)
+  if (!screen) return null
+  return screen.label || t('settings.screens.monitorN', { n: detectedScreens.value.indexOf(screen) + 1 })
+}
+
+/** Change do <select> de monitor na linha do slot. */
+function onMonitorSelect(slotId: string, event: Event): void {
+  const value = (event.target as HTMLSelectElement).value
+  if (!value) {
+    clearSlotAssignment(slotId)
+    return
+  }
+  const screen = detectedScreens.value.find((s) => s.id === value)
+  if (screen) assignSlotToScreen(slotId, screen)
+}
+
+function refreshSlotAssignments(): void {
+  slotAssignments.value = loadSlotAssignments()
+}
+
+// WT-5H validação: diagnóstico exportável — Ezequias copia e cola de volta.
+// Coleta browser/OS, suporte à API, estado da permissão e o inventário
+// detectado, para reproduzir falha em qualquer SO sem adivinhação.
+const diagnosisCopied = ref(false)
+async function copyDiagnostics(): Promise<void> {
+  let permission = 'desconhecida'
+  try {
+    permission = await navigator.permissions.query({
+      name: 'window-management' as PermissionName,
+    }).then((s) => s.state, () => 'não suportada')
+  } catch {
+    // Firefox/Safari: sem queryPermissions p/ window-management
+  }
+  const report = [
+    'PIANO Web — diagnóstico de telas (WT-5H)',
+    `userAgent: ${navigator.userAgent}`,
+    `platform: ${navigator.platform ?? 'n/d'}`,
+    `getScreenDetails suportada: ${isScreenEnumerationSupported()}`,
+    `permissão window-management: ${permission}`,
+    `inventário: ${detectedScreens.value.length} tela(s), limitado=${screensLimited.value}`,
+    ...detectedScreens.value.map(
+      (s) =>
+        `  - ${s.label}: ${s.width}x${s.height} @(${s.left},${s.top}) primary=${s.isPrimary} internal=${s.isInternal}`,
+    ),
+  ].join('\n')
+  await navigator.clipboard.writeText(report).catch(() => {})
+  diagnosisCopied.value = true
+  window.setTimeout(() => (diagnosisCopied.value = false), 2500)
+}
+
+onMounted(() => {
+  refreshSlotAssignments()
+  window.addEventListener('louvorja-slot-monitors-changed', onSlotMonitorsChanged)
+  void refreshDetectedScreens()
+  unsubscribeScreensChanged = subscribeScreensChanged(() => {
+    void refreshDetectedScreens()
+  })
+})
+
+onUnmounted(() => {
+  window.removeEventListener('louvorja-slot-monitors-changed', onSlotMonitorsChanged)
+  unsubscribeScreensChanged?.()
+  unsubscribeScreensChanged = null
+})
+
+const {
+  connected: desktopConnected,
+  fetchStatus,
+  fetchSlots,
+  turnOn,
+  turnOff,
+  idle,
+  createTv,
+  removeTv,
+  startTv,
+  stopTv,
+} = useDesktopPalcoSession()
+
+const tvLoading = ref(false)
+const tvStatus = ref<PalcoStatusInfo | null>(null)
+const tvSlots = ref<PalcoSlotInfo[]>([])
+const tvError = ref('')
+
+// WT-5c: modo cloud — quando o desktop não conecta, o relay da API assume.
+const relay = useStageRelay()
+const cloudInput = ref('')
+const cloudMode = computed(() => !desktopConnected.value)
+const receiverUrl = computed(() => {
+  if (!relay.code.value) return ''
+  const configured = new URLSearchParams(window.location.search).get('palcoApi') || localStorage.getItem('palcoApiBase') || import.meta.env.VITE_PALCO_API_URL
+  // O receiver vive na API (static/palco). Em dev o origin do web é o Vite
+  // (não serve /palco/) — fallback tem que ser a API local. Em prod, web e
+  // API compartilham domínio → location.origin serve os dois.
+  const fallback = import.meta.env.DEV ? 'http://localhost:3100' : window.location.origin
+  const origin = new URL(configured || fallback, window.location.origin).origin
+  return `${origin}/palco/?code=${encodeURIComponent(relay.code.value)}`
+})
+const receiverUrlCopied = ref(false)
+const kioskCommandCopied = ref(false)
+const kioskCommand = computed(() => {
+  if (!receiverUrl.value) return ''
+  const scriptUrl = `${new URL(receiverUrl.value).origin}/palco/palco-kiosk.sh`
+  // Download explícito (sem curl|bash): receiver web, N instâncias kiosk.
+  return `curl -fsSLO '${scriptUrl}' && chmod +x palco-kiosk.sh && ./palco-kiosk.sh --url '${receiverUrl.value}' --all`
+})
+async function copyReceiverUrl(): Promise<void> {
+  if (!receiverUrl.value) return
+  await navigator.clipboard.writeText(receiverUrl.value).catch(() => {})
+  receiverUrlCopied.value = true
+  window.setTimeout(() => (receiverUrlCopied.value = false), 2000)
+}
+async function copyKioskCommand(): Promise<void> {
+  if (!kioskCommand.value) return
+  await navigator.clipboard.writeText(kioskCommand.value).catch(() => {})
+  kioskCommandCopied.value = true
+  window.setTimeout(() => (kioskCommandCopied.value = false), 2000)
+}
+// WT-5 (criar sessão): web gera o código — TV só consome. Com o fluxo
+// streaming a TV também pode criar (OK vazio) e mostrar o QR dela; aqui
+// fica só o criar manual + encerrar.
+const creatingSession = ref(false)
+
+function endCloudSession(): void {
+  relay.detach()
+  resetStageRelayModule()
+}
+
+async function connectCloud(): Promise<void> {
+  tvError.value = ''
+  const ok = await relay.attachCode(cloudInput.value)
+  if (!ok) tvError.value = t('settings.palco.statusError')
+}
+
+// WT-5 fluxo streaming: a TV mostra QR apontando pra cá (?palco=CODE).
+// Operador escaneia → web conecta como operator direto, zero digitação.
+const route = useRoute()
+const router = useRouter()
+
+// WT-5 persistência: reload do navegador reconecta sozinho na última sessão
+// (culto não pode desparear porque o operador apertou F5). Silencioso: falhou,
+// cai no fluxo normal (criar/informar código).
+void attachStoredSession()
+void watch(
+  () => route.query.palco,
+  async (code) => {
+    if (typeof code !== 'string' || code.length !== 6) return
+    cloudInput.value = code.toUpperCase()
+    await connectCloud()
+    if (relay.connected.value) {
+      void router.replace({ query: { ...route.query, palco: undefined } })
+    }
+  },
+  { immediate: true },
+)
+
+async function createSession(): Promise<void> {
+  tvError.value = ''
+  creatingSession.value = true
+  try {
+    const ok = await relay.createSession()
+    if (!ok) tvError.value = t('settings.palco.statusError')
+  } finally {
+    creatingSession.value = false
+  }
+}
+
+async function refreshTvs(): Promise<void> {
+  if (tvLoading.value) return
+  tvLoading.value = true
+  try {
+    if (relay.connected.value) {
+      tvStatus.value = await relay.fetchStatus()
+      tvSlots.value = await relay.fetchSlots()
+    } else if (desktopConnected.value) {
+      const [st, sl] = await Promise.all([fetchStatus(), fetchSlots()])
+      tvStatus.value = st
+      tvSlots.value = sl
+    }
+  } catch {
+    tvError.value = t('settings.palco.statusError')
+  } finally {
+    tvLoading.value = false
+  }
+}
+
+async function addTv(): Promise<void> {
+  if (!desktopConnected.value) return
+  const label = `${t('settings.palco.tv')} ${tvSlots.value.length + 1}`
+  await createTv(label)
+  await refreshTvs()
+}
+
+async function removeTvSlot(id: string): Promise<void> {
+  if (id === '0') return
+  await removeTv(id)
+  await refreshTvs()
+}
+
+async function toggleTv(slot: PalcoSlotInfo): Promise<void> {
+  if (slot.running) await stopTv(slot.id)
+  else await startTv(slot.id)
+  await refreshTvs()
+}
+
+const aliveSlots = computed(() => {
+  void tick.value
+  return new Set(getPopupRefs().map((p) => String(p.__popupSlot ?? '')))
+})
+
+const slots = computed(() =>
+  Array.from({ length: popupCount.value }, (_, i) => ({
+    id: String(i + 1),
+    alive: aliveSlots.value.has(String(i + 1)),
+  })),
+)
+
+let pollTimer: ReturnType<typeof setInterval> | null = null
+pollTimer = setInterval(() => {
+  popupCount.value = getPopupCount()
+  tick.value++
+  if (desktopConnected.value || relay.connected.value) void refreshTvs()
+}, 3000)
+onUnmounted(() => {
+  if (pollTimer) clearInterval(pollTimer)
+})
+
+function addScreen(): void {
+  popupCount.value = setPopupCount(popupCount.value + 1)
+}
+
+function removeScreen(): void {
+  popupCount.value = setPopupCount(popupCount.value - 1)
+}
+
+function selectSlot(id: string): void {
+  activeId.value = id
+}
+
+function toggleSlot(slotId: string): void {
+  const n = Number.parseInt(slotId, 10)
+  if (aliveSlots.value.has(slotId)) {
+    closeScreenPopups()
+  } else {
+    void openPopupModule('media', { slots: [n] })
+  }
+}
+
+let timer: ReturnType<typeof setInterval> | null = null
+timer = setInterval(() => {
+  popupCount.value = getPopupCount()
+}, 3000)
+onUnmounted(() => {
+  if (timer) clearInterval(timer)
+})
+</script>
+
+<template>
+  <GlassCard class="palco-slots-card" :padding="false">
+    <div class="palco-slots-card__header">
+      <div>
+        <h3>{{ t('settings.screens.screensOfStage') }}</h3>
+        <p>{{ t('settings.screens.screensHint') }}</p>
+      </div>
+      <button
+        type="button"
+        class="palco-slots-card__add"
+        @click="addScreen"
+      >
+        <i
+          class="ti ti-plus"
+          aria-hidden="true"
+        />
+        {{ t('settings.screens.addScreen') }}
+      </button>
+    </div>
+
+    <!-- WT-5H: inventário real do SO/browser. O card de slots abaixo segue
+         temporariamente como compatibilidade até o launcher kiosk por tela. -->
+    <section class="palco-slots-card__detected">
+      <div class="palco-slots-card__detected-head">
+        <div>
+          <strong>{{ t('settings.screens.detectedTitle') }}</strong>
+          <small v-if="screensLimited">{{ t(screensSupported ? 'settings.screens.permissionHint' : 'settings.screens.unsupportedHint') }}</small>
+          <small v-else>{{ t('settings.screens.detectedHint') }}</small>
+        </div>
+        <div class="palco-slots-card__detected-actions">
+          <button type="button" class="palco-slots-card__add" :disabled="detectingScreens" @click="detectScreensWithFeedback">
+            <i :class="detectingScreens ? 'ti ti-loader-2 palco-slots-card__spin' : 'ti ti-monitor-search'" aria-hidden="true" />
+            {{ detectingScreens ? t('settings.screens.detecting') : t('settings.screens.detect') }}
+          </button>
+          <button v-if="!screensLimited" type="button" class="palco-slots-card__power" :aria-label="t('settings.screens.identify')" @click="identifyDetectedScreens">
+            <i class="ti ti-numbers" aria-hidden="true" />
+          </button>
+          <button type="button" class="palco-slots-card__power" :aria-label="t('settings.screens.copyDiagnostics')" :title="t('settings.screens.copyDiagnostics')" @click="copyDiagnostics">
+            <i :class="diagnosisCopied ? 'ti ti-check' : 'ti ti-clipboard-text'" aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+      <label v-if="detectedScreens.length" class="palco-slots-card__operator-select">
+        <i class="ti ti-user-screen" aria-hidden="true" />
+        <span>{{ t('settings.screens.operatorMonitor') }}</span>
+        <select :value="operatorMonitorId ?? ''" @change="setOperatorScreen">
+          <option value="">{{ t('settings.screens.operatorNone') }}</option>
+          <option v-for="screen in detectedScreens" :key="screen.id" :value="screen.id">
+            {{ screen.label || t('settings.screens.monitorN', { n: detectedScreens.indexOf(screen) + 1 }) }}
+          </option>
+        </select>
+      </label>
+      <div class="palco-slots-card__detected-list" :class="{ 'palco-slots-card__detected-list--refreshed': listRefreshed }">
+        <div v-for="(screen, index) in detectedScreens" :key="screen.id" class="palco-slots-card__detected-item" :class="{ 'palco-slots-card__detected-item--assigned': assignedSlotsForScreen(screen).length > 0 }">
+          <i class="ti ti-device-desktop" aria-hidden="true" />
+          <span><strong>{{ screen.label || t('settings.screens.monitorN', { n: index + 1 }) }}</strong><small>{{ screen.width }} × {{ screen.height }}{{ screen.isPrimary ? ` · ${t('settings.screens.primary')}` : '' }}<template v-if="assignedSlotsForScreen(screen).length"> · {{ t('settings.screens.slotsAssigned', { slots: assignedSlotsForScreen(screen).join(', ') }) }}</template></small></span>
+        </div>
+        <small v-if="listRefreshed && detectedScreens.length === detectedCountBefore" class="palco-slots-card__detected-unchanged">
+          {{ t('settings.screens.unchanged') }}
+        </small>
+      </div>
+    </section>
+
+    <div class="palco-slots-card__list">
+      <div
+        v-for="slot in slots"
+        :key="slot.id"
+        class="palco-slot"
+        :class="{ 'palco-slot--active': activeId === slot.id }"
+      >
+        <button
+          type="button"
+          class="palco-slot__select"
+          @click="selectSlot(slot.id)"
+        >
+          <span
+            class="palco-slot__dot"
+            :class="{ 'palco-slot__dot--on': slot.alive }"
+          />
+          <span>
+            <strong>{{ slot.id === '1' ? t('settings.screens.mainScreen') : t('settings.screens.screenN', { n: slot.id }) }}</strong>
+            <small>{{ monitorForSlot(slot.id) ? monitorForSlot(slot.id) : t('settings.screens.waitingScreen') }}</small>
+          </span>
+        </button>
+        <!-- WT-5H: seleção do monitor real na própria linha do slot. Chips só
+             aparecem quando há monitores detectados (permissão concedida). -->
+        <select
+          v-if="detectedScreens.length > 1"
+          class="palco-slot__monitor-select"
+          :value="slotAssignments[slot.id] ?? ''"
+          :aria-label="t('settings.screens.assignSlotAria', { n: slot.id })"
+          @change="onMonitorSelect(slot.id, $event)"
+        >
+          <option value="">{{ t('settings.screens.monitorAuto') }}</option>
+          <option v-for="screen in detectedScreens" :key="screen.id" :value="screen.id">
+            {{ screen.label || t('settings.screens.monitorN', { n: detectedScreens.indexOf(screen) + 1 }) }}
+          </option>
+        </select>
+        <span
+          v-if="activeId === slot.id"
+          class="palco-slot__badge"
+        >{{ t('settings.screens.selected') }}</span>
+        <button
+          type="button"
+          class="palco-slot__power"
+          :aria-label="slot.alive ? t('settings.palco.stop') : t('settings.screens.openScreen')"
+          @click="toggleSlot(slot.id)"
+        >
+          <i
+            class="ti"
+            :class="slot.alive ? 'ti-player-stop' : 'ti-player-play'"
+            aria-hidden="true"
+          />
+        </button>
+        <button
+          v-if="slot.id !== '1'"
+          type="button"
+          class="palco-slot__remove"
+          :aria-label="t('settings.screens.removeScreen')"
+          @click="removeScreen"
+        >
+          <i
+            class="ti ti-trash"
+            aria-hidden="true"
+          />
+        </button>
+      </div>
+    </div>
+
+    <!-- TVs físicas via desktop; receiver cloud é tratado como monitor. -->
+    <div
+      class="palco-slots-card__tv"
+      :class="{ 'palco-slots-card__tv--off': !desktopConnected && !relay.connected.value }"
+    >
+      <div class="palco-slots-card__tv-head">
+        <span class="palco-slots-card__tv-label">
+          <i :class="cloudMode ? 'ti ti-device-desktop' : 'ti ti-device-tv'" aria-hidden="true" />
+          {{ cloudMode ? t('settings.palco.receiversPlain') : t('settings.palco.tvsPlain') }}
+          <span
+            class="palco-slot__dot"
+            :class="{ 'palco-slot__dot--on': desktopConnected || relay.connected.value }"
+          />
+        </span>
+        <button
+          v-if="desktopConnected"
+          type="button"
+          class="palco-slots-card__add"
+          :disabled="!desktopConnected"
+          @click="addTv"
+        >
+          <i class="ti ti-plus" aria-hidden="true" />
+          {{ t('settings.palco.addTv') }}
+        </button>
+      </div>
+
+      <!-- Modo cloud: sem código → criar sessão (gera o código) ou conectar
+           numa existente. Com código ativo → exibir código + QR pra TV. -->
+      <div
+        v-if="cloudMode && !relay.connected.value"
+        class="palco-slots-card__cloud"
+      >
+        <button
+          type="button"
+          class="palco-slots-card__add"
+          :disabled="creatingSession"
+          @click="createSession"
+        >
+          <i class="ti ti-qrcode" aria-hidden="true" />
+          {{ t('settings.palco.cloudCreate') }}
+        </button>
+        <input
+          v-model="cloudInput"
+          class="palco-slots-card__cloud-input"
+          maxlength="6"
+          placeholder="ABC123"
+          @keydown.enter="connectCloud"
+        >
+        <button
+          type="button"
+          class="palco-slots-card__add"
+          @click="connectCloud"
+        >
+          {{ t('settings.palco.cloudConnect') }}
+        </button>
+      </div>
+
+      <!-- Sessão cloud ativa: código visível + encerrar (QR fica na TV) -->
+      <div
+        v-if="cloudMode && relay.connected.value && relay.code.value"
+        class="palco-slots-card__cloud-active"
+      >
+        <div class="palco-slots-card__cloud-info">
+          <small>{{ cloudMode ? t('settings.palco.receiverCodeLabel') : t('settings.palco.cloudCodeLabel') }}</small>
+          <strong class="palco-slots-card__cloud-code">{{ relay.code.value }}</strong>
+        </div>
+        <button type="button" class="palco-slots-card__add" :title="receiverUrl" @click="copyReceiverUrl">
+          <i :class="receiverUrlCopied ? 'ti ti-check' : 'ti ti-copy'" aria-hidden="true" />
+          {{ receiverUrlCopied ? t('settings.palco.receiverUrlCopied') : t('settings.palco.addReceiver') }}
+        </button>
+        <button
+          type="button"
+          class="palco-slots-card__icon-btn"
+          :title="t('settings.palco.kioskLaunch')"
+          :aria-label="t('settings.palco.kioskLaunch')"
+          @click="copyKioskCommand"
+        >
+          <i :class="kioskCommandCopied ? 'ti ti-check' : 'ti ti-terminal-2'" aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          class="palco-slots-card__remove"
+          :aria-label="t('settings.palco.cloudEnd')"
+          @click="endCloudSession"
+        >
+          <i class="ti ti-x" aria-hidden="true" />
+        </button>
+      </div>
+
+      <div
+        v-if="desktopConnected || relay.connected.value"
+        class="palco-slots-card__list"
+      >
+        <div
+          v-for="slot in tvSlots"
+          :key="slot.id"
+          class="palco-slot"
+          :class="{ 'palco-slot--active': slot.running }"
+        >
+          <button
+            type="button"
+            class="palco-slot__select"
+          >
+            <span
+              class="palco-slot__dot"
+              :class="{ 'palco-slot__dot--on': slot.running && slot.clients > 0 }"
+            />
+            <span>
+              <strong>{{ slot.id === '0' ? t('settings.palco.mainTv') : slot.label }}</strong>
+              <!-- cloud: httpPort=0 e TV sempre ativa quando conectada -->
+              <small v-if="slot.httpPort">:{{ slot.httpPort }} · {{ slot.clients ? t('settings.palco.connected', { count: slot.clients }) : t('settings.palco.waiting') }}</small>
+              <small v-else>{{ t('settings.palco.receiverConnected') }} · {{ t('settings.palco.cloudAlwaysOn') }}</small>
+              <small v-if="cloudMode && receiverMonitor(slot.id)">{{ t('settings.palco.assignedMonitor', { monitor: receiverMonitor(slot.id) }) }}</small>
+            </span>
+          </button>
+          <select
+            v-if="cloudMode && detectedScreens.length"
+            class="palco-slot__monitor-select"
+            :value="receiverMonitorAssignments[slot.id] ?? ''"
+            :aria-label="t('settings.palco.assignReceiverMonitor')"
+            @change="assignReceiverToScreen(slot.id, $event)"
+          >
+            <option value="">{{ t('settings.screens.monitorAuto') }}</option>
+            <option v-for="screen in detectedScreens" :key="screen.id" :value="screen.id">
+              {{ screen.label || t('settings.screens.monitorN', { n: detectedScreens.indexOf(screen) + 1 }) }}
+            </option>
+          </select>
+          <!-- TV física tem slot ligável/desligável; receiver cloud é sempre ativo. -->
+          <button
+            v-if="desktopConnected"
+            type="button"
+            class="palco-slot__power"
+            :aria-label="slot.running ? t('settings.palco.stop') : t('settings.palco.start')"
+            @click="toggleTv(slot)"
+          >
+            <i
+              class="ti"
+              :class="slot.running ? 'ti-player-stop' : 'ti-player-play'"
+              aria-hidden="true"
+            />
+          </button>
+          <button
+            v-if="desktopConnected && slot.id !== '0'"
+            type="button"
+            class="palco-slot__remove"
+            :aria-label="t('settings.palco.removeTv')"
+            @click="removeTvSlot(slot.id)"
+          >
+            <i class="ti ti-trash" aria-hidden="true" />
+          </button>
+        </div>
+        <p
+          v-if="!tvSlots.length"
+          class="palco-slots-card__hint"
+        >
+          {{ t('settings.palco.noSlots') }}
+        </p>
+      </div>
+      <p
+        v-if="!desktopConnected && !relay.connected.value"
+        class="palco-slots-card__hint"
+      >
+        {{ t('settings.palco.tvHowTo') }}
+      </p>
+      <p
+        v-if="tvError"
+        class="palco-slots-card__error"
+        role="alert"
+      >
+        {{ tvError }}
+      </p>
+    </div>
+
+    <p class="palco-slots-card__note">
+      {{ t('settings.screens.moduleHint') }}
+    </p>
+
+
+    <p class="palco-slots-card__foot">
+      {{ t('settings.screens.localNote') }}
+    </p>
+  </GlassCard>
+</template>
+
+<style scoped lang="scss">
+.palco-slots-card { overflow: hidden; }
+.palco-slots-card__header { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:1rem 1.25rem .75rem; }
+.palco-slots-card h3 { margin:0; color:var(--ds-color-on-surface); font-size:1rem; }
+.palco-slots-card__header p { margin:.2rem 0 0; color:var(--ds-color-on-surface-variant); font-size:.75rem; }
+.palco-slots-card__list { display:flex; flex-direction:column; gap:.35rem; padding:.5rem 1.25rem 1rem; }
+.palco-slot { display:flex; align-items:center; gap:.5rem; padding:.55rem .65rem; border:1px solid transparent; border-radius:.5rem 0 .5rem 0; background:color-mix(in srgb,var(--ds-color-on-surface) 5%,transparent); }
+.palco-slot--active { border-color:color-mix(in srgb,var(--ds-color-primary) 45%,transparent); background:color-mix(in srgb,var(--ds-color-primary) 8%,transparent); }
+.palco-slot__select { display:flex; align-items:center; gap:.65rem; min-width:0; flex:1; border:0; background:none; color:var(--ds-color-on-surface); text-align:left; cursor:pointer; }
+.palco-slot__select strong,.palco-slot__select small { display:block; }
+.palco-slot__select small { margin-top:.15rem; color:var(--ds-color-on-surface-variant); font-size:.7rem; }
+.palco-slot__dot { width:.55rem; height:.55rem; flex:none; border-radius:50%; background:var(--ds-color-on-surface-variant); opacity:.45; }
+.palco-slot__dot--on { background:#39c56b; opacity:1; box-shadow:0 0 0 3px color-mix(in srgb,#39c56b 18%,transparent); }
+.palco-slot__badge { color:var(--ds-color-primary); font-size:.65rem; }
+.palco-slot__power { display:flex; align-items:center; justify-content:center; width:1.8rem; height:1.8rem; border:0; border-radius:.35rem; background:transparent; color:var(--ds-color-on-surface-variant); cursor:pointer; }
+.palco-slot__power:hover { color:var(--ds-color-primary); background:color-mix(in srgb,var(--ds-color-primary) 12%,transparent); }
+.palco-slots-card__add { display:flex; align-items:center; gap:.35rem; padding:.45rem .7rem; border:1px solid color-mix(in srgb,var(--ds-color-primary) 50%,transparent); border-radius:.5rem 0 .5rem 0; background:transparent; color:var(--ds-color-primary); cursor:pointer; font-size:.75rem; }
+.palco-slots-card__icon-btn { display:flex; align-items:center; justify-content:center; width:1.8rem; height:1.8rem; border:1px solid color-mix(in srgb,var(--ds-color-primary) 50%,transparent); border-radius:.5rem 0 .5rem 0; background:transparent; color:var(--ds-color-primary); cursor:pointer; font-size:.95rem; flex:none; }
+.palco-slots-card__icon-btn:hover { background:color-mix(in srgb,var(--ds-color-primary) 12%,transparent); }
+.palco-slot__remove { display:flex; align-items:center; justify-content:center; width:1.8rem; height:1.8rem; border:0; border-radius:.35rem; background:transparent; color:var(--ds-color-on-surface-variant); cursor:pointer; }
+.palco-slot__remove:hover { color:#e65c66; }
+.palco-slots-card__operator-select{display:flex;align-items:center;gap:.5rem;margin:.75rem 0;color:var(--ds-color-on-surface-variant);font-size:.78rem}.palco-slots-card__operator-select .ti{color:var(--ds-color-primary);font-size:1rem}.palco-slots-card__operator-select select{min-width:0;flex:1;padding:.35rem .5rem;border:1px solid color-mix(in srgb,var(--ds-color-primary) 28%,transparent);border-radius:.4rem;background:color-mix(in srgb,var(--ds-color-on-surface) 6%,transparent);color:var(--ds-color-on-surface);font:inherit}
+.palco-slots-card__tv { display:flex; flex-direction:column; gap:.5rem; padding:.75rem 1.25rem; border-top:1px solid color-mix(in srgb,var(--ds-color-on-surface) 8%,transparent); }
+.palco-slots-card__cloud{display:flex;gap:8px;align-items:center;margin:8px 0}
+.palco-slots-card__cloud-input{width:110px;padding:8px 10px;border-radius:8px;border:1px solid var(--glass-border,rgba(255,255,255,.2));background:transparent;color:inherit;font:inherit;text-transform:uppercase;letter-spacing:3px;text-align:center}
+.palco-slots-card__cloud-active{display:flex;gap:14px;align-items:center;margin:10px 0;padding:12px 14px;border-radius:12px;border:1px solid var(--glass-border,rgba(255,255,255,.15));background:rgba(255,255,255,.04)}
+.palco-slots-card__cloud-info{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.palco-slots-card__cloud-info small{font-size:.72rem;opacity:.7;color:var(--ds-color-on-surface-variant)}
+.palco-slots-card__cloud-code{font-size:1.6rem;font-weight:800;letter-spacing:.35em;color:var(--ds-color-primary);line-height:1.2}
+.palco-slots-card__tv--off { opacity:.75; }
+.palco-slots-card__tv-head { display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+.palco-slots-card__tv-label { display:inline-flex; align-items:center; gap:.5rem; font-size:.9rem; font-weight:600; color:var(--ds-color-on-surface); }
+.palco-slots-card__tv-label .ti-device-tv { color:var(--ds-color-primary); }
+.palco-slots-card__tv .palco-slot__select strong { font-size:.86rem; }
+.palco-slots-card__note { padding:0 1.25rem .5rem; font-size:.75rem; color:var(--ds-color-on-surface-variant); }
+
+.palco-slots-card__detected { display:flex; flex-direction:column; gap:.6rem; padding: .9rem 1.25rem; border-top:1px solid color-mix(in srgb,var(--ds-color-on-surface) 8%,transparent); }
+.palco-slots-card__detected-head { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; }
+.palco-slots-card__detected-head strong { display:block; font-size:.9rem; color:var(--ds-color-on-surface); }
+.palco-slots-card__detected-head small { display:block; margin-top:.2rem; font-size:.7rem; color:var(--ds-color-on-surface-variant); max-width:34ch; }
+.palco-slots-card__detected-actions { display:flex; align-items:center; gap:.4rem; }
+.palco-slots-card__detected-list { display:flex; flex-wrap:wrap; gap:.45rem; }
+.palco-slots-card__detected-list--refreshed { animation: detected-refresh .6s ease; }
+@keyframes detected-refresh { 0% { opacity:.25; } 100% { opacity:1; } }
+.palco-slots-card__detected-unchanged { width:100%; font-size:.7rem; color:var(--ds-color-on-surface-variant); }
+.palco-slots-card__spin { animation: spin 1s linear infinite; display:inline-block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.palco-slots-card__detected-item { display:flex; align-items:center; gap:.5rem; padding:.5rem .7rem; border-radius:.5rem 0 .5rem 0; background:color-mix(in srgb,var(--ds-color-on-surface) 6%,transparent); }
+.palco-slots-card__detected-item--assigned { outline:1px solid color-mix(in srgb,var(--ds-color-primary) 55%,transparent); }
+.palco-slot__monitor-select { max-width:11rem; height:1.9rem; padding:0 .4rem; border:1px solid color-mix(in srgb,var(--ds-color-on-surface) 18%,transparent); border-radius:.4rem; background:color-mix(in srgb,var(--ds-color-on-surface) 5%,transparent); color:var(--ds-color-on-surface); font-size:.74rem; cursor:pointer; }
+.palco-slots-card__detected-item .ti-device-desktop { color:var(--ds-color-primary); }
+.palco-slots-card__detected-item strong { display:block; font-size:.8rem; color:var(--ds-color-on-surface); }
+.palco-slots-card__detected-item small { display:block; margin-top:.1rem; font-size:.68rem; color:var(--ds-color-on-surface-variant); }
+
+
+.palco-slots-card__foot { padding:0 1.25rem 1rem; font-size:.7rem; color:var(--ds-color-on-surface-variant); opacity:.75; }
+</style>

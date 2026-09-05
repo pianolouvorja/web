@@ -7,6 +7,7 @@ import {
   isPopupModuleOpen,
   openPopupModule,
 } from '@shared/services/popup-windows'
+import { getPopupRoute, type PopupRoutableModule } from '@shared/services/popup-routing'
 
 import {
   resolveNext,
@@ -51,7 +52,9 @@ import type {
   MediaSession,
 } from '../types/media'
 import { DEFAULT_MEDIA_PROJECTION } from '../types/media'
-
+import { readEffectiveStageSettings } from '@modules/settings/services/stage-settings-runtime'
+import { resolveBackgroundImage } from '@modules/settings/types/stage-settings'
+import { publishToStageRelay } from '@shared/services/palco-cloud-bridge'
 /** Alinha com Vuetify `smAndDown` (width < md): sem projeção no mobile. */
 function isMobileOperatorViewport(): boolean {
   if (typeof window === 'undefined') return false
@@ -66,6 +69,10 @@ export const useMediaStore = defineStore('media', () => {
   const lastErrorKey = ref<string | null>(null)
   const minimized = ref(true)
   const isProjecting = ref(false)
+  // WT-5: destino TV cloud é independente do popup — projeção ativa na TV
+  // mesmo com popup fechado (paridade app). 'parar' na UI desliga o destino
+  // que estiver ativo; a TV recebe idle explícito.
+  const isTvProjecting = ref(false)
   const showPlaylist = ref(true)
   const closeConfirmOpen = ref(false)
 
@@ -184,6 +191,10 @@ export const useMediaStore = defineStore('media', () => {
     }
     projectionWatchTimer = setInterval(() => {
       if (!isPopupModuleOpen('media')) {
+        // WT-5: rota 'Só TV (nuvem)' não tem popup — não é 'parado'
+        try {
+          if (getPopupRoute('media' as PopupRoutableModule) === 'tv') return
+        } catch { /* routing indisponível */ }
         isProjecting.value = false
         stopProjectionWatch()
       }
@@ -191,14 +202,16 @@ export const useMediaStore = defineStore('media', () => {
   }
 
   function buildRuntime(): MediaProjectionRuntime {
-    const active = session.value != null && isProjecting.value
+    // WT-5: TV é destino independente do popup — conteúdo selecionado projeta
+    // na TV (qualquer rota) enquanto houver sessão. Parar = clearProjection,
+    // que publica runtime inativo explícito (não é o buildRuntime que decide).
     const slide = currentSlide.value
     if (!session.value || !slide) {
       return { ...DEFAULT_MEDIA_PROJECTION, active: false }
     }
 
     return {
-      active,
+      active: true,
       title: session.value.title,
       subtitle: session.value.subtitle,
       lyric: stripHtmlBreaks(slide.lyric),
@@ -394,6 +407,8 @@ export const useMediaStore = defineStore('media', () => {
     } catch {
       // ignore
     }
+    // WT-5: hino anterior sai do receiver da TV
+    mirrorAudioToTv('stop')
 
     session.value = {
       musicId,
@@ -439,6 +454,34 @@ export const useMediaStore = defineStore('media', () => {
     return { ok: true, warningKey }
   }
 
+  // WT-5 áudio: espelha o estado do player pro receiver TV (case 'audio').
+  // Áudio toca na TV pelo próprio receiver (url do streaming do catálogo).
+  // MP3 segue o padrão do app (palco-session.audioRouted): sem capa do hino,
+  // bg do escopo liturgy; fallback final é o bg-fallback.png do receiver.
+  function mirrorAudioToTv(action: 'play' | 'pause' | 'stop', positionMs?: number): void {
+    try {
+      const sendAudio = (window as unknown as { __palcoRelayAudio?: (a: Record<string, unknown>) => void }).__palcoRelayAudio
+      if (!sendAudio) return
+      const ses = session.value
+      let background: string | undefined = resolvedSlideImageUrl.value ?? undefined
+      if (!background) {
+        try {
+          const st = readEffectiveStageSettings('liturgy')
+          background = resolveBackgroundImage(st.backgroundImage) ?? undefined
+        } catch { /* settings indisponíveis — receiver usa fallback */ }
+      }
+      sendAudio({
+        action,
+        positionMs,
+        url: ses?.audioUrl ?? undefined,
+        title: ses?.title ?? undefined,
+        subtitle: ses?.subtitle ?? undefined,
+        cover: background,
+        background,
+      })
+    } catch { /* TV fora — áudio local segue */ }
+  }
+
   async function play(): Promise<void> {
     if (!session.value?.audioUrl) return
     const seq = ++playPauseSeq
@@ -456,6 +499,7 @@ export const useMediaStore = defineStore('media', () => {
     const played = await fadeInMediaAudio(audio, volume.value)
     if (seq !== playPauseSeq) return
     status.value = played ? 'playing' : 'paused'
+    if (played) mirrorAudioToTv('play', Math.round(audio.currentTime * 1000))
   }
 
   async function pause(): Promise<void> {
@@ -473,6 +517,7 @@ export const useMediaStore = defineStore('media', () => {
     await fadeVolumeMediaAudio(audio, 0)
     if (seq !== playPauseSeq) return
     pauseMediaAudio(audio)
+    mirrorAudioToTv('pause', Math.round(audio.currentTime * 1000))
   }
 
   async function togglePlay(): Promise<void> {
@@ -489,6 +534,7 @@ export const useMediaStore = defineStore('media', () => {
     )
     audio.currentTime = clamped
     currentTimeSec.value = clamped
+    if (isPlaying.value) mirrorAudioToTv('play', Math.round(clamped * 1000))
   }
 
   function seekRatio(ratio: number): void {
@@ -816,8 +862,11 @@ export const useMediaStore = defineStore('media', () => {
     if (isMobileOperatorViewport()) return false
     if (!session.value) return false
     const opened = await openPopupModule('media')
+    // rota 'Só TV (nuvem)': openPopupModule não abre popup mas retorna true
     isProjecting.value = opened
     if (opened) {
+      // popup abriu de fato? senão é TV-only
+      isTvProjecting.value = !isPopupModuleOpen('media')
       startProjectionWatch()
       publishProjectionState()
     }
@@ -828,7 +877,17 @@ export const useMediaStore = defineStore('media', () => {
     void exitPopupModule()
     isProjecting.value = false
     stopProjectionWatch()
-    publishProjectionState()
+    // WT-5: TV é destino independente — parar projeção tem que MANDAR idle
+    // pro relay, senão o runtime republica o conteúdo (hino ficava preso na
+    // TV mesmo com o botão desligado). Runtime inativo explícito:
+    isTvProjecting.value = false
+    publishMediaRuntime({ ...DEFAULT_MEDIA_PROJECTION, active: false })
+  }
+
+  /** Para SÓ a TV (popup continua) — botão dedicado futuro / rota tv. */
+  function stopTvProjection(): void {
+    isTvProjecting.value = false
+    publishMediaRuntime(buildRuntime())
   }
 
   async function toggleProjection(): Promise<void> {

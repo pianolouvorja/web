@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { ProjectionBackground } from '@design-system/index'
 
@@ -60,6 +60,12 @@ const contentKey = computed(
   () => `${runtime.value.text}|${runtime.value.reference}`,
 )
 
+// Re-aplica o fit quando o bloco de conteúdo (re)aparece (a Transition
+// troca o elemento — o textEl troca de nó, o fit antigo não serve).
+watch(showContent, (v) => {
+  if (v) void nextTick(applyFit)
+})
+
 // ===== Personalização do Palco (escopo bible — paridade APK) =====
 const stage = ref<StageSettings>(readEffectiveStageSettings('bible'))
 let unsubStage: (() => void) | null = null
@@ -96,9 +102,11 @@ const stageAlign = computed(() => ({
 
 const verseStyle = computed(() => ({
   color: stage.value.bibleTextColor,
-  fontSize: `${(stage.value.bibleFontSize / 1920) * 100}cqw`,
+  fontSize: `${((stage.value.bibleFontSize / 1920) * 100 * fitScale.value).toFixed(3)}cqw`,
   fontWeight: String(stage.value.bibleFontWeight),
   textAlign: stage.value.textAlign,
+  textTransform:
+    stage.value.bibleTextTransform === 'none' ? 'none' : stage.value.bibleTextTransform,
   textShadow: stage.value.textShadow
     ? `0 0 ${(stage.value.shadowBlur / 108) * 100}cqw rgba(0,0,0,${stage.value.shadowIntensity})`
     : 'none',
@@ -118,6 +126,47 @@ const referenceStyle = computed(() => ({
   color: stage.value.footerRefColor,
   fontWeight: String(stage.value.footerRefWeight),
 }))
+
+// ===== Auto-fit (WT-5f): texto SEMPRE dentro da área útil =====
+// Versículos múltiplos (Gn 1:1–3) geram texto longo que estoura a tela com
+// a fonte configurada. Mede e reduz o fitScale até caber (paridade com o
+// auto-fit do receiver). O scale entra no verseStyle (cqw).
+const textEl = ref<HTMLParagraphElement | null>(null)
+const fitScale = ref(1)
+
+function applyFit() {
+  const el = textEl.value
+  if (!el) return
+  // área útil: altura do palco menos rodapé/padding (~12%)
+  const palco = el.closest('.bible-projection') as HTMLElement | null
+  const maxH = (palco?.clientHeight ?? window.innerHeight) * 0.86
+  const base = stage.value.bibleFontSize / 1920 * 100 // cqw alvo
+  let scale = 1
+  let guard = 0
+  // medir: aplicar o scale candidato direto e checar overflow
+  while (guard < 30) {
+    el.style.fontSize = `${(base * scale).toFixed(3)}cqw`
+    if (el.scrollHeight <= maxH) break
+    scale *= 0.94
+    guard++
+  }
+  fitScale.value = scale
+  // limpa o style inline (verseStyle assume pelo computed)
+  el.style.fontSize = ''
+}
+
+watch(
+  () => [runtime.value.text, stage.value.bibleFontSize, stage.value.bibleTextTransform],
+  () => void nextTick(applyFit),
+  { flush: 'post' },
+)
+onMounted(() => {
+  applyFit()
+  window.addEventListener('resize', applyFit)
+})
+onUnmounted(() => {
+  window.removeEventListener('resize', applyFit)
+})
 </script>
 
 <template>
@@ -136,16 +185,24 @@ const referenceStyle = computed(() => ({
         <div
           v-if="showContent"
           :key="contentKey"
-          class="bible-projection__content"
-          :style="verseBoxStyle"
+          class="bible-projection__stack"
+          :style="stageAlign"
         >
-          <p
-            v-if="runtime.text"
-            class="bible-projection__text"
-            :style="verseStyle"
+          <div
+            class="bible-projection__content"
+            :style="verseBoxStyle"
           >
-            {{ runtime.text }}
-          </p>
+            <p
+              v-if="runtime.text"
+              ref="textEl"
+              class="bible-projection__text"
+              :style="verseStyle"
+            >
+              {{ runtime.text }}
+            </p>
+          </div>
+          <!-- WT-5f: referência FORA da caixinha de texto, com gap (Rafael) —
+               o content (caixinha) abraça só o texto; a reference é irmã. -->
           <p
             v-if="runtime.reference && stage.showBibleVersion"
             class="bible-projection__reference"
@@ -184,12 +241,20 @@ const referenceStyle = computed(() => ({
   padding: clamp(1.5rem, 6vmin, 4rem);
 }
 
+/* WT-5f: stack column (caixinha do texto + referência FORA dela) — herda o
+   alinhamento do palco via stageAlign e dá o gap entre caixinha e ref. */
+.bible-projection__stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4vmin;
+  max-width: 100%;
+}
+
 .bible-projection__content {
   display: flex;
   flex-direction: column;
-  gap: 0.6em;
   width: 100%;
-  max-width: 56rem;
+  max-width: fit-content;
 }
 
 .bible-projection__text {

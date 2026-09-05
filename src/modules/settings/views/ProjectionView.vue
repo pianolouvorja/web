@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import PopupScreensCard from '../components/PopupScreensCard.vue'
+import ScreensCard from '../components/ScreensCard.vue'
+import MonitorArrangementCard from '../components/MonitorArrangementCard.vue'
 import ProjectionOptionsCard from '../components/ProjectionOptionsCard.vue'
 import StageCustomizationCard from '../components/StageCustomizationCard.vue'
 </script>
 
 <template>
   <div class="projection-view">
-    <PopupScreensCard />
+    <MonitorArrangementCard />
+    <ScreensCard />
     <ProjectionOptionsCard />
     <StageCustomizationCard only-scope="global" />
   </div>

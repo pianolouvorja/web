@@ -6,8 +6,10 @@ import {
   isPopupModuleOpen,
   openPopupModule,
 } from '@shared/services/popup-windows'
+import { getPopupRoute, type PopupRoutableModule } from '@shared/services/popup-routing'
 
-import { computeElapsedMs } from '../services/timer-format'
+import { computeElapsedMs, formatElapsedMs } from '../services/timer-format'
+import { publishToStageRelay } from '@shared/services/palco-cloud-bridge'
 import {
   loadTimerDisplayConfig,
   saveTimerDisplayConfig,
@@ -49,6 +51,10 @@ export const useTimerStore = defineStore('timer', () => {
     stopProjectionWatch()
     projectionWatchTimer = setInterval(() => {
       if (!isPopupModuleOpen('timer')) {
+        // WT-5: rota 'Só TV (nuvem)' não tem popup — não é 'parado'
+        try {
+          if (getPopupRoute('timer' as PopupRoutableModule) === 'tv') return
+        } catch { /* routing indisponível */ }
         isProjecting.value = false
         stopProjectionWatch()
       }
@@ -57,6 +63,12 @@ export const useTimerStore = defineStore('timer', () => {
 
   function syncRuntime() {
     publishTimerRuntime(runtime.value)
+    // WT-5: display formatado vai pro relay (best-effort, no-op sem sessão).
+    const display = formatElapsedMs(
+      computeElapsedMs(runtime.value.accumulatedMs, runtime.value.segmentStartedAt, runtime.value.status, Date.now()),
+      config.value.timeFormat,
+    )
+    publishToStageRelay('timer', { display })
   }
 
   function hydrate() {
@@ -187,6 +199,9 @@ export const useTimerStore = defineStore('timer', () => {
     await exitPopupModule()
     isProjecting.value = false
     stopProjectionWatch()
+    // WT-5: TV é destino independente — parar manda idle pro relay
+    runtime.value = { ...DEFAULT_TIMER_RUNTIME, savedTimesMs: runtime.value.savedTimesMs }
+    syncRuntime()
   }
 
   function refreshProjectionState() {
@@ -197,7 +212,8 @@ export const useTimerStore = defineStore('timer', () => {
   }
 
   async function toggleProjection() {
-    if (isProjecting.value && isPopupModuleOpen('timer')) {
+    // WT-5: rota 'Só TV' não tem popup — desligar pelo estado, não pelo popup
+    if (isProjecting.value) {
       await clearProjection()
       return
     }

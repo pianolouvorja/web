@@ -19,6 +19,7 @@ import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { createModuleHandlers } from "../services/module-handlers";
 import { WebRemoteBridge } from "../services/web-remote-bridge";
+import { useDesktopPalcoSession } from "../services/desktop-palco-session";
 
 // Busca de hinos com ids locais (paridade total com o desktop).
 let musicIndex: Awaited<ReturnType<typeof loadAlbumMusicIndex>> | null = null;
@@ -64,6 +65,7 @@ let scannerTimer: number | null = null;
 
 let bridge: WebRemoteBridge | null = null;
 let unwatchState: (() => void) | null = null;
+const session = useDesktopPalcoSession();
 
 function snapshot() {
 	return {
@@ -244,7 +246,10 @@ function connect(url: string) {
 	bridge = new WebRemoteBridge(full, {
 		snapshot,
 		execute,
-		onClose: () => disconnect(),
+		onClose: () => {
+			session.detach(bridge!);
+			disconnect();
+		},
 	});
 	unwatchState = watch(
 		() => [
@@ -260,6 +265,7 @@ function connect(url: string) {
 		() => bridge?.reportState(),
 	);
 	bridge.start();
+	session.attach(bridge);
 	connected.value = true;
 }
 

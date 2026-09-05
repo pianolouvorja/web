@@ -174,6 +174,15 @@ export function saveSlotBounds(slotId: string, bounds: Partial<PopupBounds>): vo
   setBrowserItem(BROWSER_STORAGE_KEYS.popupLayout, layout)
 }
 
+/** Remove a atribuição persistida; próximo open volta ao monitor atual/default. */
+export function clearSlotBounds(slotId: string): void {
+  if (!slotId) return
+  const layout = getLayout()
+  if (!(slotId in layout)) return
+  delete layout[slotId]
+  setBrowserItem(BROWSER_STORAGE_KEYS.popupLayout, layout)
+}
+
 export function captureCurrentBounds(targetWindow: Window = window): PopupBounds | null {
   const bounds = normalizeBounds({
     left: targetWindow.screenX,
@@ -247,9 +256,39 @@ export async function applyBounds(
   }
 }
 
+/**
+ * Telas de projeção SEMPRE abrem fullscreen. Quando o slot já foi associado
+ * a outro monitor, usa a origem/dimensões daquele monitor; caso contrário,
+ * usa o monitor atual. Janela de controle não passa por aqui.
+ */
+export function getProjectionFullscreenBounds(index: number): PopupBounds {
+  const saved = getLayoutEntry(getPopupSlotId(index))
+  if (
+    saved?.screenLeft !== undefined &&
+    saved.screenTop !== undefined &&
+    saved.screenWidth &&
+    saved.screenHeight
+  ) {
+    return {
+      left: saved.screenLeft,
+      top: saved.screenTop,
+      width: saved.screenWidth,
+      height: saved.screenHeight,
+    }
+  }
+  const screen = window.screen
+  const origin = readScreenOrigin(screen)
+  return {
+    left: origin.left,
+    top: origin.top,
+    width: Math.round(screen.availWidth || screen.width),
+    height: Math.round(screen.availHeight || screen.height),
+  }
+}
+
 export function getOpenFeatures(index: number): string {
-  const bounds = resolveBounds(index)
-  return `width=${bounds.width},height=${bounds.height}`
+  const bounds = getProjectionFullscreenBounds(index)
+  return `popup=yes,fullscreen=yes,width=${bounds.width},height=${bounds.height},left=${bounds.left},top=${bounds.top},menubar=no,toolbar=no,location=no,status=no`
 }
 
 /** Features da janela de controle da liturgia (≈ Electron 960×540). */

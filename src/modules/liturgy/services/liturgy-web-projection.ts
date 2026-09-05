@@ -20,7 +20,7 @@ import {
 const LITURGY_WEB_MODULE_ID = 'liturgy-web'
 
 type LiturgyWebProjectionOptions = {
-  mode?: 'video' | 'site' | 'image' | 'pdf' | 'presentation'
+  mode?: 'audio' | 'video' | 'site' | 'image' | 'pdf' | 'presentation'
   withScreens?: boolean
 }
 
@@ -159,6 +159,33 @@ export async function playLiturgyLocalVideoOnScreens(
   title = '',
 ): Promise<boolean> {
   return openLiturgyLocalVideo(filePath, title, true)
+}
+
+// WT-6: áudio local (MP3 e afins) — mesmo pipeline do vídeo, kind dedicado.
+async function openLiturgyLocalAudio(
+  filePath: string,
+  title = '', // NOSONAR
+  withScreens: boolean,
+): Promise<boolean> {
+  const path = filePath.trim()
+  if (!isBrowsableMediaUrl(path)) return false
+
+  const label = title.trim() || path.split(/[\\/]/).pop() || path
+  return openLiturgyPopup('audio', path, label, { withScreens })
+}
+
+export async function openLiturgyLocalAudioControl(
+  filePath: string,
+  title = '',
+): Promise<boolean> {
+  return openLiturgyLocalAudio(filePath, title, false)
+}
+
+export async function playLiturgyLocalAudioOnScreens(
+  filePath: string,
+  title = '',
+): Promise<boolean> {
+  return openLiturgyLocalAudio(filePath, title, true)
 }
 
 async function openLiturgyLocalImages(

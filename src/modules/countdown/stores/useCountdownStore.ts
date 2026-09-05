@@ -6,11 +6,14 @@ import {
   isPopupModuleOpen,
   openPopupModule,
 } from '@shared/services/popup-windows'
+import { getPopupRoute, type PopupRoutableModule } from '@shared/services/popup-routing'
 
 import {
   computeElapsedMs,
   computeRemainingMs,
+  formatElapsedMs,
 } from '../services/countdown-format'
+import { publishToStageRelay } from '@shared/services/palco-cloud-bridge'
 import {
   loadCountdownDisplayConfig,
   saveCountdownDisplayConfig,
@@ -58,6 +61,10 @@ export const useCountdownStore = defineStore('countdown', () => {
     stopProjectionWatch()
     projectionWatchTimer = setInterval(() => {
       if (!isPopupModuleOpen('countdown')) {
+        // WT-5: rota 'Só TV (nuvem)' não tem popup — não é 'parado'
+        try {
+          if (getPopupRoute('countdown' as PopupRoutableModule) === 'tv') return
+        } catch { /* routing indisponível */ }
         isProjecting.value = false
         stopProjectionWatch()
       }
@@ -108,6 +115,15 @@ export const useCountdownStore = defineStore('countdown', () => {
 
   function syncRuntime() {
     publishCountdownRuntime(runtime.value)
+    // WT-5: restante formatado vai pro relay (best-effort, no-op sem sessão).
+    const remaining = computeRemainingMs(
+      runtime.value.durationMs,
+      runtime.value.accumulatedMs,
+      runtime.value.segmentStartedAt,
+      runtime.value.status,
+      Date.now(),
+    )
+    publishToStageRelay('countdown', { display: formatElapsedMs(remaining, config.value.timeFormat) })
   }
 
   function hydrate() {
@@ -274,7 +290,10 @@ export const useCountdownStore = defineStore('countdown', () => {
   async function clearProjection() {
     await exitPopupModule()
     isProjecting.value = false
-    stopProjectionWatch()
+    stopFinishWatch()
+    // WT-5: TV é destino independente — parar manda idle pro relay
+    runtime.value = { ...DEFAULT_COUNTDOWN_RUNTIME, savedTimesMs: runtime.value.savedTimesMs }
+    syncRuntime()
   }
 
   function refreshProjectionState() {
@@ -285,7 +304,8 @@ export const useCountdownStore = defineStore('countdown', () => {
   }
 
   async function toggleProjection() {
-    if (isProjecting.value && isPopupModuleOpen('countdown')) {
+    // WT-5: rota 'Só TV' não tem popup — desligar pelo estado, não pelo popup
+    if (isProjecting.value) {
       await clearProjection()
       return
     }

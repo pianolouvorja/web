@@ -11,7 +11,13 @@ import {
   saveSlotBounds,
   scheduleRestoreOnWindow,
 } from '@shared/services/popup-layout'
-import { getPopupCount, getTargetPopupSlots } from '@shared/services/projection-preferences'
+import {
+  getPopupCount,
+  getProjectionFullscreenMode,
+  getTargetPopupSlots,
+} from '@shared/services/projection-preferences'
+import { getPopupRoute, POPUP_ROUTABLE_MODULES, type PopupRoutableModule } from './popup-routing'
+import { excludeOperatorSlots, loadSlotAssignments } from '@shared/services/slot-monitors'
 import {
   getBrowserItem,
   setBrowserItem,
@@ -25,6 +31,42 @@ import {
 
 export const POPUP_STATE_CHANNEL = 'louvorja-popup-state'
 export const LITURGY_CONTROL_WINDOW_NAME = 'LiturgyWebControl'
+
+// WT-5I: sob o desktop Electron, popups com `monitor=<displayId>` nas features
+// ganham fullscreen NATIVO no display certo (main.mjs aplica borderless +
+// setBounds + alwaysOnTop — imune a EWMH/Wayland). Cache carregado ANTES do
+// clique: window.open precisa permanecer no gesto do operador, sem await.
+interface LouvorjaElectronBridge {
+  isElectron?: boolean
+  displays?: { list: () => Promise<Array<{ id: number; bounds: { x: number; y: number } }>> }
+}
+let electronDisplays: Array<{ id: number; bounds: { x: number; y: number } }> = []
+
+function primeElectronDisplays(): void {
+  const bridge = (window as unknown as { louvorja?: LouvorjaElectronBridge }).louvorja
+  if (!bridge?.isElectron || !bridge.displays) return
+  void bridge.displays
+    .list()
+    .then((displays) => {
+      electronDisplays = displays
+    })
+    .catch(() => {
+      // bridge indisponível: popup segue pelo caminho de coordenadas web.
+    })
+}
+
+/** Mapeia slot atribuído (screenId "left:top") → displayId do Electron. */
+function electronMonitorIdForSlot(slotId: string): number | null {
+  if (!(window as unknown as { louvorja?: LouvorjaElectronBridge }).louvorja?.isElectron) return null
+  const screenId = loadSlotAssignments()[slotId]
+  if (!screenId) return null
+  const [leftRaw, topRaw] = screenId.split(':')
+  const left = Number.parseInt(leftRaw ?? '', 10)
+  const top = Number.parseInt(topRaw ?? '', 10)
+  if (Number.isNaN(left) || Number.isNaN(top)) return null
+  const display = electronDisplays.find((d) => d.bounds.x === left && d.bounds.y === top)
+  return display ? display.id : null
+}
 
 export type PopupSyncPayload = {
   param: string
@@ -95,14 +137,35 @@ function buildControlUrl(moduleId: string): string {
 }
 
 function openPopupWindow(slot: number, moduleId?: string): PopupWindowRef | null {
+  // WT-5I: sob Electron, monitor=<displayId> nas features dispara fullscreen
+  // NATIVO no display certo (main.mjs: borderless + setBounds + alwaysOnTop).
+  // Path web (requestFullscreen) continua como fallback do browser puro.
+  const monitorId = electronMonitorIdForSlot(String(slot))
+  const features = monitorId != null
+    ? `${getOpenFeatures(slot)},monitor=${monitorId}`
+    : getOpenFeatures(slot)
+
   const win = window.open(
     buildPopupUrl(slot, moduleId, 'screen'),
     getPopupSlotId(slot),
-    getOpenFeatures(slot),
+    features,
   ) as PopupWindowRef | null
 
   if (win) {
     win.__popupSlot = slot
+
+    // WT-5F: Chrome só aceita fullscreen dentro da activation ORIGINAL do
+    // clique do operador. A preferência controla as PRÓXIMAS popups; uma
+    // popup já aberta não pode entrar em fullscreen sem gesto nela.
+    if (getProjectionFullscreenMode()) {
+      try {
+        void win.document.documentElement.requestFullscreen().catch(() => {
+          // Browser/ambiente sem Fullscreen API: mantém popup maximizada via features.
+        })
+      } catch {
+        // API ausente/síncrona indisponível.
+      }
+    }
   }
 
   return win
@@ -200,7 +263,9 @@ function ensurePopups(
   slotOverride?: number[],
 ): PopupWindowRef[] {
   const availableCount = getPopupCount()
-  const targetSlots = (slotOverride ?? getTargetPopupSlots()).filter(
+  // Operador é uma tela de controle, nunca destino de projeção. Ao clicar
+  // Projetar, abre imediatamente TODOS os slots selecionados restantes.
+  const targetSlots = excludeOperatorSlots(slotOverride ?? getTargetPopupSlots()).filter(
     (slot) => slot >= 1 && slot <= availableCount,
   )
   let popups = getPopupRefs()
@@ -252,12 +317,8 @@ function ensurePopups(
   )
 
   popups.forEach((popup) => {
-    const slot = popup.__popupSlot
-    if (!slot) return
-    const entry = resolveBoundsForSlot(getPopupSlotId(slot))
-    if (entry) {
-      scheduleRestoreOnWindow(popup, entry)
-    }
+    // Projeções sempre iniciam fullscreen (getOpenFeatures). Não restaurar
+    // bounds antigos aqui — restaurar janela normal desfaria o fullscreen.
     requestBoundsReport(popup)
   })
 
@@ -345,9 +406,34 @@ export async function openPopupModule(
   // Define o módulo antes de abrir, para a popup ler no boot (URL + storage).
   setActiveModule(moduleId)
 
+  // Roteamento por módulo (paridade palco-routing do desktop): sem override
+  // explícito, módulo com rota individual projeta SÓ no slot designado.
+  // WT-5: rota 'tv' = só TV cloud — NENHUM popup local abre.
+  let effectiveSlots = options?.slots
+  if (!effectiveSlots && (POPUP_ROUTABLE_MODULES as readonly string[]).includes(moduleId)) {
+    const route = getPopupRoute(moduleId as PopupRoutableModule)
+    if (route === 'tv') {
+      // Conteúdo vai pelo relay (runtime publica ao selecionar); aqui só
+      // registra o módulo ativo pra UI/estado.
+      if (!isLiturgyControlOpen()) setActiveModule(moduleId)
+      requestWindowManagementPermission()
+      return true
+    }
+    if (route !== 'mirror') {
+      const slot = Number.parseInt(route, 10)
+      if (!Number.isNaN(slot) && slot >= 1 && slot <= getPopupCount()) {
+        effectiveSlots = [slot]
+      }
+    }
+  }
+
+  // Inicia a solicitação ainda no gesto do operador. NÃO await: window.open
+  // também exige esse gesto e a Promise resolve depois para restaurar o monitor.
+  const windowManagementPermission = requestWindowManagementPermission()
+
   // Critical: window.open precisa ocorrer ainda no gesto do usuário.
   // NÃO await antes de ensurePopups — browsers bloqueiam popup após await.
-  const popups = ensurePopups(moduleId, options?.slots)
+  const popups = ensurePopups(moduleId, effectiveSlots)
   if (popups.length === 0) {
     if (!isLiturgyControlOpen()) setActiveModule('')
     return false
@@ -363,14 +449,13 @@ export async function openPopupModule(
 
   scheduleSync(popups)
 
-  // Permissão / multi-monitor: best-effort depois da abertura.
-  void requestWindowManagementPermission().then(() => {
+  // Projeções abrem fullscreen (getOpenFeatures). NÃO restaurar bounds
+  // salvos aqui: restore colocaria a janela de volta em tamanho normal,
+  // desfazendo o fullscreen do window.open. Só reporta bounds p/ layout.
+  void windowManagementPermission.then(() => {
     popups.forEach((popup) => {
       if (!popup || popup.closed) return
-      const slot = popup.__popupSlot
-      if (!slot) return
-      const entry = resolveBoundsForSlot(getPopupSlotId(slot))
-      if (entry) scheduleRestoreOnWindow(popup, entry)
+      requestBoundsReport(popup)
     })
   })
 
@@ -410,6 +495,10 @@ let openerBridgeInstalled = false
 export function installPopupOpenerBridge(): void {
   if (openerBridgeInstalled || typeof window === 'undefined') return
   openerBridgeInstalled = true
+
+  // WT-5I: cache de displays do Electron p/ mapear monitor=<displayId> nas
+  // features do window.open — o gesto do clique não pode esperar IPC.
+  primeElectronDisplays()
 
   window.addEventListener('message', (event: MessageEvent) => {
     if (event.origin !== window.location.origin) return
