@@ -14,6 +14,7 @@ import {
   loadSlotAssignments,
   pickSlotForScreen,
 } from '@shared/services/slot-monitors'
+import { useStageRelay } from '../../remote/services/stage-relay'
 
 /**
  * Paridade do PalcoRouteSelect do desktop: seletor compact no header de cada
@@ -27,6 +28,9 @@ const { t } = useI18n()
 const popupCount = computed(() => getPopupCount())
 const selectedRoute = ref(getPopupRoute(props.module))
 const detectedScreens = ref<WebScreen[]>([])
+// WT-6A: receivers PWA reais (com slot lógico) como destinos por módulo.
+const relay = useStageRelay()
+const receiverTargets = computed(() => relay.receivers())
 
 function slotLabel(slotId: number): string {
   const base = slotId === 1
@@ -45,6 +49,13 @@ onMounted(() => {
 })
 
 function update(value: string): void {
+  // WT-6A: destino = receiver PWA real por slot. A rota guarda `palco:N` e a
+  // projeção do módulo vai direcionada (to: slot-N), sem popup local.
+  if (value.startsWith('palco:')) {
+    selectedRoute.value = value
+    setPopupRoute(props.module, value)
+    return
+  }
   if (!value.startsWith('monitor:')) {
     selectedRoute.value = value
     setPopupRoute(props.module, value)
@@ -91,6 +102,18 @@ function update(value: string): void {
           :value="String(slot)"
         >
           {{ slotLabel(slot) }}
+        </option>
+      </optgroup>
+      <optgroup
+        v-if="receiverTargets.length"
+        :label="t('settings.palco.receiversPlain')"
+      >
+        <option
+          v-for="receiver in receiverTargets"
+          :key="receiver.id"
+          :value="`palco:${receiver.slot ?? 1}`"
+        >
+          {{ receiver.label }} (PWA)
         </option>
       </optgroup>
       <optgroup

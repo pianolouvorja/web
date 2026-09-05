@@ -20,7 +20,7 @@ export type ReceiverMessage = {
  * o publish ia pro limbo (hinos/utilitários não projetavam na TV, caso real
  * 01/09). O stage-relay se registra aqui no attach — instância única.
  */
-type RelaySend = (state: Record<string, unknown>) => void
+type RelaySend = (state: Record<string, unknown>, to?: string) => void
 declare global {
   interface Window {
     __palcoRelaySend?: RelaySend
@@ -46,10 +46,20 @@ export function publishToStageRelay(moduleId: string, payload: unknown): void {
   try {
     const send = typeof window !== 'undefined' ? window.__palcoRelaySend : undefined
     if (!send) return // sem relay registrado (modo local/desktop ou instância dev)
+    // WT-6A: rota `palco:N` do módulo → conteúdo direcionado ao receiver do
+    // slot N (to: slot-N). Rota 'tv' ou slots de popup seguem broadcast.
+    let to: string | undefined
+    try {
+      const { getPopupRoute } = popupRouting
+      const route = getPopupRoute(moduleId as never)
+      const m = /^palco:(\d+)$/.exec(String(route ?? ''))
+      if (m) to = `slot-${m[1]}`
+    } catch { /* routing indisponível — broadcast */ }
     if (moduleId === 'clock' && lastRelayModule !== 'clock') {
       try {
         const { getPopupRoute } = popupRouting
-        if (getPopupRoute('clock') !== 'tv') return
+        const route = getPopupRoute('clock')
+        if (route !== 'tv' && !/^palco:\d+$/.test(String(route ?? ''))) return
       } catch { /* routing indisponível — segue o fluxo */ }
     }
     if (lastRelayModule && lastRelayModule !== moduleId) {
@@ -58,7 +68,7 @@ export function publishToStageRelay(moduleId: string, payload: unknown): void {
     lastRelayModule = moduleId
     void (async () => {
       const msg = await toReceiverMessage(moduleId, payload)
-      if (msg) send(msg as unknown as Record<string, unknown>)
+      if (msg) send(msg as unknown as Record<string, unknown>, to)
       else if (moduleId === lastRelayModule) lastRelayModule = null
     })()
   } catch {

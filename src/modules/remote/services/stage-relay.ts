@@ -44,6 +44,8 @@ export interface StageRelayState {
   removeTv: (id: string) => Promise<boolean>
   startTv: (id: string) => Promise<boolean>
   stopTv: (id: string) => Promise<boolean>
+  /** WT-6A: receivers vivos com slot lógico — destinos por módulo. */
+  receivers: () => Array<{ id: string; label: string; slot?: number }>
 }
 
 const connected = ref(false)
@@ -68,9 +70,9 @@ function resolveDefaultApiBase(): string {
 let apiBase = resolveDefaultApiBase()
 let keepalive: ReturnType<typeof setInterval> | null = null
 let lastState: PalcoStatusInfo | null = null
-let receivers = 0
+let receiversCount = 0
 // WT-5: TVs individualmente conectadas (youare.receiverList do relay)
-interface ReceiverEntry { id: string; label: string }
+interface ReceiverEntry { id: string; label: string; slot?: number }
 let receiverList: ReceiverEntry[] = []
 
 function resolveApi(httpBase: string): string {
@@ -90,9 +92,11 @@ async function bootstrapToken(c: string): Promise<string> {
  * Publica estado do operador no relay. Aceita objeto JS; é serializado
  * com o envelope do protocolo do receiver ({v:2, type:...}).
  */
-export function publish(state: Record<string, unknown>): void {
+export function publish(state: Record<string, unknown>, to?: string): void {
   if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ v: 2, ...state }))
+    // WT-6A: `to: 'slot-N'` roteia o conteúdo só pro receiver daquele slot
+    // (relay filtra). Sem `to`, broadcast — retrocompatível.
+    ws.send(JSON.stringify({ v: 2, ...(to ? { to } : {}), ...state }))
   }
 }
 
@@ -180,8 +184,8 @@ export function useStageRelay(): StageRelayState {
         // WT-5: registra o send NESTA instância do módulo — o bridge consome
         // via window (Vite em dev duplica módulos com ?t= e o import estático
         // do bridge pegava instância connected:false — hinos não projetavam).
-        ;(window as unknown as { __palcoRelaySend?: (s: Record<string, unknown>) => void }).__palcoRelaySend =
-          (state) => { if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ v: 2, ...state })) }
+        ;(window as unknown as { __palcoRelaySend?: (s: Record<string, unknown>, to?: string) => void }).__palcoRelaySend =
+          (state, to) => { if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ v: 2, ...(to ? { to } : {}), ...state })) }
         ;(window as unknown as { __palcoRelayAudio?: (a: Record<string, unknown>) => void }).__palcoRelayAudio =
           (audio) => { if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ v: 2, type: 'audio', ...audio })) }
       }
@@ -190,11 +194,12 @@ export function useStageRelay(): StageRelayState {
         try {
           const msg = JSON.parse(ev.data as string) as Record<string, unknown>
           if (msg.type === 'youare') {
-            receivers = typeof msg.receivers === 'number' ? msg.receivers : receivers
+            receiversCount = typeof msg.receivers === 'number' ? msg.receivers : receiversCount
             if (Array.isArray(msg.receiverList)) {
               receiverList = (msg.receiverList as ReceiverEntry[]).map((r) => ({
                 id: String(r.id),
                 label: String(r.label ?? r.id),
+                slot: typeof r.slot === 'number' ? r.slot : undefined,
               }))
             }
           }
@@ -263,13 +268,13 @@ export function useStageRelay(): StageRelayState {
     connected.value = false
     code.value = null
     lastState = null
-    receivers = 0
+    receiversCount = 0
     receiverList = []
   }
 
   async function fetchStatus(): Promise<PalcoStatusInfo | null> {
     if (!connected.value) return null
-    return { running: true, clients: receivers, url: code.value, wsUrl: null }
+    return { running: true, clients: receiversCount, url: code.value, wsUrl: null }
   }
 
   async function fetchSlots(): Promise<PalcoSlotInfo[]> {
@@ -296,7 +301,12 @@ export function useStageRelay(): StageRelayState {
   async function startTv(): Promise<boolean> { return connected.value }
   async function stopTv(): Promise<boolean> { return connected.value }
 
-  return { connected, code, attachCode, createSession, detach, fetchStatus, fetchSlots, turnOn, turnOff, idle, createTv, removeTv, startTv, stopTv }
+  // WT-6A: receivers ativos com slot — alimenta o PopupRouteSelect.
+  function receivers(): Array<{ id: string; label: string; slot?: number }> {
+    return receiverList.map((r) => ({ ...r }))
+  }
+
+  return { connected, code, attachCode, createSession, detach, fetchStatus, fetchSlots, turnOn, turnOff, idle, createTv, removeTv, startTv, stopTv, receivers }
 }
 
 void lastState
