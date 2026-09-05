@@ -600,12 +600,12 @@ onUnmounted(() => {
         </button>
         <button
           type="button"
-          class="palco-slots-card__add"
-          :title="kioskCommand"
+          class="palco-slots-card__icon-btn"
+          :title="t('settings.palco.kioskLaunch')"
+          :aria-label="t('settings.palco.kioskLaunch')"
           @click="copyKioskCommand"
         >
-          <i :class="kioskCommandCopied ? 'ti ti-check' : 'ti ti-device-desktop-up'" aria-hidden="true" />
-          {{ kioskCommandCopied ? t('settings.palco.kioskLaunchCopied') : t('settings.palco.kioskLaunch') }}
+          <i :class="kioskCommandCopied ? 'ti ti-check' : 'ti ti-terminal-2'" aria-hidden="true" />
         </button>
         <button
           type="button"
@@ -729,6 +729,8 @@ onUnmounted(() => {
 .palco-slot__power { display:flex; align-items:center; justify-content:center; width:1.8rem; height:1.8rem; border:0; border-radius:.35rem; background:transparent; color:var(--ds-color-on-surface-variant); cursor:pointer; }
 .palco-slot__power:hover { color:var(--ds-color-primary); background:color-mix(in srgb,var(--ds-color-primary) 12%,transparent); }
 .palco-slots-card__add { display:flex; align-items:center; gap:.35rem; padding:.45rem .7rem; border:1px solid color-mix(in srgb,var(--ds-color-primary) 50%,transparent); border-radius:.5rem 0 .5rem 0; background:transparent; color:var(--ds-color-primary); cursor:pointer; font-size:.75rem; }
+.palco-slots-card__icon-btn { display:flex; align-items:center; justify-content:center; width:1.8rem; height:1.8rem; border:1px solid color-mix(in srgb,var(--ds-color-primary) 50%,transparent); border-radius:.5rem 0 .5rem 0; background:transparent; color:var(--ds-color-primary); cursor:pointer; font-size:.95rem; flex:none; }
+.palco-slots-card__icon-btn:hover { background:color-mix(in srgb,var(--ds-color-primary) 12%,transparent); }
 .palco-slot__remove { display:flex; align-items:center; justify-content:center; width:1.8rem; height:1.8rem; border:0; border-radius:.35rem; background:transparent; color:var(--ds-color-on-surface-variant); cursor:pointer; }
 .palco-slot__remove:hover { color:#e65c66; }
 .palco-slots-card__operator-select{display:flex;align-items:center;gap:.5rem;margin:.75rem 0;color:var(--ds-color-on-surface-variant);font-size:.78rem}.palco-slots-card__operator-select .ti{color:var(--ds-color-primary);font-size:1rem}.palco-slots-card__operator-select select{min-width:0;flex:1;padding:.35rem .5rem;border:1px solid color-mix(in srgb,var(--ds-color-primary) 28%,transparent);border-radius:.4rem;background:color-mix(in srgb,var(--ds-color-on-surface) 6%,transparent);color:var(--ds-color-on-surface);font:inherit}
