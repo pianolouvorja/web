@@ -238,6 +238,8 @@ export default {
       cloudCodeLabel: 'Código da sessão — digite na TV (tecla vermelha)',
       addReceiver: 'Adicionar receiver',
       receiverUrlCopied: 'URL copiada',
+      kioskLaunch: 'Copiar comando: abrir todos os monitores em tela cheia',
+      kioskLaunchCopied: 'Comando kiosk copiado',
       cloudEnd: 'Encerrar sessão cloud',
       cloudAlwaysOn: 'sempre ativa quando conectada',
       cloudHint: 'Sem desktop? Digite o código da sessão para projetar via nuvem.',

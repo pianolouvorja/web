@@ -241,11 +241,24 @@ const receiverUrl = computed(() => {
   return `${origin}/palco/?code=${encodeURIComponent(relay.code.value)}`
 })
 const receiverUrlCopied = ref(false)
+const kioskCommandCopied = ref(false)
+const kioskCommand = computed(() => {
+  if (!receiverUrl.value) return ''
+  const scriptUrl = `${new URL(receiverUrl.value).origin}/palco/palco-kiosk.sh`
+  // Download explícito (sem curl|bash): receiver web, N instâncias kiosk.
+  return `curl -fsSLO '${scriptUrl}' && chmod +x palco-kiosk.sh && ./palco-kiosk.sh --url '${receiverUrl.value}' --all`
+})
 async function copyReceiverUrl(): Promise<void> {
   if (!receiverUrl.value) return
   await navigator.clipboard.writeText(receiverUrl.value).catch(() => {})
   receiverUrlCopied.value = true
   window.setTimeout(() => (receiverUrlCopied.value = false), 2000)
+}
+async function copyKioskCommand(): Promise<void> {
+  if (!kioskCommand.value) return
+  await navigator.clipboard.writeText(kioskCommand.value).catch(() => {})
+  kioskCommandCopied.value = true
+  window.setTimeout(() => (kioskCommandCopied.value = false), 2000)
 }
 // WT-5 (criar sessão): web gera o código — TV só consome. Com o fluxo
 // streaming a TV também pode criar (OK vazio) e mostrar o QR dela; aqui
@@ -584,6 +597,15 @@ onUnmounted(() => {
         <button type="button" class="palco-slots-card__add" :title="receiverUrl" @click="copyReceiverUrl">
           <i :class="receiverUrlCopied ? 'ti ti-check' : 'ti ti-copy'" aria-hidden="true" />
           {{ receiverUrlCopied ? t('settings.palco.receiverUrlCopied') : t('settings.palco.addReceiver') }}
+        </button>
+        <button
+          type="button"
+          class="palco-slots-card__add"
+          :title="kioskCommand"
+          @click="copyKioskCommand"
+        >
+          <i :class="kioskCommandCopied ? 'ti ti-check' : 'ti ti-device-desktop-up'" aria-hidden="true" />
+          {{ kioskCommandCopied ? t('settings.palco.kioskLaunchCopied') : t('settings.palco.kioskLaunch') }}
         </button>
         <button
           type="button"
