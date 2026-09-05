@@ -232,8 +232,12 @@ const cloudInput = ref('')
 const cloudMode = computed(() => !desktopConnected.value)
 const receiverUrl = computed(() => {
   if (!relay.code.value) return ''
-  const configured = new URLSearchParams(window.location.search).get('palcoApi') || localStorage.getItem('palcoApiBase') || import.meta.env.VITE_PALCO_API_URL || window.location.origin
-  const origin = new URL(configured, window.location.origin).origin
+  const configured = new URLSearchParams(window.location.search).get('palcoApi') || localStorage.getItem('palcoApiBase') || import.meta.env.VITE_PALCO_API_URL
+  // O receiver vive na API (static/palco). Em dev o origin do web é o Vite
+  // (não serve /palco/) — fallback tem que ser a API local. Em prod, web e
+  // API compartilham domínio → location.origin serve os dois.
+  const fallback = import.meta.env.DEV ? 'http://localhost:3100' : window.location.origin
+  const origin = new URL(configured || fallback, window.location.origin).origin
   return `${origin}/palco/?code=${encodeURIComponent(relay.code.value)}`
 })
 const receiverUrlCopied = ref(false)
