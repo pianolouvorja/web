@@ -761,7 +761,17 @@ onUnmounted(() => {
 @keyframes spin { to { transform: rotate(360deg); } }
 .palco-slots-card__detected-item { display:flex; align-items:center; gap:.5rem; padding:.5rem .7rem; border-radius:.5rem 0 .5rem 0; background:color-mix(in srgb,var(--ds-color-on-surface) 6%,transparent); }
 .palco-slots-card__detected-item--assigned { outline:1px solid color-mix(in srgb,var(--ds-color-primary) 55%,transparent); }
-.palco-slot__monitor-select { max-width:11rem; height:1.9rem; padding:0 .4rem; border:1px solid color-mix(in srgb,var(--ds-color-on-surface) 18%,transparent); border-radius:.4rem; background:color-mix(in srgb,var(--ds-color-on-surface) 5%,transparent); color:var(--ds-color-on-surface); font-size:.74rem; cursor:pointer; }
+.palco-slot__monitor-select {
+  max-width:11rem; height:1.9rem; padding:0 .4rem; border:1px solid color-mix(in srgb,var(--ds-color-on-surface) 18%,transparent); border-radius:.4rem; background:color-mix(in srgb,var(--ds-color-on-surface) 5%,transparent); color:var(--ds-color-on-surface); font-size:.74rem; cursor:pointer;
+  /* <select> nativo: color-scheme escuro faz o dropdown do SO usar fundo dark */
+  color-scheme: dark;
+}
+.palco-slot__monitor-select option,
+.palco-slot__monitor-select optgroup {
+  /* Fallback: navegadores que permitem estilizar option (Chromium) */
+  background: var(--ds-color-surface-container-high, #2a2a2a);
+  color: var(--ds-color-on-surface, #e5e2e1);
+}
 .palco-slots-card__detected-item .ti-device-desktop { color:var(--ds-color-primary); }
 .palco-slots-card__detected-item strong { display:block; font-size:.8rem; color:var(--ds-color-on-surface); }
 .palco-slots-card__detected-item small { display:block; margin-top:.1rem; font-size:.68rem; color:var(--ds-color-on-surface-variant); }

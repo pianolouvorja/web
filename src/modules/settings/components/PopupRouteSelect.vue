@@ -154,6 +154,14 @@ function update(value: string): void {
   color: var(--ds-color-on-surface, #fff);
   font-size: 0.72rem;
   cursor: pointer;
+  /* <select> nativo: dropdown do SO com fundo dark (evita branco-no-branco) */
+  color-scheme: dark;
+}
+
+.popup-route select option,
+.popup-route select optgroup {
+  background: var(--ds-color-surface-container-high, #2a2a2a);
+  color: var(--ds-color-on-surface, #fff);
 }
 
 .popup-route--compact span {
