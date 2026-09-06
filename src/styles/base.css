@@ -111,6 +111,17 @@ body {
   background-color: var(--ds-color-background);
 }
 
+/* --- Contraste de <select> nativo (qualquer select do app) ---
+   O dropdown aberto é desenhado pelo SO: sem regra, o texto herda a cor
+   clara do tema dark e o fundo fica branco (branco-no-branco). Estiliza
+   option/optgroup com as variáveis do tema (cobre dark e light, pois o
+   ThemeManager troca as --ds-color-* por [data-mode]). */
+select option,
+select optgroup {
+  background-color: var(--ds-color-surface-container-high, #2a2a2a);
+  color: var(--ds-color-on-surface, #e5e2e1);
+}
+
 /* --- Transições de página (Interações: Dinâmico / Suave / Névoa) --- */
 
 .page-fade-enter-active,
