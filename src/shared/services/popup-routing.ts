@@ -69,6 +69,18 @@ export function isMirrorRoute(module: PopupRoutableModule): boolean {
 }
 
 /**
+ * WT-6A: destino sem popup local — rota 'tv' (broadcast relay) ou `palco:N`
+ * (receiver PWA do slot N, to: slot-N). Os projectionWatch dos stores (400ms)
+ * usam isto pra NÃO marcar isProjecting=false quando não há popup local.
+ * Sem isso, o botão de projeção "desligava sozinho" 400ms depois do clique
+ * (a popup nunca abre, o watch interpreta como "fechada").
+ */
+export function isCloudDestinationRoute(module: PopupRoutableModule): boolean {
+  const route = getPopupRoute(module)
+  return route === 'tv' || /^palco:\d+$/.test(route)
+}
+
+/**
  * Resolve em quais slots um módulo projeta:
  * - mirror → todos os slots ativos (undefined = quem chama decide)
  * - rota individual → [slotId]

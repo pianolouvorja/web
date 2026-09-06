@@ -7,7 +7,11 @@ import {
   isPopupModuleOpen,
   openPopupModule,
 } from '@shared/services/popup-windows'
-import { getPopupRoute, type PopupRoutableModule } from '@shared/services/popup-routing'
+import {
+  getPopupRoute,
+  isCloudDestinationRoute,
+  type PopupRoutableModule,
+} from '@shared/services/popup-routing'
 import { publishToStageRelay } from '@shared/services/palco-cloud-bridge'
 
 import {
@@ -40,9 +44,9 @@ export const useClockStore = defineStore('clock', () => {
     stopProjectionWatch()
     projectionWatchTimer = setInterval(() => {
       if (!isPopupModuleOpen('clock')) {
-        // WT-5: rota 'Só TV (nuvem)' não tem popup — não é 'parado'
+        // WT-5/WT-6A: 'Só TV (nuvem)' e `palco:N` (receiver PWA) não têm popup — não é 'parado'
         try {
-          if (getPopupRoute('clock' as PopupRoutableModule) === 'tv') return
+          if (isCloudDestinationRoute('clock')) return
         } catch { /* routing indisponível */ }
         isProjecting.value = false
         stopProjectionWatch()

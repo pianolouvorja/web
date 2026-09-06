@@ -7,7 +7,11 @@ import {
   isPopupModuleOpen,
   openPopupModule,
 } from '@shared/services/popup-windows'
-import { getPopupRoute, type PopupRoutableModule } from '@shared/services/popup-routing'
+import {
+  getPopupRoute,
+  isCloudDestinationRoute,
+  type PopupRoutableModule,
+} from '@shared/services/popup-routing'
 import {
   getUserPreference,
   setUserPreference,
@@ -72,9 +76,9 @@ export const useBibleStore = defineStore('bible', () => {
     stopProjectionWatch()
     projectionWatchTimer = setInterval(() => {
       if (!isPopupModuleOpen('bible')) {
-        // WT-5: rota 'Só TV (nuvem)' não tem popup — não é 'parado'
+        // WT-5/WT-6A: 'Só TV (nuvem)' e `palco:N` (receiver PWA) não têm popup — não é 'parado'
         try {
-          if (getPopupRoute('bible' as PopupRoutableModule) === 'tv') return
+          if (isCloudDestinationRoute('bible')) return
         } catch { /* routing indisponível */ }
         isProjecting.value = false
         stopProjectionWatch()

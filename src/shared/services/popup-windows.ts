@@ -419,6 +419,13 @@ export async function openPopupModule(
       requestWindowManagementPermission()
       return true
     }
+    // WT-6A: rota `palco:N` = receiver PWA no slot N. Conteúdo vai pelo relay
+    // (publishToStageRelay vira to: slot-N). NENHUM popup local abre.
+    if (/^palco:\d+$/.test(route)) {
+      if (!isLiturgyControlOpen()) setActiveModule(moduleId)
+      requestWindowManagementPermission()
+      return true
+    }
     if (route !== 'mirror') {
       const slot = Number.parseInt(route, 10)
       if (!Number.isNaN(slot) && slot >= 1 && slot <= getPopupCount()) {
