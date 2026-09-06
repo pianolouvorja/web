@@ -35,6 +35,7 @@ import {
   type PalcoStatusInfo,
 } from '../../remote/services/desktop-palco-session'
 import { attachStoredSession, useStageRelay } from '../../remote/services/stage-relay'
+import { kioskCommandFor } from '@shared/services/kiosk-command'
 
 /**
  * Paridade 1:1 com PalcoCard + PalcoSlotsCard do desktop.
@@ -244,9 +245,9 @@ const receiverUrlCopied = ref(false)
 const kioskCommandCopied = ref(false)
 const kioskCommand = computed(() => {
   if (!receiverUrl.value) return ''
-  const scriptUrl = `${new URL(receiverUrl.value).origin}/palco/palco-kiosk.sh`
-  // Download explícito (sem curl|bash): receiver web, N instâncias kiosk.
-  return `curl -fsSLO '${scriptUrl}' && chmod +x palco-kiosk.sh && ./palco-kiosk.sh --url '${receiverUrl.value}' --all`
+  const scriptBase = new URL(receiverUrl.value).origin
+  // Comando certo por SO da máquina do operador (Windows não roda .sh).
+  return kioskCommandFor(navigator.userAgent, receiverUrl.value, scriptBase).comando
 })
 async function copyReceiverUrl(): Promise<void> {
   if (!receiverUrl.value) return
