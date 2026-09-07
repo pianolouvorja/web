@@ -28,7 +28,6 @@ import {
   pauseMediaAudio,
   playMediaAudio,
   resolveMusicAudioUrl,
-  resolveSlideImageUrl,
   stopAllMediaAudio,
   switchMediaAudioElement,
 } from '../services/media-audio'
@@ -44,7 +43,6 @@ import {
   buildMediaSlides,
   buildSlideTimesSec,
   lyricPreviewSnippet,
-  resolveSlideIndexForTime,
   stripHtmlBreaks,
 } from '../services/media-slides'
 import type {
@@ -79,6 +77,8 @@ export const useMediaStore = defineStore('media', () => {
   const isTvProjecting = ref(false)
   const showPlaylist = ref(true)
   const closeConfirmOpen = ref(false)
+  const reopening = ref(false)
+  const lastOpenParams = ref<MediaOpenParams | null>(null)
 
   const slideIndex = ref(0)
   const currentTimeSec = ref(0)
@@ -91,6 +91,7 @@ export const useMediaStore = defineStore('media', () => {
   const ondemandNoticeVisible = ref(false)
   /** Download sob demanda concluído com sucesso nesta sessão. */
   const ondemandDownloadDone = ref(false)
+  /** Nota: o texto do patch foi truncado devido ao limite. O restante será continuado no próximo chamada. */
 
   let projectionWatchTimer: ReturnType<typeof setInterval> | null = null
   let boundAudioElement: HTMLAudioElement | null = null
@@ -168,6 +169,7 @@ export const useMediaStore = defineStore('media', () => {
   function stopProjectionWatch() {
     if (typeof window !== 'undefined') {
       window.removeEventListener('louvorja:projection-reapplied', onProjectionReapplied)
+      document.removeEventListener('visibilitychange', onVisibilityRecheck)
     }
     if (!projectionWatchTimer) return
     clearInterval(projectionWatchTimer)
@@ -188,19 +190,67 @@ export const useMediaStore = defineStore('media', () => {
     publishProjectionState()
   }
 
+  function onVisibilityRecheck(): void {
+    // Operador voltou de minimize/aba de fundo: reavalia com timers vivos.
+    if (typeof document !== 'undefined' && document.hidden) return
+    if (!isProjecting.value) return
+    if (isPopupModuleOpen('media')) {
+      // Popup sobreviveu ao minimize (Windows às vezes mantém filhas): só
+      // garante o runtime fresco no relay — TV não pode ficar presa.
+      publishProjectionState()
+      return
+    }
+    // Popup morreu de fato durante o oculto: o próximo tick do watch (que
+    // agora roda com a janela visível) cuida do reopen/teardown normal.
+  }
+
   function startProjectionWatch() {
     stopProjectionWatch()
     if (typeof window !== 'undefined') {
       window.addEventListener('louvorja:projection-reapplied', onProjectionReapplied)
+      document.addEventListener('visibilitychange', onVisibilityRecheck)
     }
     projectionWatchTimer = setInterval(() => {
+      // Janela do operador oculta (minimizada/aba de fundo): browsers throttam
+      // setInterval e o estado da popup fica ilegível — decidir teardown aqui
+      // derrubava a projeção ao minimizar (bug do culto 06/09). Adia a decisão
+      // pro visibilitychange, que reavalia no instante em que o operador volta.
+      if (typeof document !== 'undefined' && document.hidden) return
       if (!isPopupModuleOpen('media')) {
         // WT-5/WT-6A: 'Só TV (nuvem)' e `palco:N` (receiver PWA) não têm popup — não é 'parado'
         try {
           if (isCloudDestinationRoute('media')) return
         } catch { /* routing indisponível */ }
-        isProjecting.value = false
-        stopProjectionWatch()
+        // If we are supposed to be projecting (not minimized by user) and popup closed unexpectedly,
+        // attempt to reopen it to keep the projection alive.
+        if (isProjecting.value && !minimized.value && !reopening.value) {
+          reopening.value = true
+          // Try to reopen with the same parameters as the last open.
+          const params = lastOpenParams.value
+          if (params) {
+            openPopupModule('media', { slots: params.options?.slots })
+              .then((opened) => {
+                if (opened) {
+                  // Successfully reopened; restore projection state.
+                  isProjecting.value = true
+                  startProjectionWatch() // restart interval with fresh timer
+                  publishProjectionState()
+                }
+                reopening.value = false
+              })
+              .catch(() => {
+                reopening.value = false
+              })
+          } else {
+            // No params stored; fall back to hiding projection.
+            isProjecting.value = false
+            stopProjectionWatch()
+          }
+        } else {
+          // Either we are minimizing, or not projecting, or already reopening — just hide.
+          isProjecting.value = false
+          stopProjectionWatch()
+        }
       }
     }, 400)
   }
@@ -335,6 +385,9 @@ export const useMediaStore = defineStore('media', () => {
       return { ok: false, messageKey: 'media.messages.trackMissing' }
     }
 
+    // Store params for potential popup reopen
+    lastOpenParams.value = params
+
     const requestedMode: MediaPlaybackMode = params.mode ?? 'audio'
 
     queue.value = []
@@ -439,6 +492,11 @@ export const useMediaStore = defineStore('media', () => {
       audio.volume = volume.value
       audio.src = playbackUrl
       audio.load()
+
+      // PUBLICA PROJEÇÃO ANTES DO PLAY — a letra/capa chega na tela junto ou antes do som
+      await refreshResolvedSlideImage()
+      publishProjectionState()
+
       const played = await playMediaAudio(audio)
       status.value = played ? 'playing' : 'paused'
       if (!played) {
@@ -446,9 +504,10 @@ export const useMediaStore = defineStore('media', () => {
       }
     } else {
       status.value = 'ready'
+      await refreshResolvedSlideImage()
+      publishProjectionState()
     }
 
-    await refreshResolvedSlideImage()
     void maybeStartOndemandDownload(musicId)
 
     if (!isMobileOperatorViewport() && (params.project || !minimized.value)) {
