@@ -5,7 +5,13 @@ export type MediaUrlResolveResult =
 function resolveRemoteFileUrl(urlPath: string): string {
   const cleanPath = urlPath.startsWith('/') ? urlPath.slice(1) : urlPath
   const base = import.meta.env.VITE_URL_FILES ?? 'https://api.louvorja.com.br/file'
-  return `${base}/${cleanPath}`
+  // Base relativa (ex: /tunnel-file no dev via proxy): absolutizar contra a
+  // origem atual. O runtime publicado via relay é consumido por janelas em
+  // OUTRA origem (TV/receiver) — URL relativa quebraria o bg/audio lá.
+  const absoluteBase = base.startsWith('/')
+    ? `${window.location.origin}${base}`
+    : base
+  return `${absoluteBase}/${cleanPath}`
 }
 
 /** Resolve URL de áudio (streaming remoto na web). */
