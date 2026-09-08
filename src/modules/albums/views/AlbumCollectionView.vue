@@ -4,7 +4,6 @@ import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 
 import { MediaCollectionList } from '@design-system/index'
-import { VBtn } from 'vuetify/components'
 
 import AlbumLyricDialog from '../components/AlbumLyricDialog.vue'
 import AlbumTrackRow from '../components/AlbumTrackRow.vue'
@@ -155,15 +154,17 @@ async function runAction(
         </h1>
       </div>
 
-      <v-btn
+      <button
         v-if="activeCollection?.kind !== 'hymnal' && filteredTracks.length > 0"
-        size="small"
-        color="primary"
-        prepend-icon="mdi-play"
+        type="button"
+        class="album-collection-view__play-all"
+        :aria-label="t('albums.playAll')"
+        :title="t('albums.playAll')"
         @click="playAllInActiveCollection()"
       >
-        Tocar tudo
-      </v-btn>
+        <i class="ti ti-player-play" aria-hidden="true" />
+        {{ t('albums.playAll') }}
+      </button>
     </header>
 
     <div
@@ -301,6 +302,21 @@ async function runAction(
 </template>
 
 <style scoped lang="scss">
+.album-collection-view__play-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: auto;
+  border: 0;
+  border-radius: 0.7rem;
+  padding: 0.6rem 0.85rem;
+  background: var(--ds-color-primary);
+  color: var(--ds-color-on-primary);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 .album-collection-view {
   position: relative;
   display: flex;

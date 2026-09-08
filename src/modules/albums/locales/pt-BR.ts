@@ -3,6 +3,7 @@ export default {
     title: 'Central de Mídia',
     subtitle: 'Álbum & Coletâneas',
     collectionFallback: 'Coletânea',
+    playAll: 'Tocar tudo',
     back: 'Voltar para álbuns',
     searchPlaceholder: 'Digite o número ou nome do hino...',
     hubSearchPlaceholder: 'Procure aqui...',

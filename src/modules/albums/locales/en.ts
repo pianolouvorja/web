@@ -3,6 +3,7 @@ export default {
     title: 'Media Center',
     subtitle: 'Albums & Collections',
     collectionFallback: 'Collection',
+    playAll: 'Play all',
     back: 'Back to albums',
     searchPlaceholder: 'Type the hymn number or name...',
     hubSearchPlaceholder: 'Search here...',
