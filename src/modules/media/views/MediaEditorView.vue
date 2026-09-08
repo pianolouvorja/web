@@ -9,6 +9,8 @@ import {
   listCustomCollections,
   listCustomMusics,
   updateCustomLyric,
+  updateCustomMusic,
+  uploadCustomFile,
 } from '../services/custom-catalog'
 import type { CustomCollectionSummary } from '../services/custom-catalog'
 import { buildSlja, parseSlja } from '../../../shared/services/slja'
@@ -47,6 +49,8 @@ const saving = ref(false)
 const statusMessage = ref('')
 const newCollectionName = ref('')
 const newMusicName = ref('')
+/** Assets de imagem upados no último import .slja (path → url) */
+const uploadedAssets = ref<Array<{ path: string; url: string; idFile: number }>>([])
 
 const hasSelection = computed(() => selectedMusicId.value != null)
 
@@ -241,25 +245,64 @@ async function onImportFile(event: Event): Promise<void> {
     musicName.value = name
     lyrics.value = []
 
+    // Upload de mídia embutida no .slja (áudio + imagens de fundo).
+    // Falha de upload não aborta o import — segue só com texto.
+    if (archive.audio?.bytes?.length) {
+      const audio = await uploadCustomFile(
+        archive.audio.bytes,
+        archive.audio.name,
+        'audio',
+      )
+      if (audio) {
+        await updateCustomMusic(createdMusic.id, { id_file_audio: audio.idFile })
+        statusMessage.value = `Importado: ${file.name} (com áudio)`
+      } else {
+        statusMessage.value = `Importado: ${file.name} (áudio falhou no upload)`
+      }
+    }
+    if (archive.assets?.length) {
+      const uploaded: Array<{ path: string; url: string; idFile: number }> = []
+      for (const asset of archive.assets) {
+        const up = await uploadCustomFile(asset.bytes, asset.path, 'imagens')
+        if (up) uploaded.push({ path: asset.path, url: up.url, idFile: up.idFile })
+      }
+      uploadedAssets.value = uploaded
+    }
+
+    /** imageUrl → id_file, pro createCustomLyric (API espera id, não url) */
+    const imageIdByUrl = new Map(uploadedAssets.value.map((a) => [a.url, a.idFile]))
+
     // CAPA vira estrofe 1 (se tiver texto), demais slides na ordem
     const slides = [...archive.slides].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
     for (const slide of slides) {
       const text = slide.lyric.trim()
       if (!text) continue
+      // Background do slide: se o .slja referencia imagem, usa a URL upada
+      let imageUrl = ''
+      if (slide.image?.name && uploadedAssets.value.length) {
+        const match = uploadedAssets.value.find((a) =>
+          slide.image!.name.toLowerCase().includes(a.path.toLowerCase())
+          || a.path.toLowerCase().includes(slide.image!.name.toLowerCase()),
+        )
+        if (match) imageUrl = match.url
+      }
       const created = await createCustomLyric(createdMusic.id, {
         lyric: text,
         time: formatMsAsTime(slide.timeMs),
+        id_file_image: imageIdByUrl.get(imageUrl),
       })
       if (created) {
         lyrics.value.push({
           id: created.id,
           lyric: text,
           time: formatMsAsTime(slide.timeMs),
-          imageUrl: '',
+          imageUrl,
         })
       }
     }
-    statusMessage.value = `Importado: ${slides.filter((s) => s.lyric.trim()).length} estrofes de ${file.name}`
+    if (!statusMessage.value) {
+      statusMessage.value = `Importado: ${slides.filter((s) => s.lyric.trim()).length} estrofes de ${file.name}`
+    }
   } catch (error) {
     console.error('Falha ao importar .slja', error)
     statusMessage.value = 'Arquivo .slja inválido'

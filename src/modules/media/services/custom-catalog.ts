@@ -269,7 +269,13 @@ export async function createCustomMusic(
 
 export async function updateCustomMusic(
   musicId: number,
-  input: { name?: string; lyric?: string; auxiliary_lyric?: string },
+  input: {
+    name?: string
+    lyric?: string
+    auxiliary_lyric?: string
+    id_file_audio?: number | null
+    id_file_image?: number | null
+  },
 ): Promise<boolean> {
   try {
     const response = await fetch(`${customBaseUrl()}/musics/${musicId}`, {
@@ -280,6 +286,38 @@ export async function updateCustomMusic(
     return response.ok
   } catch {
     return false
+  }
+}
+
+/** URL absoluta para um path de arquivo servido pela API (/file/...) */
+export function customFileUrl(urlPath: string): string {
+  const base = import.meta.env.VITE_PALCO_API_URL
+  if (base) return `${base.replace(/\/$/, '')}/file${urlPath}`
+  return `/file${urlPath}`
+}
+
+/**
+ * Upload de mídia extraída de .slja (áudio/imagens).
+ * Retorna id_file + url relativa (/custom/...) ou null em falha.
+ */
+export async function uploadCustomFile(
+  bytes: Uint8Array,
+  filename: string,
+  kind: 'audio' | 'imagens',
+): Promise<{ idFile: number; url: string } | null> {
+  try {
+    const formData = new FormData()
+    formData.append('file', new Blob([bytes as BlobPart]), filename)
+    formData.append('kind', kind)
+    const response = await fetch(`${customBaseUrl()}/files`, {
+      method: 'POST',
+      body: formData,
+    })
+    if (!response.ok) return null
+    const data = (await response.json()) as { id_file: number; url: string }
+    return { idFile: data.id_file, url: data.url }
+  } catch {
+    return null
   }
 }
 
@@ -301,6 +339,7 @@ export async function createCustomLyric(
     aux_lyric?: string
     time?: string
     order?: number
+    id_file_image?: number
   },
 ): Promise<{ id: number } | null> {
   try {
