@@ -497,6 +497,24 @@ export const useMediaStore = defineStore('media', () => {
       await refreshResolvedSlideImage()
       publishProjectionState()
 
+      // Sincronia projeção↔áudio: espera o bg + letra renderizarem no receiver
+      // antes do primeiro som. O receiver (popup/TV/PWA) baixa o bg por conta
+      // própria — pre-carregamos a imagem aqui (aquece cache HTTP compartilhado
+      // com a popup same-origin) e damos um settle curto para a renderização.
+      const bgToWarm = resolvedSlideImageUrl.value ?? track.coverUrl ?? null
+      if (bgToWarm) {
+        try {
+          await new Promise<void>((resolve) => {
+            const img = new Image()
+            img.onload = () => resolve()
+            img.onerror = () => resolve() // bg falhou: não trava o play
+            img.src = bgToWarm
+            setTimeout(resolve, 3000) // teto: nunca segurar o som mais que isso
+          })
+        } catch { /* nunca bloquear o play por causa do preload */ }
+      }
+      await new Promise((r) => setTimeout(r, 400)) // settle de renderização no receiver
+
       const played = await playMediaAudio(audio)
       status.value = played ? 'playing' : 'paused'
       if (!played) {
