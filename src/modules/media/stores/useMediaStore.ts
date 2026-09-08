@@ -28,6 +28,7 @@ import {
   pauseMediaAudio,
   playMediaAudio,
   resolveMusicAudioUrl,
+  resolveSlideImageUrl,
   stopAllMediaAudio,
   switchMediaAudioElement,
 } from '../services/media-audio'
@@ -43,6 +44,7 @@ import {
   buildMediaSlides,
   buildSlideTimesSec,
   lyricPreviewSnippet,
+  resolveSlideIndexForTime,
   stripHtmlBreaks,
 } from '../services/media-slides'
 import type {
@@ -228,7 +230,7 @@ export const useMediaStore = defineStore('media', () => {
           // Try to reopen with the same parameters as the last open.
           const params = lastOpenParams.value
           if (params) {
-            openPopupModule('media', { slots: params.options?.slots })
+            openPopupModule('media')
               .then((opened) => {
                 if (opened) {
                   // Successfully reopened; restore projection state.
