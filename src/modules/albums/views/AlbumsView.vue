@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
@@ -125,6 +125,45 @@ function addPlaylist() {
   playlists.value = listPlaylists()
   newPlaylistName.value = ''
 }
+
+// --- Minhas Coletâneas (custom, via API /v1/custom) ---
+import {
+  listCustomCollections,
+  type CustomCollectionSummary,
+  toCustomCollectionId,
+} from '@modules/media/services/custom-catalog'
+
+const customCollections = ref<CustomCollectionSummary[]>([])
+const isLoadingCustomCollections = ref(false)
+const customCollectionsLoaded = ref(false)
+
+async function hydrateCustomCollections() {
+  if (customCollectionsLoaded.value) return
+  isLoadingCustomCollections.value = true
+  try {
+    customCollections.value = await listCustomCollections()
+    customCollectionsLoaded.value = true
+  } finally {
+    isLoadingCustomCollections.value = false
+  }
+}
+
+const showCustomCollections = computed(
+  () =>
+    customCollections.value.length > 0 ||
+    isLoadingCustomCollections.value === true,
+)
+
+function openCustomCollection(id: number) {
+  router.push({
+    name: 'albums-collection',
+    params: { collectionId: String(toCustomCollectionId(id)) },
+  })
+}
+
+onMounted(() => {
+  void hydrateCustomCollections()
+})
 
 function removePlaylist(id: string) {
   deletePlaylist(id)
@@ -430,6 +469,64 @@ async function runAction(
             </Transition>
           </article>
         </TransitionGroup>
+      </div>
+    </GlassCard>
+
+    <!-- Minhas Coletâneas: coletâneas do usuário criadas no editor (API custom) -->
+    <GlassCard
+      v-if="showCustomCollections"
+      class="albums-view__custom"
+      :padding="false"
+    >
+      <div class="albums-view__playlists-inner">
+        <header class="albums-view__playlists-header">
+          <div class="albums-view__playlists-heading">
+            <i class="ti ti-folder" aria-hidden="true" />
+            <h2>{{ t('albums.custom.title') }}</h2>
+          </div>
+          <button
+            type="button"
+            class="albums-view__custom-editor-btn"
+            :aria-label="t('albums.custom.openEditor')"
+            :title="t('albums.custom.openEditor')"
+            @click="router.push({ name: 'media-editor' })"
+          >
+            <i class="ti ti-pencil" aria-hidden="true" />
+            {{ t('albums.custom.openEditor') }}
+          </button>
+        </header>
+
+        <div
+          v-if="isLoadingCustomCollections"
+          class="albums-view__state albums-view__playlists-empty"
+        >
+          {{ t('albums.loading') }}
+        </div>
+
+        <div
+          v-else
+          class="albums-view__custom-grid"
+        >
+          <button
+            v-for="collection in customCollections"
+            :key="collection.id"
+            type="button"
+            class="albums-view__custom-card"
+            :aria-label="t('albums.custom.open', { name: collection.name })"
+            @click="openCustomCollection(collection.id)"
+          >
+            <span class="albums-view__custom-icon">
+              <i class="ti ti-disc" aria-hidden="true" />
+            </span>
+            <span class="albums-view__custom-info">
+              <strong>{{ collection.name }}</strong>
+              <small>
+                {{ t('albums.custom.trackCount', { count: collection.musicsCount }) }}
+              </small>
+            </span>
+            <i class="ti ti-chevron-right" aria-hidden="true" />
+          </button>
+        </div>
       </div>
     </GlassCard>
 
@@ -880,6 +977,95 @@ async function runAction(
 .albums-view__playlists {
   flex-shrink: 0;
   overflow: hidden;
+}
+
+/* Minhas Coletâneas (custom) */
+.albums-view__custom {
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.albums-view__custom-editor-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid var(--ds-color-outline-strong);
+  border-radius: 999px;
+  padding: 0.4rem 0.85rem;
+  background: transparent;
+  color: var(--ds-color-on-surface);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 120ms ease;
+
+  &:hover {
+    background: color-mix(in srgb, var(--ds-color-primary) 18%, transparent);
+  }
+}
+
+.albums-view__custom-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 0.6rem;
+}
+
+.albums-view__custom-card {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  border: 1px solid var(--ds-color-outline, rgba(255, 255, 255, 0.06));
+  border-radius: var(--ds-radius-md, 0.8rem);
+  padding: 0.65rem 0.8rem;
+  background: color-mix(in srgb, var(--ds-color-surface-card) 60%, transparent);
+  color: var(--ds-color-on-surface);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease;
+
+  &:hover {
+    background: color-mix(in srgb, var(--ds-color-primary) 14%, transparent);
+    border-color: color-mix(in srgb, var(--ds-color-primary) 45%, transparent);
+  }
+
+  .ti-chevron-right {
+    margin-left: auto;
+    opacity: 0.6;
+  }
+}
+
+.albums-view__custom-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  flex-shrink: 0;
+  border-radius: var(--ds-radius-sm, 0.6rem);
+  background: color-mix(in srgb, var(--ds-color-primary) 18%, transparent);
+  color: var(--ds-color-primary);
+  font-size: 1.1rem;
+}
+
+.albums-view__custom-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+
+  strong {
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  small {
+    color: var(--ds-color-on-surface-variant);
+    font-size: 0.75rem;
+  }
 }
 
 .albums-view__playlists-inner {

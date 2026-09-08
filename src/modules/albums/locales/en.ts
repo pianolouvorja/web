@@ -60,6 +60,12 @@ export default {
       invalidFile: 'Invalid playlists file.',
       newLists: '{count} new playlist(s)',
       addedTracks: '{count} track(s) added'
+    },
+    custom: {
+      title: 'My Collections',
+      openEditor: 'Open editor',
+      open: 'Open collection {name}',
+      trackCount: '{count} track(s)'
     }
   }
 }

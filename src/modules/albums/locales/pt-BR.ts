@@ -62,5 +62,11 @@ export default {
       newLists: '{count} playlist(s) nova(s)',
       addedTracks: '{count} faixa(s) adicionada(s)',
     },
+    custom: {
+      title: 'Minhas Coletâneas',
+      openEditor: 'Abrir editor',
+      open: 'Abrir coletânea {name}',
+      trackCount: '{count} faixa(s)',
+    },
   },
 }

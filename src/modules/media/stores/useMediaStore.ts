@@ -33,9 +33,9 @@ import {
   switchMediaAudioElement,
 } from '../services/media-audio'
 import {
-  loadMediaTrack,
   resolveAlbumSubtitle,
 } from '../services/media-catalog'
+import { resolveMediaTrack } from '../services/custom-catalog'
 import {
   clearMediaRuntime,
   publishMediaRuntime,
@@ -432,7 +432,7 @@ export const useMediaStore = defineStore('media', () => {
     status.value = 'loading'
     lastErrorKey.value = null
 
-    const track = await loadMediaTrack(musicId)
+    const track = await resolveMediaTrack(musicId)
     if (!track) {
       status.value = 'error'
       lastErrorKey.value = 'media.messages.trackMissing'
@@ -753,7 +753,7 @@ export const useMediaStore = defineStore('media', () => {
     status.value = 'loading'
     lastErrorKey.value = null
 
-    const track = await loadMediaTrack(current.musicId)
+    const track = await resolveMediaTrack(current.musicId)
     if (!track) {
       status.value = 'error'
       lastErrorKey.value = 'media.messages.trackMissing'

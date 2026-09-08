@@ -3,6 +3,8 @@ import type {
   MediaTrackRecord,
 } from '../types/media'
 
+import { loadMediaTrack } from './media-catalog'
+
 /**
  * Catálogo de músicas customizadas (Minhas Coletâneas) via API /v1/custom
  *
@@ -12,6 +14,42 @@ import type {
  *   lyrics: [{ id_lyric, lyric, aux_lyric, image_url, image_position,
  *              time, instrumental_time, show_slide, order }] }
  */
+
+/**
+ * Namespace de IDs: custom_musics.id_music e custom_collections.id_collection
+ * são AUTOINCREMENT próprios (1, 2, 3...) e colidem com music_{id} do catálogo
+ * oficial (1..90167). Na Central de Mídia usamos IDs deslocados:
+ * - música custom = id_music + CUSTOM_MUSIC_ID_OFFSET (1.000.000+)
+ * - coletânea custom = id_collection + CUSTOM_COLLECTION_ID_OFFSET (2.000.000+)
+ * O dispatcher resolveMediaTrack() usa o offset para escolher o loader certo.
+ */
+export const CUSTOM_MUSIC_ID_OFFSET = 1_000_000
+export const CUSTOM_COLLECTION_ID_OFFSET = 2_000_000
+
+export function isCustomMusicId(musicId: number): boolean {
+  return Number.isFinite(musicId) && musicId >= CUSTOM_MUSIC_ID_OFFSET
+}
+
+export function toCustomMusicId(musicId: number): number {
+  return musicId + CUSTOM_MUSIC_ID_OFFSET
+}
+
+export function fromCustomMusicId(musicId: number): number {
+  return musicId - CUSTOM_MUSIC_ID_OFFSET
+}
+
+export function isCustomCollectionId(collectionId: number | string): boolean {
+  const n = Number(collectionId)
+  return Number.isFinite(n) && n >= CUSTOM_COLLECTION_ID_OFFSET
+}
+
+export function toCustomCollectionId(collectionId: number): number {
+  return collectionId + CUSTOM_COLLECTION_ID_OFFSET
+}
+
+export function fromCustomCollectionId(collectionId: number | string): number {
+  return Number(collectionId) - CUSTOM_COLLECTION_ID_OFFSET
+}
 
 type CustomLyricRow = {
   lyric?: string
@@ -309,4 +347,19 @@ export async function deleteCustomLyric(lyricId: number): Promise<boolean> {
   } catch {
     return false
   }
+}
+
+/**
+ * Loader composto: resolve um musicId para MediaTrackRecord consultando o
+ * catálogo oficial OU a API custom (Minhas Coletâneas), conforme o namespace.
+ * IDs >= 1.000.000 são custom; o restante vai ao catálogo JSON oficial.
+ * Retorna null quando nenhuma fonte tem a faixa.
+ */
+export async function resolveMediaTrack(
+  musicId: number,
+): Promise<MediaTrackRecord | null> {
+  if (isCustomMusicId(musicId)) {
+    return loadCustomMusicTrack(fromCustomMusicId(musicId))
+  }
+  return loadMediaTrack(musicId)
 }
