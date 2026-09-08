@@ -119,41 +119,43 @@ export async function parseSlja(zipBuffer: ArrayBuffer): Promise<SljaArchive> {
     })
   })
 
-  // 1. Ler slides.lja
+  // 1. Ler slides.lja (INI do Delphi usa Windows-1252/Latin-1, não UTF-8)
   const iniBytes = zipResult['slides.lja']
   if (!iniBytes) {
     throw new Error('slides.lja não encontrado no .slja')
   }
-  const ini = new TextDecoder().decode(iniBytes)
+  const ini = new TextDecoder('windows-1252').decode(iniBytes)
+
+  // Normalizar chaves do ZIP: entradas de arquivos gerados pelo Delphi podem
+  // usar backslash (audio\..., imagens\...). Unificar para slash.
+  const zipEntries: Record<string, Uint8Array> = {}
+  for (const [key, value] of Object.entries(zipResult)) {
+    zipEntries[key.replaceAll('\\', '/')] = value
+  }
 
   // 2. Parse INI
   const iniData = parseIni(ini)
 
   // 3. Extrair metadados
-    const geral = iniData['Geral'] || {}
-    const slidesCount = parseInt(geral.slides || '0', 10)
+  const geral = iniData['Geral'] || {}
+  const slidesCount = parseInt(geral.slides || '0', 10)
 
-    // Título: tentar várias fontes
-      let title = 'Sem título'
-      if (geral.titulo) {
-        title = geral.titulo
-      } else if (geral.versao) {
-        title = `v${geral.versao}`
-      }
+  // Título: tentar várias fontes
+  const title = geral.titulo || (geral.versao ? `v${geral.versao}` : 'Sem título')
 
-    // Áudio
-    let audio: SljaAudio | undefined
-    if (geral.audio === '1' && geral.url_musica) {
-      const audioName = geral.url_musica.replace(/^audio[/\\]/, '')
-      const audioBytes = zipResult[`audio/${audioName}`]
-      if (audioBytes) {
-        audio = { name: audioName, bytes: audioBytes }
-      }
+  // Áudio (url_musica pode usar backslash no Delphi)
+  let audio: SljaAudio | undefined
+  if (geral.audio === '1' && geral.url_musica) {
+    const audioName = geral.url_musica.replace(/^audio[/\\]/, '')
+    const audioBytes = zipEntries[`audio/${audioName}`]
+    if (audioBytes) {
+      audio = { name: audioName, bytes: audioBytes }
     }
+  }
 
   // 4. Assets (imagens)
   const assets: SljaAsset[] = []
-  for (const [path, bytes] of Object.entries(zip)) {
+  for (const [path, bytes] of Object.entries(zipEntries)) {
     if (path.startsWith('imagens/')) {
       assets.push({ path: path.replace('imagens/', ''), bytes })
     }
@@ -245,12 +247,6 @@ function generateIni(archive: SljaArchive): string {
     }
     if (slide.fontSize) lines.push(`tamanho_letra=${slide.fontSize}`)
     if (slide.auxiliaryFontSize) lines.push(`tamanho_letra_aux=${slide.auxiliaryFontSize}`)
-    if (slide.auxiliaryLyric) lines.push(`letra_aux=${slide.auxiliaryLyric.replace(/\n/g, '|')}`)
-
-    // letra principal
-    if (slide.lyric) {
-      lines.push(`letra=${slide.lyric.replace(/\n/g, '|')}`)
-    }
 
     lines.push('')
   })

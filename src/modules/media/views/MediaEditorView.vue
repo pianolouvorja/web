@@ -11,6 +11,7 @@ import {
   updateCustomLyric,
 } from '../services/custom-catalog'
 import type { CustomCollectionSummary } from '../services/custom-catalog'
+import { buildSlja, parseSlja } from '../../../shared/services/slja'
 
 /**
  * Editor de letras v1 (web)
@@ -186,6 +187,137 @@ function onBack(): void {
   void router.push('/media')
 }
 
+/* ---------- Import / Export .slja ---------- */
+
+const fileInputEl = ref<HTMLInputElement | null>(null)
+
+function onImportSlja(): void {
+  fileInputEl.value?.click()
+}
+
+async function onImportFile(event: Event): Promise<void> {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = ''
+  if (!file) return
+  loading.value = true
+  statusMessage.value = ''
+  try {
+    const buffer = await file.arrayBuffer()
+    const archive = await parseSlja(buffer)
+
+    // Nome da música: título do arquivo .slja, mas ignora fallbacks genéricos do
+    // parser (v<versao> / "Sem título") — nesses casos usa o nome do arquivo.
+    const genericTitle = /^v[\d.]+$/.test(archive.title?.trim() ?? '') || !archive.title?.trim()
+    const name = genericTitle
+      ? file.name.replace(/\.slja$/i, '')
+      : archive.title.trim()
+
+    // Garante coletânea de importação: reaproveita a primeira "Importações .slja"
+    // existente; só cria se ainda não houver nenhuma.
+    let collectionId = selectedCollectionId.value
+    if (collectionId == null) {
+      const existing = collections.value.find((c) => c.name === 'Importações .slja')
+      if (existing) {
+        collectionId = existing.id
+      } else {
+        const created = await createCustomCollection('Importações .slja')
+        if (!created) {
+          statusMessage.value = 'Falha ao criar coletânea de importação'
+          return
+        }
+        collectionId = created.id
+      }
+      await refreshCollections()
+      selectedCollectionId.value = collectionId
+    }
+
+    const createdMusic = await createCustomMusic(collectionId, { name })
+    if (!createdMusic) {
+      statusMessage.value = 'Falha ao criar música a partir do .slja'
+      return
+    }
+    selectedMusicId.value = createdMusic.id
+    musicName.value = name
+    lyrics.value = []
+
+    // CAPA vira estrofe 1 (se tiver texto), demais slides na ordem
+    const slides = [...archive.slides].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    for (const slide of slides) {
+      const text = slide.lyric.trim()
+      if (!text) continue
+      const created = await createCustomLyric(createdMusic.id, {
+        lyric: text,
+        time: formatMsAsTime(slide.timeMs),
+      })
+      if (created) {
+        lyrics.value.push({
+          id: created.id,
+          lyric: text,
+          time: formatMsAsTime(slide.timeMs),
+          imageUrl: '',
+        })
+      }
+    }
+    statusMessage.value = `Importado: ${slides.filter((s) => s.lyric.trim()).length} estrofes de ${file.name}`
+  } catch (error) {
+    console.error('Falha ao importar .slja', error)
+    statusMessage.value = 'Arquivo .slja inválido'
+  } finally {
+    loading.value = false
+  }
+}
+
+/** ms -> HH:MM[:SS] para o input[type=time] */
+function formatMsAsTime(ms: number): string {
+  const totalSeconds = Math.floor(ms / 1000)
+  const h = String(Math.floor(totalSeconds / 3600)).padStart(2, '0')
+  const m = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0')
+  const s = String(totalSeconds % 60).padStart(2, '0')
+  return s !== '00' ? `${h}:${m}:${s}` : `${h}:${m}`
+}
+
+async function onExportSlja(): Promise<void> {
+  if (selectedMusicId.value == null || lyrics.value.length === 0) return
+  saving.value = true
+  statusMessage.value = ''
+  try {
+    const slides = lyrics.value.map((stanza, index) => ({
+      lyric: stanza.lyric,
+      auxiliaryLyric: '',
+      type: (index === 0 ? 'CAPA' : 'LETRA') as 'CAPA' | 'LETRA',
+      timeMs: timeToMs(stanza.time),
+      order: index + 1,
+    }))
+    const archive = {
+      title: musicName.value || 'Sem título',
+      version: 'piano-web-editor',
+      slides,
+    }
+    const buffer = await buildSlja(archive as never)
+    const blob = new Blob([buffer], { type: 'application/zip' })
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = `${musicName.value || 'apresentacao'}.slja`
+    anchor.click()
+    URL.revokeObjectURL(url)
+    statusMessage.value = 'Exportado com sucesso'
+  } catch (error) {
+    console.error('Falha ao exportar .slja', error)
+    statusMessage.value = 'Falha ao exportar .slja'
+  } finally {
+    saving.value = false
+  }
+}
+
+/** HH:MM[:SS] -> ms */
+function timeToMs(time: string): number {
+  const parts = time.split(':').map((part) => Number.parseInt(part, 10) || 0)
+  const [h = 0, m = 0, s = 0] = parts
+  return ((h * 3600 + m * 60 + s) * 1000)
+}
+
 onMounted(() => {
   void refreshCollections()
 })
@@ -208,6 +340,38 @@ onMounted(() => {
       <h1 class="editor__title">
         Editor de Letras
       </h1>
+      <input
+        ref="fileInputEl"
+        type="file"
+        accept=".slja"
+        class="editor__file-input"
+        @change="onImportFile"
+      >
+      <button
+        type="button"
+        class="editor__btn"
+        title="Importar arquivo .slja (LouvorJA Delphi)"
+        @click="onImportSlja"
+      >
+        <i
+          class="ti ti-file-import"
+          aria-hidden="true"
+        />
+        Importar .slja
+      </button>
+      <button
+        type="button"
+        class="editor__btn"
+        :disabled="!hasSelection || lyrics.length === 0"
+        title="Exportar música atual como .slja"
+        @click="onExportSlja"
+      >
+        <i
+          class="ti ti-file-export"
+          aria-hidden="true"
+        />
+        Exportar .slja
+      </button>
       <span
         v-if="statusMessage"
         class="editor__status"
@@ -407,6 +571,10 @@ onMounted(() => {
 .editor__status {
   font-size: 0.85rem;
   opacity: 0.75;
+}
+
+.editor__file-input {
+  display: none;
 }
 
 .editor__body {
