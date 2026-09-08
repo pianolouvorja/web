@@ -179,7 +179,7 @@ async function onSelectMusic(id: number): Promise<void> {
       lyrics.value = (data.lyrics ?? []).map((row) => ({
         id: row.id_lyric,
         lyric: row.lyric,
-        time: row.time?.slice(0, 5) ?? '00:00',
+        time: row.time ?? '00:00',
         imageUrl: row.image_url ?? '',
       }))
       loadAudioForMusic(data.audio_url ?? null)
@@ -253,14 +253,15 @@ async function onImportFile(event: Event): Promise<void> {
 
     // Upload de mídia embutida no .slja (áudio + imagens de fundo).
     // Falha de upload não aborta o import — segue só com texto.
+    let uploadedAudio: { idFile: number; url: string } | null = null
     if (archive.audio?.bytes?.length) {
-      const audio = await uploadCustomFile(
+      uploadedAudio = await uploadCustomFile(
         archive.audio.bytes,
         archive.audio.name,
         'audio',
       )
-      if (audio) {
-        await updateCustomMusic(createdMusic.id, { id_file_audio: audio.idFile })
+      if (uploadedAudio) {
+        await updateCustomMusic(createdMusic.id, { id_file_audio: uploadedAudio.idFile })
         statusMessage.value = `Importado: ${file.name} (com áudio)`
       } else {
         statusMessage.value = `Importado: ${file.name} (áudio falhou no upload)`
@@ -309,6 +310,15 @@ async function onImportFile(event: Event): Promise<void> {
     if (!statusMessage.value) {
       statusMessage.value = `Importado: ${slides.filter((s) => s.lyric.trim()).length} estrofes de ${file.name}`
     }
+
+    // Pós-import: reflete tudo na UI — sidebar da coletânea, áudio no player,
+    // estrofes com timing (já populadas acima).
+    await refreshCollections()
+    if (selectedCollectionId.value !== collectionId) {
+      selectedCollectionId.value = collectionId
+    }
+    musics.value = await listCustomMusics(collectionId)
+    loadAudioForMusic(uploadedAudio?.url ?? null)
   } catch (error) {
     console.error('Falha ao importar .slja', error)
     statusMessage.value = 'Arquivo .slja inválido'
@@ -470,6 +480,14 @@ function onAudioPlay(): void {
 
 function onAudioPause(): void {
   isPlaying.value = false
+  // Auto-fill: ao pausar, o instante atual vira o timing da estrofe ativa
+  // (o usuário pausa no momento certo e digita/ajusta a letra).
+  const idx = activeStanzaIndexOverride.value ?? computedActiveIndex.value
+  const stanza = lyrics.value[idx]
+  if (stanza) {
+    stanza.time = timeLabelOf(currentTimeMs.value)
+    void onSaveStanza(idx)
+  }
 }
 
 function onAudioTimeUpdate(): void {
