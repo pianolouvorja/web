@@ -43,6 +43,11 @@ export default defineConfig(({ mode }) => {
           target: env.VITE_DEV_CUSTOM_API ?? 'http://localhost:3100',
           changeOrigin: true,
         },
+        // Mídia custom (áudio/imagens de coletâneas): mesmo alvo do /v1/custom
+        '/file/custom': {
+          target: env.VITE_DEV_CUSTOM_API ?? 'http://localhost:3100',
+          changeOrigin: true,
+        },
       },
     },
     plugins: [

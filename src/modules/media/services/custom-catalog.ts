@@ -332,6 +332,17 @@ export async function deleteCustomMusic(musicId: number): Promise<boolean> {
   }
 }
 
+export async function deleteCustomCollection(collectionId: number): Promise<boolean> {
+  try {
+    const response = await fetch(`${customBaseUrl()}/collections/${collectionId}`, {
+      method: 'DELETE',
+    })
+    return response.ok
+  } catch {
+    return false
+  }
+}
+
 export async function createCustomLyric(
   musicId: number,
   input: {
