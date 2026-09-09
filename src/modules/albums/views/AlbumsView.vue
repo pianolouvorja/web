@@ -137,6 +137,10 @@ const customCollections = ref<CustomCollectionSummary[]>([])
 const isLoadingCustomCollections = ref(false)
 const customCollectionsLoaded = ref(false)
 
+// Modais compactos (Playlists / Minhas Coletâneas)
+const playlistsModalOpen = ref(false)
+const customModalOpen = ref(false)
+
 async function hydrateCustomCollections() {
   if (customCollectionsLoaded.value) return
   isLoadingCustomCollections.value = true
@@ -323,17 +327,67 @@ async function runAction(
       <PopupRouteSelect module="media" compact />
     </header>
 
-    <GlassCard
-      class="albums-view__playlists"
-      :padding="false"
-    >
-      <div class="albums-view__playlists-inner">
-        <header class="albums-view__playlists-header">
-          <div class="albums-view__playlists-heading">
-            <i class="ti ti-playlist" aria-hidden="true" />
-            <h2 id="playlists-title">{{ t('albums.playlists.title') }}</h2>
-          </div>
-          <form @submit.prevent="addPlaylist">
+    <!-- Toolbar compacta: Playlists e Minhas Coletâneas viram modais -->
+    <div class="albums-view__toolbar">
+      <button
+        type="button"
+        class="albums-view__toolbar-btn"
+        :aria-label="t('albums.playlists.title')"
+        @click="playlistsModalOpen = true"
+      >
+        <i class="ti ti-playlist" aria-hidden="true" />
+        {{ t('albums.playlists.title') }}
+        <span
+          v-if="playlists.length > 0"
+          class="albums-view__toolbar-count"
+        >{{ playlists.length }}</span>
+      </button>
+      <button
+        type="button"
+        class="albums-view__toolbar-btn"
+        :aria-label="t('albums.custom.title')"
+        @click="customModalOpen = true"
+      >
+        <i class="ti ti-folder" aria-hidden="true" />
+        {{ t('albums.custom.title') }}
+        <span
+          v-if="customCollections.length > 0"
+          class="albums-view__toolbar-count"
+        >{{ customCollections.length }}</span>
+      </button>
+    </div>
+
+    <!-- Modal: Playlists -->
+    <Teleport to="body">
+      <div
+        v-if="playlistsModalOpen"
+        class="albums-view__modal"
+        role="dialog"
+        aria-modal="true"
+        :aria-label="t('albums.playlists.title')"
+      >
+        <div
+          class="albums-view__modal-backdrop"
+          aria-hidden="true"
+          @click="playlistsModalOpen = false"
+        />
+        <GlassCard class="albums-view__modal-panel">
+          <header class="albums-view__modal-header">
+            <div class="albums-view__playlists-heading">
+              <i class="ti ti-playlist" aria-hidden="true" />
+              <h2>{{ t('albums.playlists.title') }}</h2>
+            </div>
+            <button
+              type="button"
+              class="albums-view__playlists-io"
+              :aria-label="t('albums.lyric.close')"
+              @click="playlistsModalOpen = false"
+            >
+              <i class="ti ti-x" aria-hidden="true" />
+            </button>
+          </header>
+
+          <form class="albums-view__modal-form" @submit.prevent="addPlaylist">
             <input
               v-model="newPlaylistName"
               required
@@ -370,165 +424,195 @@ async function runAction(
               >
             </label>
           </form>
-        </header>
 
-        <p
-          v-if="importFeedback"
-          class="albums-view__playlists-feedback"
-          role="status"
-          aria-live="polite"
-        >
-          {{ importFeedback }}
-        </p>
-
-        <div
-          v-if="playlists.length === 0"
-          class="albums-view__state albums-view__playlists-empty"
-        >
-          <i class="ti ti-music-plus" aria-hidden="true" />
-          {{ t('albums.playlists.empty') }}
-        </div>
-
-        <TransitionGroup
-          v-else
-          name="playlist-card"
-          tag="div"
-          class="albums-view__playlists-list"
-        >
-          <article
-            v-for="playlist in playlists"
-            :key="playlist.id"
-            class="albums-view__playlist"
-            :class="{ 'albums-view__playlist--open': expandedPlaylistId === playlist.id }"
+          <p
+            v-if="importFeedback"
+            class="albums-view__playlists-feedback"
+            role="status"
+            aria-live="polite"
           >
-            <div class="albums-view__playlist-row">
-              <button
-                type="button"
-                class="albums-view__playlist-toggle"
-                :aria-expanded="expandedPlaylistId === playlist.id"
-                @click="togglePlaylist(playlist.id)"
-              >
-                <span class="albums-view__playlist-icon">
+            {{ importFeedback }}
+          </p>
+
+          <div
+            v-if="playlists.length === 0"
+            class="albums-view__state albums-view__playlists-empty"
+          >
+            <i class="ti ti-music-plus" aria-hidden="true" />
+            {{ t('albums.playlists.empty') }}
+          </div>
+
+          <TransitionGroup
+            v-else
+            name="playlist-card"
+            tag="div"
+            class="albums-view__playlists-list"
+          >
+            <article
+              v-for="playlist in playlists"
+              :key="playlist.id"
+              class="albums-view__playlist"
+              :class="{ 'albums-view__playlist--open': expandedPlaylistId === playlist.id }"
+            >
+              <div class="albums-view__playlist-row">
+                <button
+                  type="button"
+                  class="albums-view__playlist-toggle"
+                  :aria-expanded="expandedPlaylistId === playlist.id"
+                  @click="togglePlaylist(playlist.id)"
+                >
+                  <span class="albums-view__playlist-icon">
+                    <i
+                      class="ti"
+                      :class="playlist.items.length > 0 ? 'ti-playlist' : 'ti-music-off'"
+                      aria-hidden="true"
+                    />
+                  </span>
+                  <span class="albums-view__playlist-name">
+                    <strong>{{ playlist.name }}</strong>
+                    <small>{{ playlist.items.length }} faixa(s)</small>
+                  </span>
                   <i
-                    class="ti"
-                    :class="playlist.items.length > 0 ? 'ti-playlist' : 'ti-music-off'"
+                    class="ti albums-view__playlist-chevron"
+                    :class="expandedPlaylistId === playlist.id ? 'ti-chevron-down' : 'ti-chevron-right'"
                     aria-hidden="true"
                   />
-                </span>
-                <span class="albums-view__playlist-name">
-                  <strong>{{ playlist.name }}</strong>
-                  <small>{{ playlist.items.length }} faixa(s)</small>
-                </span>
-                <i
-                  class="ti albums-view__playlist-chevron"
-                  :class="expandedPlaylistId === playlist.id ? 'ti-chevron-down' : 'ti-chevron-right'"
-                  aria-hidden="true"
-                />
-              </button>
-              <div class="albums-view__playlist-actions">
-                <button
-                  type="button"
-                  class="albums-view__playlist-play"
-                  :disabled="playlist.items.length === 0"
-                  :aria-label="`Tocar ${playlist.name}`"
-                  @click="playPlaylist(playlist)"
-                >
-                  <i class="ti ti-player-play" aria-hidden="true" />
                 </button>
-                <button
-                  type="button"
-                  class="albums-view__playlist-remove"
-                  :aria-label="`Remover playlist ${playlist.name}`"
-                  @click="removePlaylist(playlist.id)"
-                >
-                  <i class="ti ti-trash" aria-hidden="true" />
-                </button>
-              </div>
-            </div>
-            <Transition name="playlist-tracks">
-              <ul
-                v-if="expandedPlaylistId === playlist.id && playlist.items.length > 0"
-                class="albums-view__playlist-tracks"
-              >
-                <li
-                  v-for="(item, index) in playlist.items"
-                  :key="`${item.musicId}-${index}`"
-                >
-                  <span class="albums-view__playlist-track-index">{{ index + 1 }}</span>
-                  <span class="albums-view__playlist-track-title">{{ item.title }}</span>
+                <div class="albums-view__playlist-actions">
                   <button
                     type="button"
-                    class="albums-view__playlist-track-remove"
-                    :aria-label="`Remover ${item.title} da playlist`"
-                    @click="removePlaylistTrack(playlist.id, index)"
+                    class="albums-view__playlist-play"
+                    :disabled="playlist.items.length === 0"
+                    :aria-label="`Tocar ${playlist.name}`"
+                    @click="playPlaylist(playlist)"
                   >
-                    <i class="ti ti-x" aria-hidden="true" />
+                    <i class="ti ti-player-play" aria-hidden="true" />
                   </button>
-                </li>
-              </ul>
-            </Transition>
-          </article>
-        </TransitionGroup>
+                  <button
+                    type="button"
+                    class="albums-view__playlist-remove"
+                    :aria-label="`Remover playlist ${playlist.name}`"
+                    @click="removePlaylist(playlist.id)"
+                  >
+                    <i class="ti ti-trash" aria-hidden="true" />
+                  </button>
+                </div>
+              </div>
+              <Transition name="playlist-tracks">
+                <ul
+                  v-if="expandedPlaylistId === playlist.id && playlist.items.length > 0"
+                  class="albums-view__playlist-tracks"
+                >
+                  <li
+                    v-for="(item, index) in playlist.items"
+                    :key="`${item.musicId}-${index}`"
+                  >
+                    <span class="albums-view__playlist-track-index">{{ index + 1 }}</span>
+                    <span class="albums-view__playlist-track-title">{{ item.title }}</span>
+                    <button
+                      type="button"
+                      class="albums-view__playlist-track-remove"
+                      :aria-label="`Remover ${item.title} da playlist`"
+                      @click="removePlaylistTrack(playlist.id, index)"
+                    >
+                      <i class="ti ti-x" aria-hidden="true" />
+                    </button>
+                  </li>
+                </ul>
+              </Transition>
+            </article>
+          </TransitionGroup>
+        </GlassCard>
       </div>
-    </GlassCard>
+    </Teleport>
 
-    <!-- Minhas Coletâneas: coletâneas do usuário criadas no editor (API custom) -->
-    <GlassCard
-      v-if="showCustomCollections"
-      class="albums-view__custom"
-      :padding="false"
-    >
-      <div class="albums-view__playlists-inner">
-        <header class="albums-view__playlists-header">
-          <div class="albums-view__playlists-heading">
-            <i class="ti ti-folder" aria-hidden="true" />
-            <h2>{{ t('albums.custom.title') }}</h2>
+    <!-- Modal: Minhas Coletâneas -->
+    <Teleport to="body">
+      <div
+        v-if="customModalOpen"
+        class="albums-view__modal"
+        role="dialog"
+        aria-modal="true"
+        :aria-label="t('albums.custom.title')"
+      >
+        <div
+          class="albums-view__modal-backdrop"
+          aria-hidden="true"
+          @click="customModalOpen = false"
+        />
+        <GlassCard class="albums-view__modal-panel">
+          <header class="albums-view__modal-header">
+            <div class="albums-view__playlists-heading">
+              <i class="ti ti-folder" aria-hidden="true" />
+              <h2>{{ t('albums.custom.title') }}</h2>
+            </div>
+            <button
+              type="button"
+              class="albums-view__playlists-io"
+              :aria-label="t('albums.lyric.close')"
+              @click="customModalOpen = false"
+            >
+              <i class="ti ti-x" aria-hidden="true" />
+            </button>
+          </header>
+
+          <div
+            v-if="isLoadingCustomCollections"
+            class="albums-view__state albums-view__playlists-empty"
+          >
+            {{ t('albums.loading') }}
           </div>
-          <button
-            type="button"
-            class="albums-view__custom-editor-btn"
-            :aria-label="t('albums.custom.openEditor')"
-            :title="t('albums.custom.openEditor')"
-            @click="router.push({ name: 'media-editor' })"
-          >
-            <i class="ti ti-pencil" aria-hidden="true" />
-            {{ t('albums.custom.openEditor') }}
-          </button>
-        </header>
 
-        <div
-          v-if="isLoadingCustomCollections"
-          class="albums-view__state albums-view__playlists-empty"
-        >
-          {{ t('albums.loading') }}
-        </div>
-
-        <div
-          v-else
-          class="albums-view__custom-grid"
-        >
-          <button
-            v-for="collection in customCollections"
-            :key="collection.id"
-            type="button"
-            class="albums-view__custom-card"
-            :aria-label="t('albums.custom.open', { name: collection.name })"
-            @click="openCustomCollection(collection.id)"
+          <div
+            v-else-if="customCollections.length === 0"
+            class="albums-view__state albums-view__playlists-empty"
           >
-            <span class="albums-view__custom-icon">
-              <i class="ti ti-disc" aria-hidden="true" />
-            </span>
-            <span class="albums-view__custom-info">
-              <strong>{{ collection.name }}</strong>
-              <small>
-                {{ t('albums.custom.trackCount', { count: collection.musicsCount }) }}
-              </small>
-            </span>
-            <i class="ti ti-chevron-right" aria-hidden="true" />
-          </button>
-        </div>
+            <i class="ti ti-music-plus" aria-hidden="true" />
+            {{ t('albums.custom.empty') }}
+          </div>
+
+          <div
+            v-else
+            class="albums-view__custom-grid"
+          >
+            <button
+              v-for="collection in customCollections"
+              :key="collection.id"
+              type="button"
+              class="albums-view__custom-card"
+              :aria-label="t('albums.custom.open', { name: collection.name })"
+              @click="openCustomCollection(collection.id)"
+            >
+              <span class="albums-view__custom-icon">
+                <i class="ti ti-disc" aria-hidden="true" />
+              </span>
+              <span class="albums-view__custom-info">
+                <strong>{{ collection.name }}</strong>
+                <small>
+                  {{ t('albums.custom.trackCount', { count: collection.musicsCount }) }}
+                </small>
+              </span>
+              <i class="ti ti-chevron-right" aria-hidden="true" />
+            </button>
+          </div>
+
+          <footer class="albums-view__modal-footer">
+            <button
+              type="button"
+              class="albums-view__custom-editor-btn"
+              :aria-label="t('albums.custom.openEditor')"
+              :title="t('albums.custom.openEditor')"
+              @click="router.push({ name: 'media-editor' })"
+            >
+              <i class="ti ti-pencil" aria-hidden="true" />
+              {{ t('albums.custom.openEditor') }}
+            </button>
+          </footer>
+        </GlassCard>
       </div>
-    </GlassCard>
+    </Teleport>
+
+    <!-- Hinários Oficiais -->
 
     <div
       v-if="lastActionMessageKey && !lastActionMessageKey.startsWith('media.messages.')"
@@ -983,6 +1067,145 @@ async function runAction(
 .albums-view__custom {
   flex-shrink: 0;
   overflow: hidden;
+}
+
+/* --- Toolbar compacta (substitui os cards grandes de Playlists/Coletâneas) --- */
+.albums-view__toolbar {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.albums-view__toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1rem;
+  border: 1px solid var(--ds-color-outline, rgba(255, 255, 255, 0.08));
+  border-radius: var(--ds-radius-sm, 8px 0 8px 0);
+  background: color-mix(in srgb, var(--ds-color-surface-card, #201f1f) 70%, transparent);
+  color: var(--ds-color-on-surface);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
+
+  .ti {
+    color: var(--ds-color-primary);
+    font-size: 1.05rem;
+  }
+
+  &:hover {
+    background: color-mix(in srgb, var(--ds-color-primary) 16%, transparent);
+    border-color: color-mix(in srgb, var(--ds-color-primary) 45%, transparent);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ds-color-primary);
+    outline-offset: 2px;
+  }
+}
+
+.albums-view__toolbar-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ds-color-primary) 22%, transparent);
+  color: var(--ds-color-primary);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+/* --- Modais (Teleport > body) --- */
+.albums-view__modal {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.albums-view__modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgb(0 0 0 / 0.55);
+}
+
+.albums-view__modal-panel {
+  position: relative;
+  width: min(40rem, 100%);
+  max-height: min(75vh, 42rem);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 1.1rem 1.25rem !important;
+}
+
+.albums-view__modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.albums-view__modal-form {
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+
+  input {
+    flex: 1 1 10rem;
+    min-width: 10rem;
+    padding: 0.5rem 0.8rem;
+    border: 1px solid var(--ds-color-outline-strong);
+    border-radius: var(--ds-radius-sm, 8px 0 8px 0);
+    background: color-mix(in srgb, var(--ds-color-surface-card, #201f1f) 80%, transparent);
+    color: var(--ds-color-on-surface);
+    font: inherit;
+    font-size: 0.88rem;
+    transition: border-color 0.2s ease;
+
+    &:focus {
+      outline: none;
+      border-color: var(--ds-color-primary);
+    }
+  }
+
+  button[type='submit'] {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.5rem 0.9rem;
+    border: 0;
+    border-radius: var(--ds-radius-sm, 8px 0 8px 0);
+    background: var(--ds-color-primary);
+    color: var(--ds-color-on-primary, #fff);
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: filter 0.2s ease;
+
+    &:hover {
+      filter: brightness(1.1);
+    }
+  }
+}
+
+.albums-view__modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 0.25rem;
+  border-top: 1px solid var(--ds-color-outline, rgba(255, 255, 255, 0.06));
 }
 
 .albums-view__custom-editor-btn {

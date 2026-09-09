@@ -67,6 +67,7 @@ export default {
       openEditor: 'Abrir editor',
       open: 'Abrir coletânea {name}',
       trackCount: '{count} faixa(s)',
+      empty: 'Nenhuma coletânea criada ainda. Importe um .slja no editor.',
     },
   },
 }
