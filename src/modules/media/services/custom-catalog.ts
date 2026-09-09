@@ -303,7 +303,14 @@ export function probeAudioDuration(
   timeoutMs: number,
 ): Promise<number | null> {
   return new Promise((resolve) => {
-    const src = audioUrl ? resolveRemoteFileUrl(audioUrl) : null
+    // URLs custom (/custom/...) vêm da própria API custom (customFileUrl:
+    // respeita VITE_PALCO_API_URL/proxy local). Demais paths do catálogo
+    // usam a base de files remota (resolveRemoteFileUrl).
+    const src = audioUrl
+      ? audioUrl.startsWith('/custom/')
+        ? customFileUrl(audioUrl)
+        : resolveRemoteFileUrl(audioUrl)
+      : null
     if (!src) {
       resolve(null)
       return
