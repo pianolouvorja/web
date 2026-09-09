@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import type { AlbumCollection } from '../types/albums'
@@ -9,12 +10,29 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   open: []
+  changeCover?: [file: File]
 }>()
 
 const { t } = useI18n()
 
+const coverInput = ref<HTMLInputElement | null>(null)
+
 function onOpen() {
   emit('open')
+}
+
+/** Só coletâneas custom permitem trocar cover (álbuns oficiais são curados). */
+function onCoverClick(event: Event) {
+  if (!props.collection.isCustom) return
+  event.stopPropagation()
+  coverInput.value?.click()
+}
+
+async function onCoverFile(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = ''
+  if (file) emit('changeCover', file)
 }
 </script>
 
@@ -27,6 +45,9 @@ function onOpen() {
           ? { backgroundImage: `url(${collection.coverUrl})` }
           : undefined
       "
+      :class="{ 'album-collection-card__cover--editable': collection.isCustom }"
+      :title="collection.isCustom ? t('albums.custom.changeCover') : undefined"
+      @click="onCoverClick"
     >
       <i
         v-if="!collection.coverUrl"
@@ -34,6 +55,14 @@ function onOpen() {
         :class="collection.kind === 'hymnal' ? 'ti-book' : 'ti-disc'"
         aria-hidden="true"
       />
+
+      <span
+        v-if="collection.isCustom"
+        class="album-collection-card__cover-edit"
+        aria-hidden="true"
+      >
+        <i class="ti ti-camera" />
+      </span>
 
       <div class="album-collection-card__hover">
         <button
@@ -50,6 +79,16 @@ function onOpen() {
           </span>
         </button>
       </div>
+
+      <input
+        v-if="collection.isCustom"
+        ref="coverInput"
+        type="file"
+        accept="image/*"
+        class="album-collection-card__cover-input"
+        :aria-label="t('albums.custom.changeCover')"
+        @change="onCoverFile"
+      >
     </div>
 
     <div class="album-collection-card__body">
@@ -107,6 +146,38 @@ function onOpen() {
 .album-collection-card__fallback {
   font-size: 2.5rem;
   color: color-mix(in srgb, #fff 70%, transparent);
+}
+
+// Cover editável (coletâneas custom): câmera no canto + cursor pointer
+.album-collection-card__cover--editable {
+  cursor: pointer;
+
+  &:hover .album-collection-card__cover-edit {
+    opacity: 1;
+  }
+}
+
+.album-collection-card__cover-edit {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 60%);
+  color: #fff;
+  font-size: 1rem;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.album-collection-card__cover-input {
+  display: none;
 }
 
 .album-collection-card__hover {

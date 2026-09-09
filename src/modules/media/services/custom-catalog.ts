@@ -196,7 +196,39 @@ export type CustomCollectionSummary = {
   id: number
   name: string
   description: string | null
+  coverUrl?: string | null
   musicsCount: number
+}
+
+/** Atualiza campos de uma coletânea custom (nome, descrição, cover). */
+export async function updateCustomCollection(
+  collectionId: number,
+  patch: { name?: string; description?: string | null; cover_url?: string | null },
+): Promise<CustomCollectionSummary | null> {
+  try {
+    const response = await fetch(`${customBaseUrl()}/collections/${collectionId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(patch),
+    })
+    if (!response.ok) return null
+    const row = (await response.json()) as {
+      id_collection: number
+      name: string
+      description: string | null
+      cover_url?: string | null
+      musics_count?: number
+    }
+    return {
+      id: row.id_collection,
+      name: row.name,
+      description: row.description ?? null,
+      coverUrl: row.cover_url ?? null,
+      musicsCount: row.musics_count ?? 0,
+    }
+  } catch {
+    return null
+  }
 }
 
 export async function listCustomCollections(): Promise<
@@ -210,6 +242,7 @@ export async function listCustomCollections(): Promise<
         id_collection: number
         name: string
         description: string | null
+        cover_url?: string | null
         musics_count?: number
       }>
     }
@@ -217,6 +250,7 @@ export async function listCustomCollections(): Promise<
       id: row.id_collection,
       name: row.name,
       description: row.description ?? null,
+      coverUrl: row.cover_url ?? null,
       musicsCount: row.musics_count ?? 0,
     }))
   } catch {

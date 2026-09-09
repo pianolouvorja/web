@@ -64,6 +64,7 @@ export default {
     custom: {
           title: 'Mis Colecciones',
           sectionSubtitle: 'Tus colecciones personalizadas — edita en el editor de letras',
+          changeCover: 'Cambiar portada de la colección',
           openEditor: 'Abrir editor',
           open: 'Abrir colección {name}',
           trackCount: '{count} pista(s)',

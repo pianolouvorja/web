@@ -131,6 +131,9 @@ import {
   createCustomCollection,
   listCustomCollections,
   fromCustomCollectionId,
+  updateCustomCollection,
+  uploadCustomFile,
+  customFileUrl,
   type CustomCollectionSummary,
   toCustomCollectionId,
 } from '@modules/media/services/custom-catalog'
@@ -146,11 +149,27 @@ const customCollectionCards = computed<AlbumCollection[]>(() =>
     kind: 'album' as const,
     name: c.name,
     subtitle: c.description ?? '',
-    coverUrl: null,
+    coverUrl: c.coverUrl ? customFileUrl(c.coverUrl) : null,
     trackCount: c.musicsCount,
     catalogKey: `custom_collection_${c.id}`,
+    isCustom: true,
   })),
 )
+
+/** Upload de cover: salva arquivo na API e associa à coletânea. */
+async function onChangeCustomCover(collectionId: number, file: File): Promise<void> {
+  const customId = fromCustomCollectionId(collectionId)
+  const bytes = new Uint8Array(await file.arrayBuffer())
+  const uploaded = await uploadCustomFile(bytes, file.name, 'imagens')
+  if (!uploaded) return
+  const updated = await updateCustomCollection(customId, {
+    cover_url: uploaded.url,
+  })
+  if (!updated) return
+  customCollections.value = customCollections.value.map((c) =>
+    c.id === customId ? updated : c,
+  )
+}
 
 // Modais compactos (Playlists / Minhas Coletâneas)
 const playlistsModalOpen = ref(false)
@@ -769,6 +788,7 @@ async function runAction(
               :key="String(collection.id)"
               :collection="collection"
               @open="openCustomCollection(fromCustomCollectionId(Number(collection.id)))"
+              @change-cover="(file: File) => onChangeCustomCover(Number(collection.id), file)"
             />
           </div>
         </GlassCard>

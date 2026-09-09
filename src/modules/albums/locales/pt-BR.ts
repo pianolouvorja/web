@@ -65,6 +65,7 @@ export default {
     custom: {
       title: 'Minhas Coletâneas',
       sectionSubtitle: 'Suas coletâneas personalizadas — edite no editor de letras',
+      changeCover: 'Alterar capa da coletânea',
       openEditor: 'Abrir editor',
       open: 'Abrir coletânea {name}',
       trackCount: '{count} faixa(s)',
