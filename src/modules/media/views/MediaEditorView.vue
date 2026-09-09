@@ -613,6 +613,12 @@ function onAudioTimeUpdate(): void {
   if (!el) return
   currentTimeMs.value = el.currentTime * 1000
   syncStanzaHighlight()
+  // Auto-scroll: mantém a estrofe ativa visível enquanto a letra avança
+  if (isPlaying.value && activeStanzaIndex.value >= 0) {
+    document
+      .querySelectorAll('.editor__stanza')
+      [activeStanzaIndex.value]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+  }
 }
 
 /** Marca o timing da estrofe com o instante atual do áudio (sync manual) */
@@ -633,10 +639,8 @@ function onSeekToStanza(index: number): void {
   syncStanzaHighlight()
 }
 
-/** Preview: entra em modo preview mostrando a estrofe ativa como no /media */
-const isPreviewMode = ref(false)
+/** Slide em exibição: estrofe ativa (override manual > timing do áudio > 1ª). */
 const activeStanza = computed(() => {
-  if (!isPreviewMode.value) return null
   const idx =
     activeStanzaIndexOverride.value ??
     (activeStanzaIndex.value >= 0
@@ -647,11 +651,6 @@ const activeStanza = computed(() => {
   return lyrics.value[idx] ?? null
 })
 
-function onTogglePreview(): void {
-  isPreviewMode.value = !isPreviewMode.value
-  if (!isPreviewMode.value) activeStanzaIndexOverride.value = null
-}
-
 /** Carrega o áudio vinculado à música (audio_url da API) */
 function loadAudioForMusic(audioPath: string | null): void {
   audioSrc.value = audioPath ? customFileUrl(audioPath) : null
@@ -659,7 +658,6 @@ function loadAudioForMusic(audioPath: string | null): void {
   currentTimeMs.value = 0
   activeStanzaIndex.value = -1
   activeStanzaIndexOverride.value = null
-  isPreviewMode.value = false
 }
 
 onMounted(async () => {
@@ -749,8 +747,11 @@ onMounted(async () => {
 
     <v-snackbar
       v-model="snackbarOpen"
-      :timeout="3500"
-      location="bottom"
+      :timeout="2600"
+      location="top right"
+      variant="tonal"
+      color="primary"
+      class="editor__snackbar"
     >
       {{ statusMessage }}
     </v-snackbar>
@@ -978,62 +979,69 @@ onMounted(async () => {
             <h2 class="editor__section-title">
               {{ musicName || 'Música' }}
             </h2>
-            <button
-              v-if="audioSrc"
-              type="button"
-              class="editor__btn"
-              :class="{ 'editor__btn--active': isPreviewMode }"
-              title="Alternar preview (mostra o slide ativo como no player)"
-              @click="onTogglePreview"
-            >
-              <i
-                class="ti ti-eye"
-                aria-hidden="true"
-              />
-              Preview
-            </button>
           </div>
 
-          <!-- Player de áudio (aparece se a música tem áudio vinculado) -->
-          <div
-            v-if="audioSrc"
-            class="editor__player"
-          >
-            <audio
-              ref="audioEl"
-              class="editor__audio"
-              controls
-              :src="audioSrc"
-              preload="metadata"
-              @play="onAudioPlay"
-              @pause="onAudioPause"
-              @timeupdate="onAudioTimeUpdate"
-            />
-            <span class="editor__player-time">{{ timeLabelOf(currentTimeMs) }}</span>
-          </div>
-          <p
-            v-else
-            class="editor__hint"
-          >
-            Esta música não tem áudio vinculado. Importe um .slja com áudio ou o áudio
-            ficará disponível na próxima importação.
-          </p>
+          <!-- Faixa superior: player + preview SEMPRE juntos (tocar e ver a letra avançando) -->
+          <div class="editor__stage-row">
+            <div class="editor__stage-left">
+              <!-- Preview estilo /media: MediaSlideStage REAL (mesma estética do player) -->
+              <div
+                v-if="activeStanza"
+                class="editor__preview"
+              >
+                <MediaSlideStage
+                  :lyric="activeStanza.lyric"
+                  :title="musicName || ''"
+                  :image-url="activeStanza.imageUrl ? customFileUrl(activeStanza.imageUrl) : null"
+                  :is-cover="false"
+                />
+              </div>
+              <div
+                v-else
+                class="editor__preview editor__preview--empty"
+              >
+                <i
+                  class="ti ti-movie"
+                  aria-hidden="true"
+                />
+                <span>Adicione a 1ª estrofe para ver o slide aqui</span>
+              </div>
+            </div>
 
-          <!-- Preview estilo /media: MediaSlideStage REAL (mesma estética do player) -->
-          <div
-            v-if="isPreviewMode && activeStanza"
-            class="editor__preview"
-          >
-            <MediaSlideStage
-              :lyric="activeStanza.lyric"
-              :title="musicName || ''"
-              :image-url="activeStanza.imageUrl ? customFileUrl(activeStanza.imageUrl) : null"
-              :is-cover="false"
-            />
+            <aside class="editor__controls">
+              <!-- Player de áudio -->
+              <div
+                v-if="audioSrc"
+                class="editor__player"
+              >
+                <audio
+                  ref="audioEl"
+                  class="editor__audio"
+                  controls
+                  :src="audioSrc"
+                  preload="metadata"
+                  @play="onAudioPlay"
+                  @pause="onAudioPause"
+                  @timeupdate="onAudioTimeUpdate"
+                />
+                <span class="editor__player-time">{{ timeLabelOf(currentTimeMs) }}</span>
+                <p class="editor__hint editor__hint--compact">
+                  Dê play e clique em <strong>Marcar</strong> na estrofe certa — o timing é
+                  preenchido automaticamente.
+                </p>
+              </div>
+              <p
+                v-else
+                class="editor__hint"
+              >
+                Esta música não tem áudio vinculado. Importe um .slja com áudio ou o áudio
+                ficará disponível na próxima importação.
+              </p>
+            </aside>
           </div>
 
+          <!-- Estrofes na MESMA visão: tocar, marcar, adicionar — tudo junto -->
           <ul
-            v-else
             class="editor__stanzas"
           >
             <li
@@ -1584,6 +1592,49 @@ onMounted(async () => {
   border-radius: var(--ds-radius-lg, 16px 0 16px 0);
   border: 1px solid var(--ds-color-outline-strong);
   overflow: hidden;
+}
+
+/* Faixa topo: preview (slide vivo) + controles (player) lado a lado */
+.editor__stage-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(260px, 1fr);
+  gap: var(--ds-spacing-4, 1rem);
+  align-items: stretch;
+}
+
+.editor__stage-left {
+  min-height: 320px;
+  min-width: 0;
+}
+
+.editor__preview--empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: rgb(255 255 255 / 0.03);
+  color: var(--ds-color-on-surface-variant, rgb(255 255 255 / 0.55));
+  font-size: 0.9rem;
+
+  > i {
+    font-size: 2rem;
+    opacity: 0.5;
+  }
+}
+
+.editor__controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.editor__hint--compact {
+  font-size: 0.8rem;
+  opacity: 0.75;
+  margin: 0;
+  line-height: 1.4;
 }
 
 /* MediaSlideStage preenche o container do preview (estética idêntica à /media) */
