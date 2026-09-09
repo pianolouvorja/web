@@ -1661,8 +1661,9 @@ onMounted(async () => {
 
 .editor__player {
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.375rem;
   padding: 0.625rem 0.875rem;
   background: color-mix(in srgb, var(--ds-color-surface) 60%, transparent);
   border: 1px solid var(--ds-color-outline-strong);
@@ -1671,8 +1672,9 @@ onMounted(async () => {
 }
 
 .editor__audio {
-  flex: 1;
-  min-width: 0;
+  /* flex-basis 0 colapsa <audio> (replaced element sem largura intrínseca
+     nessa cadeia de grid) — fix: sem flex-grow, largura 100% do player */
+  flex: 0 0 auto;
   width: 100%;
   height: 36px;
 }
