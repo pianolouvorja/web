@@ -24,6 +24,11 @@ type CatalogHymnalEntry = {
 
 function resolveRemoteCoverUrl(urlPath: string): string {
   const cleanPath = urlPath.startsWith('/') ? urlPath.slice(1) : urlPath
+  // Dev: proxy same-origin /tunnel-file (VITE_DEV_MEDIA_PROXY) — Image() contra
+  // URLs absolutas do túnel Cloudflare falha silenciosamente (fetch 200 ok,
+  // img onerror); proxy local renderiza. Prod: URL absoluta da API.
+  const proxyTarget = import.meta.env.VITE_DEV_MEDIA_PROXY
+  if (proxyTarget) return `/tunnel-file/${cleanPath}`
   const base = import.meta.env.VITE_URL_FILES ?? 'https://api.louvorja.com.br/file'
   return `${base}/${cleanPath}`
 }
