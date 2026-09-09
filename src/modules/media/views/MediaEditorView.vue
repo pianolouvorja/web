@@ -66,11 +66,16 @@ const saving = ref(false)
 const statusMessage = ref('')
 const snackbarOpen = ref(false)
 
-/** statusMessage + snackbar juntos (span inline e toast). */
+/** statusMessage + snackbar juntos (toast). */
 function notify(message: string): void {
   statusMessage.value = message
   snackbarOpen.value = true
 }
+
+/** Status de erro ganha ícone/cor distintos no toast. */
+const isErrorStatus = computed(() =>
+  /falha|erro|indispon|não foi possível/i.test(statusMessage.value),
+)
 const newCollectionName = ref('')
 const newMusicName = ref('')
 /** Assets de imagem upados no último import .slja (path → url) */
@@ -361,6 +366,15 @@ async function onSelectMusic(id: number): Promise<void> {
         imageUrl: row.image_url ?? '',
       }))
       loadAudioForMusic(data.audio_url ?? null)
+    } else if (response.status === 404) {
+      // Música não existe mais (apagada em outra sessão/coletânea):
+      // limpa a seleção em vez de deixar a tela em estado quebrado.
+      notify('Esta música não existe mais')
+      selectedMusicId.value = null
+      musicName.value = ''
+      lyrics.value = []
+      loadAudioForMusic(null)
+      await refreshCollections()
     } else {
       notify('Falha ao carregar música')
     }
@@ -798,22 +812,24 @@ onMounted(async () => {
         />
         Exportar .slja
       </button>
-      <span
-        v-if="statusMessage"
-        class="editor__status"
-        role="status"
-      >{{ statusMessage }}</span>
     </header>
 
     <v-snackbar
       v-model="snackbarOpen"
       :timeout="2600"
       location="top right"
-      variant="tonal"
-      color="primary"
+      variant="text"
       class="editor__snackbar"
+      :content-class="'editor__snackbar-content'"
     >
-      {{ statusMessage }}
+      <div class="editor__toast">
+        <i
+          class="editor__toast-icon"
+          :class="isErrorStatus ? 'ti-alert-circle' : 'ti-circle-check'"
+          aria-hidden="true"
+        />
+        <span class="editor__toast-text">{{ statusMessage }}</span>
+      </div>
     </v-snackbar>
 
     <div class="editor__body">
@@ -1291,9 +1307,43 @@ onMounted(async () => {
   flex: 1;
 }
 
-.editor__status {
+/* Toast do editor — linguagem de vidro do design system (docs/prd/DESIGN_SYSTEM.md) */
+.editor__snackbar-content {
+  /* mata o fundo/chpadding padrão do VSnackbar (variant=text) */
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.editor__toast {
+  display: flex;
+  align-items: center;
+  gap: var(--ds-spacing-3, 12px);
+  max-width: 380px;
+  padding: var(--ds-spacing-3, 12px) var(--ds-spacing-4, 16px);
+  border-radius: var(--ds-radius-md, 12px 0 12px 0);
+  border: 1px solid var(--ds-color-outline-strong);
+  background: color-mix(in srgb, var(--ds-color-surface-elevated) 82%, transparent);
+  backdrop-filter: blur(var(--ds-blur-default, 16px));
+  -webkit-backdrop-filter: blur(var(--ds-blur-default, 16px));
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.35);
+  color: var(--ds-color-on-surface);
+  font-family: var(--ds-font-family);
   font-size: 0.85rem;
-  color: var(--ds-color-on-surface-variant);
+  line-height: 1.4;
+}
+
+.editor__toast-icon {
+  flex-shrink: 0;
+  font-size: 1.15rem;
+  color: var(--ds-color-primary);
+}
+
+.editor__toast:has(.ti-alert-circle) .editor__toast-icon {
+  color: #ef5350;
+}
+
+.editor__toast-text {
+  min-width: 0;
 }
 
 .editor__file-input {
