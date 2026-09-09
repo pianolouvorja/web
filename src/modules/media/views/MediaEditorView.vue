@@ -1126,13 +1126,14 @@ onMounted(async () => {
             </h2>
           </div>
 
-          <!-- Faixa superior: slide ao centro, player embutido EMBAIXO (como o pill da /media) -->
+          <!-- Faixa superior: slide com player INTEGRADO (hover), mesmo tamanho da /media -->
           <div class="editor__stage-row">
             <div class="editor__stage-left">
               <!-- Preview estilo /media: MediaSlideStage REAL (mesma estética do player) -->
               <div
                 v-if="activeStanza"
-                class="editor__preview"
+                class="editor__preview editor__preview--with-player"
+                :class="{ 'is-playing': isPlaying }"
               >
                 <MediaSlideStage
                   :lyric="activeStanza.lyric"
@@ -1140,6 +1141,23 @@ onMounted(async () => {
                   :image-url="activeStanza.imageUrl ? customFileUrl(activeStanza.imageUrl) : null"
                   :is-cover="false"
                 />
+                <!-- Player embutido: aparece no hover, igual player da /media -->
+                <div
+                  v-if="audioSrc"
+                  class="editor__player"
+                >
+                  <span class="editor__player-time">{{ timeLabelOf(currentTimeMs) }}</span>
+                  <audio
+                    ref="audioEl"
+                    class="editor__audio"
+                    controls
+                    :src="audioSrc"
+                    preload="metadata"
+                    @play="onAudioPlay"
+                    @pause="onAudioPause"
+                    @timeupdate="onAudioTimeUpdate"
+                  />
+                </div>
               </div>
               <div
                 v-else
@@ -1152,25 +1170,8 @@ onMounted(async () => {
                 <span>Adicione a 1ª estrofe para ver o slide aqui</span>
               </div>
 
-              <!-- Player embutido sob o slide (pill) -->
-              <div
-                v-if="audioSrc"
-                class="editor__player"
-              >
-                <span class="editor__player-time">{{ timeLabelOf(currentTimeMs) }}</span>
-                <audio
-                  ref="audioEl"
-                  class="editor__audio"
-                  controls
-                  :src="audioSrc"
-                  preload="metadata"
-                  @play="onAudioPlay"
-                  @pause="onAudioPause"
-                  @timeupdate="onAudioTimeUpdate"
-                />
-              </div>
               <p
-                v-else
+                v-if="!audioSrc && activeStanza"
                 class="editor__hint editor__hint--compact"
               >
                 Esta música não tem áudio vinculado. Importe um .slja com áudio ou o áudio
@@ -1946,8 +1947,9 @@ onMounted(async () => {
 
 .editor__preview {
   position: relative;
-  height: 100%;
-  min-height: 400px;
+  /* 16:9 como a /media — o slide é vídeo, não estica com o container */
+  aspect-ratio: 16 / 9;
+  width: 100%;
   border-radius: var(--ds-radius-lg, 16px 0 16px 0);
   border: 1px solid var(--ds-color-outline-strong);
   overflow: hidden;
@@ -1986,6 +1988,33 @@ onMounted(async () => {
     font-size: 2rem;
     opacity: 0.5;
   }
+}
+
+/* Slide com player integrado: player sobrepõe a base, aparece no hover
+   ou enquanto toca (mesmo comportamento do player da /media) */
+.editor__preview--with-player {
+  position: relative;
+}
+
+.editor__preview--with-player > .editor__player {
+  position: absolute;
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: 0.75rem;
+  z-index: 2;
+  margin: 0;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 180ms ease, transform 180ms ease;
+  pointer-events: none;
+}
+
+.editor__preview--with-player:hover > .editor__player,
+.editor__preview--with-player:focus-within > .editor__player,
+.editor__preview--with-player.is-playing > .editor__player {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
 }
 
 /* Player-pill sob o slide: tempo à esquerda + áudio esticando (como /media) */
