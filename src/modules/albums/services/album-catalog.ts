@@ -1,4 +1,5 @@
 import { readOrFetchCatalogJson } from '@shared/services/remote-catalog'
+import { catalogMusicLang } from './album-music-search'
 
 import type { AlbumCategory, AlbumCollection } from '../types/albums'
 
@@ -50,8 +51,9 @@ async function resolveCoverUrl(urlImage: string | null | undefined): Promise<str
 
 async function buildHymnalCollections(): Promise<AlbumCollection[]> {
   const collections: AlbumCollection[] = []
+  const lang = catalogMusicLang()
 
-  const hymnal = await readOrFetchCatalog<CatalogHymnalEntry[]>('pt_hymnal')
+  const hymnal = await readOrFetchCatalog<CatalogHymnalEntry[]>(`${lang}_hymnal`)
   if (Array.isArray(hymnal) && hymnal.length > 0) {
     collections.push({
       id: 'hymnal',
@@ -60,11 +62,11 @@ async function buildHymnalCollections(): Promise<AlbumCollection[]> {
       subtitle: '',
       coverUrl: resolveRemoteCoverUrl(HYMNAL_COVER_PATHS.hymnal),
       trackCount: hymnal.length,
-      catalogKey: 'pt_hymnal',
+      catalogKey: `${lang}_hymnal`,
     })
   }
 
-  const hymnal1996 = await readOrFetchCatalog<CatalogHymnalEntry[]>('pt_hymnal_1996')
+  const hymnal1996 = await readOrFetchCatalog<CatalogHymnalEntry[]>(`${lang}_hymnal_1996`)
   if (Array.isArray(hymnal1996) && hymnal1996.length > 0) {
     collections.push({
       id: 'hymnal_1996',
@@ -73,7 +75,7 @@ async function buildHymnalCollections(): Promise<AlbumCollection[]> {
       subtitle: '',
       coverUrl: resolveRemoteCoverUrl(HYMNAL_COVER_PATHS.hymnal_1996),
       trackCount: hymnal1996.length,
-      catalogKey: 'pt_hymnal_1996',
+      catalogKey: `${lang}_hymnal_1996`,
     })
   }
 
@@ -93,7 +95,9 @@ export async function loadAlbumCategories(): Promise<AlbumCategory[]> {
     })
   }
 
-  const categories = await readOrFetchCatalog<CatalogCategory[]>('pt_categories')
+  const categories = await readOrFetchCatalog<CatalogCategory[]>(
+    `${catalogMusicLang()}_categories`,
+  )
   if (!Array.isArray(categories)) return result
 
   for (const category of categories) {
