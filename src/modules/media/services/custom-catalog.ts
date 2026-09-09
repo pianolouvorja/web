@@ -283,6 +283,59 @@ export type CustomMusicSummary = {
   officialMusicId?: number | null
 }
 
+/** Copia uma música custom existente (outra coletânea) pra coletânea aberta. */
+export async function copyCustomMusic(
+  collectionId: number,
+  musicId: number,
+): Promise<{ id: number } | null> {
+  try {
+    const response = await fetch(
+      `${customBaseUrl()}/collections/${collectionId}/musics/${musicId}/copy`,
+      { method: 'POST' },
+    )
+    if (!response.ok) return null
+    const json = (await response.json()) as { id_music: number }
+    return { id: json.id_music }
+  } catch {
+    return null
+  }
+}
+
+/** Todas as músicas custom (qualquer coletânea) — p/ reutilizar no editor. */
+export async function listAllCustomMusics(): Promise<
+  Array<CustomMusicSummary & { collectionName?: string; collectionId?: number }>
+> {
+  try {
+    const response = await fetch(`${customBaseUrl()}/musics`)
+    if (!response.ok) return []
+    const json = (await response.json()) as {
+      data?: Array<{
+        id_music: number
+        name: string | null
+        official_music_id?: number | null
+        duration?: number | string | null
+        audio_url?: string | null
+        image_url?: string | null
+        id_collection?: number
+        collection_name?: string
+      }>
+    }
+    return (json.data ?? []).map((row) => ({
+      id: row.id_music,
+      name: row.name ?? '',
+      duration: typeof row.duration === 'string' ? null : row.duration ?? null,
+      hasAudio: Boolean(row.audio_url),
+      hasImage: Boolean(row.image_url),
+      audioUrl: row.audio_url ?? null,
+      officialMusicId: row.official_music_id ?? null,
+      collectionId: row.id_collection,
+      collectionName: row.collection_name,
+    }))
+  } catch {
+    return []
+  }
+}
+
 export async function listCustomMusics(
   collectionId: number,
 ): Promise<CustomMusicSummary[]> {

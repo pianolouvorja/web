@@ -3,7 +3,11 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import MediaSlideStage from '../components/MediaSlideStage.vue'
-import { addOfficialMusicToCollection } from '../services/custom-catalog'
+import {
+  addOfficialMusicToCollection,
+  copyCustomMusic,
+  listAllCustomMusics,
+} from '../services/custom-catalog'
 import {
   filterAlbumMusicIndex,
   loadAlbumMusicIndex,
@@ -178,6 +182,62 @@ async function onAddOfficial(officialMusicId: number, name: string): Promise<voi
 function onAddOfficialFromSearch(): void {
   const first = officialSearchResults.value[0]
   if (first) void onAddOfficial(first.musicId, first.displayTitle || first.name)
+}
+
+/* ---------- Reutilizar música custom existente (outra coletânea) ---------- */
+
+interface ReusableMusic {
+  id: number
+  name: string
+  collectionName?: string
+  isCurrent: boolean
+}
+
+const reuseSearch = ref('')
+const reuseResults = ref<ReusableMusic[]>([])
+let allCustomMusicsCache: Array<ReusableMusic & { collectionId?: number }> | null = null
+
+function onReuseSearchInput(): void {
+  const query = reuseSearch.value.trim().toLowerCase()
+  if (!query) {
+    reuseResults.value = []
+    return
+  }
+  void (async () => {
+    if (allCustomMusicsCache == null) {
+      allCustomMusicsCache = await listAllCustomMusics()
+    }
+    reuseResults.value = allCustomMusicsCache
+      .filter((m) => m.name.toLowerCase().includes(query))
+      .slice(0, 8)
+      .map((m) => ({
+        id: m.id,
+        name: m.name,
+        collectionName: m.collectionName,
+        isCurrent: m.collectionId === selectedCollectionId.value,
+      }))
+  })()
+}
+
+async function onReuseMusic(music: ReusableMusic): Promise<void> {
+  if (selectedCollectionId.value == null || music.isCurrent) return
+  saving.value = true
+  try {
+    const result = await copyCustomMusic(selectedCollectionId.value, music.id)
+    if (result) {
+      reuseSearch.value = ''
+      reuseResults.value = []
+      allCustomMusicsCache = null
+      await onCollectionChange()
+      selectedMusicId.value = result.id
+      await onSelectMusic(result.id)
+      notify(`“${music.name}” copiada com letra e áudio`)
+    } else {
+      notify('Falha ao copiar música')
+    }
+  } finally {
+    saving.value = false
+  }
 }
 
 /* ---------- Capa da coletânea (upload/remoção no editor) ---------- */
@@ -885,6 +945,48 @@ onMounted(async () => {
             </button>
           </div>
 
+          <!-- Reutilizar música custom já criada/importada (copia com letra e áudio) -->
+          <div class="editor__add-official">
+            <input
+              v-model="reuseSearch"
+              type="text"
+              class="editor__input"
+              placeholder="Reutilizar música existente…"
+              @input="onReuseSearchInput"
+            >
+            <ul
+              v-if="reuseResults.length > 0"
+              class="editor__list editor__list--search"
+            >
+              <li
+                v-for="music in reuseResults"
+                :key="`reuse-${music.id}`"
+              >
+                <button
+                  type="button"
+                  class="editor__list-item editor__list-item--search"
+                  :disabled="saving || music.isCurrent"
+                  :title="music.isCurrent
+                    ? 'Já está nesta coletânea'
+                    : `Copiar “${music.name}” (com letra e áudio) para esta coletânea`"
+                  @click="onReuseMusic(music)"
+                >
+                  <i
+                    class="ti ti-copy"
+                    aria-hidden="true"
+                  />
+                  <span class="editor__list-item-text">
+                    {{ music.name }}
+                    <small
+                      v-if="music.collectionName"
+                      class="editor__list-item-sub"
+                    >em {{ music.collectionName }}</small>
+                  </span>
+                </button>
+              </li>
+            </ul>
+          </div>
+
           <!-- Adicionar hino OFICIAL da API à coletânea (busca no catálogo) -->
           <div class="editor__add-official">
             <div class="editor__row">
@@ -1520,6 +1622,8 @@ onMounted(async () => {
 
 .editor__audio {
   flex: 1;
+  min-width: 0;
+  width: 100%;
   height: 36px;
 }
 
@@ -1696,6 +1800,18 @@ onMounted(async () => {
   text-align: left;
   gap: 0.4rem;
   font-size: 0.82rem;
+}
+
+.editor__list-item-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.editor__list-item-sub {
+  opacity: 0.55;
+  font-size: 0.72rem;
 }
 
 .editor__list-search-num {
