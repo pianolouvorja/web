@@ -4,6 +4,9 @@ export type MediaUrlResolveResult =
 
 export function resolveRemoteFileUrl(urlPath: string): string {
   const cleanPath = urlPath.startsWith('/') ? urlPath.slice(1) : urlPath
+  // Mídia CUSTOM (coletâneas do usuário) vive na API local — NUNCA no túnel
+  // do catálogo oficial. Em dev o Vite proxia /file/custom -> API local.
+  if (cleanPath.startsWith('custom/')) return `/file/${cleanPath}`
   // Dev: proxy same-origin /tunnel-file (VITE_DEV_MEDIA_PROXY). Requisições de
   // mídia contra URLs absolutas do túnel Cloudflare falham no browser
   // (fetch 200 ok, mas Audio/Image disparam onerror); via proxy renderiza.

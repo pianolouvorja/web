@@ -156,31 +156,6 @@ const customCollectionCards = computed<AlbumCollection[]>(() =>
   })),
 )
 
-/** Upload de cover: salva arquivo na API e associa à coletânea. */
-async function onChangeCustomCover(collectionId: number, file: File): Promise<void> {
-  const customId = fromCustomCollectionId(collectionId)
-  const bytes = new Uint8Array(await file.arrayBuffer())
-  const uploaded = await uploadCustomFile(bytes, file.name, 'imagens')
-  if (!uploaded) return
-  const updated = await updateCustomCollection(customId, {
-    cover_url: uploaded.url,
-  })
-  if (!updated) return
-  customCollections.value = customCollections.value.map((c) =>
-    c.id === customId ? updated : c,
-  )
-}
-
-/** Remove o cover da coletânea custom (cover_url = null). */
-async function onRemoveCustomCover(collectionId: number): Promise<void> {
-  const customId = fromCustomCollectionId(collectionId)
-  const updated = await updateCustomCollection(customId, { cover_url: null })
-  if (!updated) return
-  customCollections.value = customCollections.value.map((c) =>
-    c.id === customId ? updated : c,
-  )
-}
-
 // Modais compactos (Playlists / Minhas Coletâneas)
 const playlistsModalOpen = ref(false)
 const customModalOpen = ref(false)
@@ -798,8 +773,6 @@ async function runAction(
               :key="String(collection.id)"
               :collection="collection"
               @open="openCustomCollection(fromCustomCollectionId(Number(collection.id)))"
-              @change-cover="(file: File) => onChangeCustomCover(Number(collection.id), file)"
-              @remove-cover="onRemoveCustomCover(Number(collection.id))"
             />
           </div>
         </GlassCard>

@@ -2,6 +2,13 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import MediaSlideStage from '../components/MediaSlideStage.vue'
+import { addOfficialMusicToCollection } from '../services/custom-catalog'
+import {
+  filterAlbumMusicIndex,
+  loadAlbumMusicIndex,
+} from '@modules/albums/services/album-music-search'
+import type { AlbumSearchHit } from '@modules/albums/types/albums'
 import {
   createCustomCollection,
   createCustomLyric,
@@ -12,6 +19,7 @@ import {
   deleteCustomMusic,
   listCustomCollections,
   listCustomMusics,
+  updateCustomCollection,
   updateCustomLyric,
   updateCustomMusic,
   uploadCustomFile,
@@ -132,6 +140,103 @@ async function onCreateMusic(): Promise<void> {
   }
 }
 
+/* ---------- Adicionar hino oficial à coletânea (busca no catálogo) ---------- */
+
+const officialSearch = ref('')
+const officialSearchResults = ref<AlbumSearchHit[]>([])
+
+function onOfficialSearchInput(): void {
+  const query = officialSearch.value.trim()
+  if (!query) {
+    officialSearchResults.value = []
+    return
+  }
+  void (async () => {
+    const index = await loadAlbumMusicIndex()
+    officialSearchResults.value = filterAlbumMusicIndex(index, query).slice(0, 8)
+  })()
+}
+
+async function onAddOfficial(officialMusicId: number, name: string): Promise<void> {
+  if (selectedCollectionId.value == null) return
+  saving.value = true
+  try {
+    const result = await addOfficialMusicToCollection(selectedCollectionId.value, officialMusicId, name)
+    if (result) {
+      officialSearch.value = ''
+      officialSearchResults.value = []
+      await onCollectionChange()
+      notify(`“${name}” adicionada à coletânea`)
+    } else {
+      notify('Falha ao adicionar hino')
+    }
+  } finally {
+    saving.value = false
+  }
+}
+
+function onAddOfficialFromSearch(): void {
+  const first = officialSearchResults.value[0]
+  if (first) void onAddOfficial(first.musicId, first.displayTitle || first.name)
+}
+
+/* ---------- Capa da coletânea (upload/remoção no editor) ---------- */
+
+const coverInput = ref<HTMLInputElement | null>(null)
+
+const selectedCollection = computed(
+  () => collections.value.find((c) => c.id === selectedCollectionId.value) ?? null,
+)
+
+async function onCoverFile(event: Event): Promise<void> {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = ''
+  if (!file || selectedCollectionId.value == null) return
+  saving.value = true
+  try {
+    const bytes = new Uint8Array(await file.arrayBuffer())
+    const uploaded = await uploadCustomFile(bytes, file.name, 'imagens')
+    if (!uploaded) {
+      notify('Falha no upload da capa')
+      return
+    }
+    const updated = await updateCustomCollection(selectedCollectionId.value, {
+      cover_url: uploaded.url,
+    })
+    if (!updated) {
+      notify('Falha ao salvar capa')
+      return
+    }
+    collections.value = collections.value.map((c) =>
+      c.id === selectedCollectionId.value ? updated : c,
+    )
+    notify('Capa atualizada')
+  } finally {
+    saving.value = false
+  }
+}
+
+async function onRemoveCover(): Promise<void> {
+  if (selectedCollectionId.value == null) return
+  saving.value = true
+  try {
+    const updated = await updateCustomCollection(selectedCollectionId.value, {
+      cover_url: null,
+    })
+    if (!updated) {
+      notify('Falha ao remover capa')
+      return
+    }
+    collections.value = collections.value.map((c) =>
+      c.id === selectedCollectionId.value ? updated : c,
+    )
+    notify('Capa removida')
+  } finally {
+    saving.value = false
+  }
+}
+
 async function onAddStanza(): Promise<void> {
   if (selectedMusicId.value == null) return
   saving.value = true
@@ -176,12 +281,17 @@ async function onSelectMusic(id: number): Promise<void> {
       const data = (await response.json()) as {
         name: string
         audio_url?: string | null
+        official_music_id?: number | null
         lyrics?: Array<{
           id_lyric: number
           lyric: string
           time: string
           image_url?: string | null
         }>
+      }
+      // Link p/ hino oficial: editor mostra aviso (edição de letra fica no hinário oficial)
+      if (typeof data.official_music_id === 'number' && data.official_music_id > 0) {
+        notify('Hino oficial vinculado — a letra/áudio são gerenciados no catálogo oficial')
       }
       musicName.value = data.name
       lyrics.value = (data.lyrics ?? []).map((row) => ({
@@ -525,9 +635,17 @@ function onSeekToStanza(index: number): void {
 
 /** Preview: entra em modo preview mostrando a estrofe ativa como no /media */
 const isPreviewMode = ref(false)
-const activeStanza = computed(() =>
-  isPreviewMode.value ? lyrics.value[activeStanzaIndex.value] ?? null : null,
-)
+const activeStanza = computed(() => {
+  if (!isPreviewMode.value) return null
+  const idx =
+    activeStanzaIndexOverride.value ??
+    (activeStanzaIndex.value >= 0
+      ? activeStanzaIndex.value
+      : lyrics.value.length > 0
+        ? 0
+        : -1)
+  return lyrics.value[idx] ?? null
+})
 
 function onTogglePreview(): void {
   isPreviewMode.value = !isPreviewMode.value
@@ -642,6 +760,48 @@ onMounted(async () => {
         <h2 class="editor__section-title">
           Coletâneas
         </h2>
+        <!-- Capa da coletânea selecionada (upload/remoção) -->
+        <div
+          v-if="selectedCollection"
+          class="editor__cover"
+        >
+          <button
+            type="button"
+            class="editor__cover-thumb"
+            :class="{ 'editor__cover-thumb--empty': !selectedCollection.coverUrl }"
+            :style="selectedCollection.coverUrl
+              ? { backgroundImage: `url(${customFileUrl(selectedCollection.coverUrl)})` }
+              : undefined"
+            title="Alterar capa da coletânea"
+            @click="coverInput?.click()"
+          >
+            <i
+              v-if="!selectedCollection.coverUrl"
+              class="ti ti-camera"
+              aria-hidden="true"
+            />
+          </button>
+          <button
+            v-if="selectedCollection.coverUrl"
+            type="button"
+            class="editor__btn editor__btn--danger editor__btn--icon"
+            title="Remover capa"
+            @click="onRemoveCover"
+          >
+            <i
+              class="ti ti-trash"
+              aria-hidden="true"
+            />
+          </button>
+          <input
+            ref="coverInput"
+            type="file"
+            accept="image/*"
+            class="editor__file-input"
+            aria-label="Alterar capa da coletânea"
+            @change="onCoverFile"
+          >
+        </div>
         <div class="editor__row">
           <input
             v-model="newCollectionName"
@@ -723,6 +883,57 @@ onMounted(async () => {
               />
             </button>
           </div>
+
+          <!-- Adicionar hino OFICIAL da API à coletânea (busca no catálogo) -->
+          <div class="editor__add-official">
+            <div class="editor__row">
+              <input
+                v-model="officialSearch"
+                type="text"
+                class="editor__input"
+                placeholder="Buscar hino oficial (nº ou nome)…"
+                @input="onOfficialSearchInput"
+                @keyup.enter="onAddOfficialFromSearch"
+              >
+              <button
+                type="button"
+                class="editor__btn"
+                :disabled="saving || officialSearchResults.length === 0"
+                title="Adicionar 1º resultado"
+                @click="onAddOfficialFromSearch"
+              >
+                <i
+                  class="ti ti-plus"
+                  aria-hidden="true"
+                />
+              </button>
+            </div>
+            <ul
+              v-if="officialSearchResults.length > 0"
+              class="editor__list editor__list--search"
+            >
+              <li
+                v-for="result in officialSearchResults"
+                :key="result.musicId"
+              >
+                <button
+                  type="button"
+                  class="editor__list-item editor__list-item--search"
+                  :disabled="saving"
+                  :title="`Adicionar “${result.name}” à coletânea`"
+                  @click="onAddOfficial(result.musicId, result.displayTitle || result.name)"
+                >
+                  <i
+                    class="ti ti-plus"
+                    aria-hidden="true"
+                  />
+                  <span class="editor__list-search-num">{{ result.track ?? '' }}</span>
+                  {{ result.name }}
+                </button>
+              </li>
+            </ul>
+          </div>
+
           <ul class="editor__list">
             <li
               v-for="music in musics"
@@ -734,6 +945,12 @@ onMounted(async () => {
                 :class="{ 'editor__list-item--active': music.id === selectedMusicId }"
                 @click="onSelectMusic(music.id)"
               >
+                <i
+                  v-if="music.officialMusicId"
+                  class="ti ti-book editor__official-badge"
+                  title="Hino oficial (gerenciado no catálogo)"
+                  aria-hidden="true"
+                />
                 {{ music.name }}
               </button>
             </li>
@@ -802,19 +1019,17 @@ onMounted(async () => {
             ficará disponível na próxima importação.
           </p>
 
-          <!-- Preview estilo /media: slide ativo em fullscreen simulado -->
+          <!-- Preview estilo /media: MediaSlideStage REAL (mesma estética do player) -->
           <div
             v-if="isPreviewMode && activeStanza"
             class="editor__preview"
           >
-            <div
-              class="editor__preview-slide"
-              :style="activeStanza.imageUrl
-                ? { backgroundImage: `url(${customFileUrl(activeStanza.imageUrl)})` }
-                : { backgroundColor: '#000' }"
-            >
-              <span class="editor__preview-text">{{ activeStanza.lyric }}</span>
-            </div>
+            <MediaSlideStage
+              :lyric="activeStanza.lyric"
+              :title="musicName || ''"
+              :image-url="activeStanza.imageUrl ? customFileUrl(activeStanza.imageUrl) : null"
+              :is-cover="false"
+            />
           </div>
 
           <ul
@@ -1371,25 +1586,80 @@ onMounted(async () => {
   overflow: hidden;
 }
 
-.editor__preview-slide {
+/* MediaSlideStage preenche o container do preview (estética idêntica à /media) */
+.editor__preview :deep(.media-slide-stage) {
   width: 100%;
   height: 100%;
+}
+
+/* Busca de hino oficial */
+.editor__cover {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.editor__cover-thumb {
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
+  border: 1px dashed var(--ds-color-outline, rgb(255 255 255 / 0.25));
+  border-radius: var(--ds-radius-md, 10px 0 10px 0);
+  background-size: cover;
+  background-position: center;
+  background-color: rgb(255 255 255 / 0.04);
+  color: rgb(255 255 255 / 0.55);
+  font-size: 1.4rem;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-size: cover;
-  background-position: center;
-  padding: 2rem;
+  transition: border-color 150ms ease, opacity 150ms ease;
+
+  &:hover {
+    border-color: var(--ds-color-primary, #2196f3);
+    opacity: 0.9;
+  }
 }
 
-.editor__preview-text {
-  max-width: 90%;
-  text-align: center;
-  color: #fff;
-  font-size: clamp(1.5rem, 4vw, 3rem);
-  font-weight: 600;
-  line-height: 1.3;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
-  white-space: pre-wrap;
+.editor__cover-thumb--empty {
+  border-style: dashed;
+}
+
+.editor__add-official {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.editor__list--search {
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid var(--ds-color-outline, rgb(255 255 255 / 0.12));
+  border-radius: var(--ds-radius-md, 10px 0 10px 0);
+  padding: 0.25rem;
+}
+
+.editor__list-item--search {
+  justify-content: flex-start;
+  text-align: left;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+}
+
+.editor__list-search-num {
+  flex-shrink: 0;
+  min-width: 1.6rem;
+  text-align: right;
+  opacity: 0.55;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.75rem;
+}
+
+.editor__official-badge {
+  flex-shrink: 0;
+  margin-right: 0.3rem;
+  color: var(--ds-color-primary, #2196f3);
+  opacity: 0.85;
 }
 </style>

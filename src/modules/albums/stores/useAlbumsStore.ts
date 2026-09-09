@@ -133,9 +133,14 @@ export const useAlbumsStore = defineStore('albums', () => {
           catalogKey: `custom_collection_${customId}`,
         }
         const musics = await listCustomMusics(customId)
+        // Faixa-link de hino oficial: musicId = id oficial (sem offset) —
+        // resolveMediaTrack despacha pro catálogo JSON; capa/duração vêm de lá.
         tracks.value = musics.map((music, index) => ({
-          musicId: toCustomMusicId(music.id),
-          name: music.name,
+          musicId:
+            music.officialMusicId != null
+              ? music.officialMusicId
+              : toCustomMusicId(music.id),
+          name: music.name ?? `Hino oficial #${music.officialMusicId ?? music.id}`,
           track: index + 1,
           durationLabel: formatCustomDuration(music.duration),
           hasInstrumental: false,
@@ -145,8 +150,11 @@ export const useAlbumsStore = defineStore('albums', () => {
         void enrichDurations(musics).then((enriched) => {
           if (!enriched || tracks.value.length !== musics.length) return
           tracks.value = musics.map((music, index) => ({
-            musicId: toCustomMusicId(music.id),
-            name: music.name,
+            musicId:
+              music.officialMusicId != null
+                ? music.officialMusicId
+                : toCustomMusicId(music.id),
+            name: music.name ?? `Hino oficial #${music.officialMusicId ?? music.id}`,
             track: index + 1,
             durationLabel: formatCustomDuration(music.duration),
             hasInstrumental: false,

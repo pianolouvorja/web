@@ -1,39 +1,20 @@
 <script setup lang="ts">
-import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import type { AlbumCollection } from '../types/albums'
 
-const props = defineProps<{
+defineProps<{
   collection: AlbumCollection
 }>()
 
 const emit = defineEmits<{
   open: []
-  changeCover?: [file: File]
-  removeCover?: []
 }>()
 
 const { t } = useI18n()
 
-const coverInput = ref<HTMLInputElement | null>(null)
-
 function onOpen() {
   emit('open')
-}
-
-/** Só coletâneas custom permitem trocar cover (álbuns oficiais são curados). */
-function onCoverClick(event: Event) {
-  if (!props.collection.isCustom) return
-  event.stopPropagation()
-  coverInput.value?.click()
-}
-
-async function onCoverFile(event: Event) {
-  const input = event.target as HTMLInputElement
-  const file = input.files?.[0]
-  input.value = ''
-  if (file) emit('changeCover', file)
 }
 </script>
 
@@ -46,9 +27,6 @@ async function onCoverFile(event: Event) {
           ? { backgroundImage: `url(${collection.coverUrl})` }
           : undefined
       "
-      :class="{ 'album-collection-card__cover--editable': collection.isCustom }"
-      :title="collection.isCustom ? t('albums.custom.changeCover') : undefined"
-      @click="onCoverClick"
     >
       <i
         v-if="!collection.coverUrl"
@@ -56,25 +34,6 @@ async function onCoverFile(event: Event) {
         :class="collection.kind === 'hymnal' ? 'ti-book' : 'ti-disc'"
         aria-hidden="true"
       />
-
-      <button
-        v-if="collection.isCustom && collection.coverUrl"
-        type="button"
-        class="album-collection-card__cover-edit album-collection-card__cover-edit--btn"
-        :aria-label="t('albums.custom.removeCover')"
-        :title="t('albums.custom.removeCover')"
-        @click.stop="emit('removeCover')"
-      >
-        <i class="ti ti-trash" />
-      </button>
-
-      <span
-        v-if="collection.isCustom"
-        class="album-collection-card__cover-edit"
-        aria-hidden="true"
-      >
-        <i class="ti ti-camera" />
-      </span>
 
       <div class="album-collection-card__hover">
         <button
@@ -91,16 +50,6 @@ async function onCoverFile(event: Event) {
           </span>
         </button>
       </div>
-
-      <input
-        v-if="collection.isCustom"
-        ref="coverInput"
-        type="file"
-        accept="image/*"
-        class="album-collection-card__cover-input"
-        :aria-label="t('albums.custom.changeCover')"
-        @change="onCoverFile"
-      >
     </div>
 
     <div class="album-collection-card__body">

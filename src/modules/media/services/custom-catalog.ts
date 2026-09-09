@@ -74,6 +74,7 @@ type CustomMusicRow = {
   image_url?: string | null
   image_position?: string | number | null
   duration?: number | null
+  official_music_id?: number | null
   lyrics?: CustomLyricRow[]
 }
 
@@ -166,6 +167,18 @@ export async function loadCustomMusicTrack(
     if (!response.ok) return null
     const row = (await response.json()) as CustomMusicRow
     if (!row || !row.name) return null
+
+    // Link p/ hino oficial: delega ao catálogo oficial (letra, áudio, capa,
+    // instrumental — tudo de lá). Mantém o id custom p/ fila/estado do player.
+    const officialId =
+      typeof row.official_music_id === 'number' && row.official_music_id > 0
+        ? row.official_music_id
+        : null
+    if (officialId != null) {
+      const official = await loadMediaTrack(officialId)
+      if (official) return { ...official, id: row.id_music ?? musicId }
+      return null
+    }
 
     const lyrics = mapCustomLyrics(row.lyrics ?? [])
     // Capa: image_url da música; fallback = bg do primeiro slide que tiver imagem
@@ -266,6 +279,8 @@ export type CustomMusicSummary = {
   hasAudio: boolean
   hasImage: boolean
   audioUrl?: string | null
+  /** Link p/ hino oficial da API (null = música própria). */
+  officialMusicId?: number | null
 }
 
 export async function listCustomMusics(
@@ -283,15 +298,20 @@ export async function listCustomMusics(
         duration: number | null
         audio_url?: string | null
         image_url?: string | null
+        official_music_id?: number | null
       }>
     }
     const rows = (json.data ?? []).map((row) => ({
       id: row.id_music,
       name: row.name,
       duration: row.duration ?? null,
-      hasAudio: Boolean(row.audio_url),
+      hasAudio: Boolean(row.audio_url) || Boolean(row.official_music_id),
       hasImage: Boolean(row.image_url),
       audioUrl: asNullableString(row.audio_url),
+      officialMusicId:
+        typeof row.official_music_id === 'number' && row.official_music_id > 0
+          ? row.official_music_id
+          : null,
     }))
     // API não tem duração (null no banco): ler metadata do MP3 no cliente
     // (request range — só o header do arquivo). Não bloqueia a lista.
@@ -394,7 +414,7 @@ export async function createCustomCollection(
 
 export async function createCustomMusic(
   collectionId: number,
-  input: { name: string; lyric?: string; auxiliary_lyric?: string },
+  input: { name?: string; lyric?: string; auxiliary_lyric?: string },
 ): Promise<{ id: number } | null> {
   try {
     const response = await fetch(
@@ -403,6 +423,35 @@ export async function createCustomMusic(
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(input),
+      },
+    )
+    if (!response.ok) return null
+    const json = (await response.json()) as { id_music: number }
+    return { id: json.id_music }
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Adiciona um hino OFICIAL da API (tabela musics) a uma coletânea custom.
+ * Cria apenas um link (official_music_id) — playback/letra resolvem pelo
+ * catálogo oficial via resolveMediaTrack. Retorna o id custom criado.
+ */
+export async function addOfficialMusicToCollection(
+  collectionId: number,
+  officialMusicId: number,
+  name?: string,
+): Promise<{ id: number } | null> {
+  try {
+    const response = await fetch(
+      `${customBaseUrl()}/collections/${collectionId}/musics`,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        // name opcional: o catálogo oficial (json_db remoto) é a fonte do nome —
+        // o SQLite local pode não ter o hino.
+        body: JSON.stringify({ official_music_id: officialMusicId, name }),
       },
     )
     if (!response.ok) return null
