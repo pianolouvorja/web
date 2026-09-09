@@ -4,6 +4,11 @@ export type MediaUrlResolveResult =
 
 export function resolveRemoteFileUrl(urlPath: string): string {
   const cleanPath = urlPath.startsWith('/') ? urlPath.slice(1) : urlPath
+  // Dev: proxy same-origin /tunnel-file (VITE_DEV_MEDIA_PROXY). Requisições de
+  // mídia contra URLs absolutas do túnel Cloudflare falham no browser
+  // (fetch 200 ok, mas Audio/Image disparam onerror); via proxy renderiza.
+  const proxyTarget = import.meta.env.VITE_DEV_MEDIA_PROXY
+  if (proxyTarget) return `/tunnel-file/${cleanPath}`
   const base = import.meta.env.VITE_URL_FILES ?? 'https://api.louvorja.com.br/file'
   // Base relativa (ex: /tunnel-file no dev via proxy): absolutizar contra a
   // origem atual. O runtime publicado via relay é consumido por janelas em

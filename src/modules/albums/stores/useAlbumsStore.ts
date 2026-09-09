@@ -20,6 +20,7 @@ import {
   findCollectionById,
   loadAlbumCategories,
 } from '../services/album-catalog'
+import { customFileUrl } from '@modules/media/services/custom-catalog'
 import { formatCatalogDuration } from '../services/album-tracks'
 import {
   filterAlbumMusicIndex,
@@ -125,7 +126,9 @@ export const useAlbumsStore = defineStore('albums', () => {
           kind: 'album',
           name: summary.name,
           subtitle: summary.description ?? '',
-          coverUrl: null,
+          coverUrl: summary.coverUrl
+            ? customFileUrl(summary.coverUrl)
+            : null,
           trackCount: summary.musicsCount,
           catalogKey: `custom_collection_${customId}`,
         }

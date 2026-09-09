@@ -171,6 +171,16 @@ async function onChangeCustomCover(collectionId: number, file: File): Promise<vo
   )
 }
 
+/** Remove o cover da coletânea custom (cover_url = null). */
+async function onRemoveCustomCover(collectionId: number): Promise<void> {
+  const customId = fromCustomCollectionId(collectionId)
+  const updated = await updateCustomCollection(customId, { cover_url: null })
+  if (!updated) return
+  customCollections.value = customCollections.value.map((c) =>
+    c.id === customId ? updated : c,
+  )
+}
+
 // Modais compactos (Playlists / Minhas Coletâneas)
 const playlistsModalOpen = ref(false)
 const customModalOpen = ref(false)
@@ -789,6 +799,7 @@ async function runAction(
               :collection="collection"
               @open="openCustomCollection(fromCustomCollectionId(Number(collection.id)))"
               @change-cover="(file: File) => onChangeCustomCover(Number(collection.id), file)"
+              @remove-cover="onRemoveCustomCover(Number(collection.id))"
             />
           </div>
         </GlassCard>

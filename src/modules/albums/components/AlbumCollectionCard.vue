@@ -11,6 +11,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   open: []
   changeCover?: [file: File]
+  removeCover?: []
 }>()
 
 const { t } = useI18n()
@@ -55,6 +56,17 @@ async function onCoverFile(event: Event) {
         :class="collection.kind === 'hymnal' ? 'ti-book' : 'ti-disc'"
         aria-hidden="true"
       />
+
+      <button
+        v-if="collection.isCustom && collection.coverUrl"
+        type="button"
+        class="album-collection-card__cover-edit album-collection-card__cover-edit--btn"
+        :aria-label="t('albums.custom.removeCover')"
+        :title="t('albums.custom.removeCover')"
+        @click.stop="emit('removeCover')"
+      >
+        <i class="ti ti-trash" />
+      </button>
 
       <span
         v-if="collection.isCustom"
@@ -174,6 +186,17 @@ async function onCoverFile(event: Event) {
   opacity: 0;
   transition: opacity 0.2s ease;
   pointer-events: none;
+
+  &--btn {
+    right: 2.75rem;
+    pointer-events: auto;
+    cursor: pointer;
+    border: none;
+
+    &:hover {
+      background: rgb(180 40 40 / 80%);
+    }
+  }
 }
 
 .album-collection-card__cover-input {
