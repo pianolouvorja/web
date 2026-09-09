@@ -1126,7 +1126,7 @@ onMounted(async () => {
             </h2>
           </div>
 
-          <!-- Faixa superior: player + preview SEMPRE juntos (tocar e ver a letra avançando) -->
+          <!-- Faixa superior: slide ao centro, player embutido EMBAIXO (como o pill da /media) -->
           <div class="editor__stage-row">
             <div class="editor__stage-left">
               <!-- Preview estilo /media: MediaSlideStage REAL (mesma estética do player) -->
@@ -1151,14 +1151,13 @@ onMounted(async () => {
                 />
                 <span>Adicione a 1ª estrofe para ver o slide aqui</span>
               </div>
-            </div>
 
-            <aside class="editor__controls">
-              <!-- Player de áudio -->
+              <!-- Player embutido sob o slide (pill) -->
               <div
                 v-if="audioSrc"
                 class="editor__player"
               >
+                <span class="editor__player-time">{{ timeLabelOf(currentTimeMs) }}</span>
                 <audio
                   ref="audioEl"
                   class="editor__audio"
@@ -1169,20 +1168,15 @@ onMounted(async () => {
                   @pause="onAudioPause"
                   @timeupdate="onAudioTimeUpdate"
                 />
-                <span class="editor__player-time">{{ timeLabelOf(currentTimeMs) }}</span>
-                <p class="editor__hint editor__hint--compact">
-                  Dê play e clique em <strong>Marcar</strong> na estrofe certa — o timing é
-                  preenchido automaticamente.
-                </p>
               </div>
               <p
                 v-else
-                class="editor__hint"
+                class="editor__hint editor__hint--compact"
               >
                 Esta música não tem áudio vinculado. Importe um .slja com áudio ou o áudio
                 ficará disponível na próxima importação.
               </p>
-            </aside>
+            </div>
           </div>
 
           <!-- Estrofes na MESMA visão: tocar, marcar, adicionar — tudo junto -->
@@ -1881,16 +1875,11 @@ onMounted(async () => {
   gap: 0.5rem;
 }
 
-.editor__player {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 0.375rem;
-  padding: 0.625rem 0.875rem;
-  background: color-mix(in srgb, var(--ds-color-surface) 60%, transparent);
-  border: 1px solid var(--ds-color-outline-strong);
-  border-radius: var(--ds-radius-md, 12px 0 12px 0);
-  margin-bottom: 1rem;
+.editor__player-time {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.8rem;
+  color: var(--ds-color-on-surface-variant);
+  font-family: monospace;
 }
 
 .editor__audio {
@@ -1899,14 +1888,6 @@ onMounted(async () => {
   flex: 0 0 auto;
   width: 100%;
   height: 36px;
-}
-
-.editor__player-time {
-  font-variant-numeric: tabular-nums;
-  font-family: monospace;
-  font-size: 0.8rem;
-  color: var(--ds-color-on-surface-variant);
-  min-width: 52px;
 }
 
 .editor__btn--active {
@@ -1972,16 +1953,22 @@ onMounted(async () => {
   overflow: hidden;
 }
 
-/* Faixa topo: preview (slide vivo) + controles (player) lado a lado */
+/* Faixa topo: slide + player embutido em coluna (como /media) */
+.editor__hint--compact {
+  font-size: 0.8rem;
+  opacity: 0.75;
+  margin: 0;
+  line-height: 1.4;
+}
+
 .editor__stage-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1.6fr) minmax(260px, 1fr);
-  gap: var(--ds-spacing-4, 1rem);
-  align-items: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-width: 0;
 }
 
 .editor__stage-left {
-  min-height: 320px;
   min-width: 0;
 }
 
@@ -2001,18 +1988,22 @@ onMounted(async () => {
   }
 }
 
-.editor__controls {
+/* Player-pill sob o slide: tempo à esquerda + áudio esticando (como /media) */
+.editor__player {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  min-width: 0;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.875rem;
+  background: rgb(12 12 12 / 0.92);
+  border: 1px solid var(--ds-color-outline-strong);
+  border-radius: var(--ds-radius-full, 9999px);
 }
 
-.editor__hint--compact {
+.editor__player-time {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
   font-size: 0.8rem;
-  opacity: 0.75;
-  margin: 0;
-  line-height: 1.4;
+  color: var(--ds-color-on-surface-variant);
 }
 
 /* MediaSlideStage preenche o container do preview (estética idêntica à /media) */
