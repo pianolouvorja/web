@@ -125,6 +125,33 @@ function customBaseUrl(): string {
 }
 
 /**
+ * Formata duração da API para m:ss.
+ * API pode retornar: null, segundos (number), "mm:ss" ou "hh:mm:ss".
+ */
+function formatDurationLabel(value: unknown): string {
+  const raw = asNullableString(value)
+  if (raw) {
+    // Já vem formatado ("3:45" / "00:03:45") — só limpar horas vazias
+    const parts = raw.split(':').map((p) => p.padStart(2, '0'))
+    if (parts.length === 3 && parts[0] === '00') return parts.slice(1).join(':')
+    if (parts.length >= 2) return raw
+    const secs = Number(raw)
+    if (Number.isFinite(secs) && secs > 0) return formatSeconds(secs)
+    return '0:00'
+  }
+  if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
+    return formatSeconds(value)
+  }
+  return '0:00'
+}
+
+function formatSeconds(total: number): string {
+  const m = Math.floor(total / 60)
+  const s = Math.floor(total % 60)
+  return `${m}:${String(s).padStart(2, '0')}`
+}
+
+/**
  * Carrega uma música customizada pela API e mapeia para MediaTrackRecord.
  * Retorna null se a API não responder ou a música não existir.
  */
@@ -139,17 +166,24 @@ export async function loadCustomMusicTrack(
     const row = (await response.json()) as CustomMusicRow
     if (!row || !row.name) return null
 
+    const lyrics = mapCustomLyrics(row.lyrics ?? [])
+    // Capa: image_url da música; fallback = bg do primeiro slide que tiver imagem
+    const coverUrl =
+      asNullableString(row.image_url) ??
+      lyrics.find((slide) => slide.imageUrl)?.imageUrl ??
+      null
+
     return {
       id: row.id_music ?? musicId,
       name: row.name,
-      durationLabel: row.duration ? `${row.duration}s` : '0:00',
+      durationLabel: formatDurationLabel(row.duration),
       audioUrl: asNullableString(row.audio_url),
       instrumentalUrl: asNullableString(row.instrumental_url),
-      coverUrl: asNullableString(row.image_url),
+      coverUrl,
       coverPosition: row.image_position != null ? String(row.image_position) : null,
       albums: [],
       categories: ['Minhas Coletâneas'],
-      lyrics: mapCustomLyrics(row.lyrics ?? []),
+      lyrics,
     } satisfies MediaTrackRecord
   } catch {
     return null

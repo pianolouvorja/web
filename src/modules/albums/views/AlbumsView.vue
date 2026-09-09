@@ -128,6 +128,7 @@ function addPlaylist() {
 
 // --- Minhas Coletâneas (custom, via API /v1/custom) ---
 import {
+  createCustomCollection,
   listCustomCollections,
   type CustomCollectionSummary,
   toCustomCollectionId,
@@ -140,6 +141,22 @@ const customCollectionsLoaded = ref(false)
 // Modais compactos (Playlists / Minhas Coletâneas)
 const playlistsModalOpen = ref(false)
 const customModalOpen = ref(false)
+
+// Criação de coletânea custom
+const newCustomCollectionName = ref('')
+
+async function onCreateCustomCollection(): Promise<void> {
+  const name = newCustomCollectionName.value.trim()
+  if (!name) return
+  const created = await createCustomCollection(name)
+  newCustomCollectionName.value = ''
+  customCollectionsLoaded.value = false
+  await hydrateCustomCollections()
+  if (created) {
+    const routeId = toCustomCollectionId(created.id)
+    openCustomCollection(routeId)
+  }
+}
 
 async function hydrateCustomCollections() {
   if (customCollectionsLoaded.value) return
@@ -323,39 +340,35 @@ async function runAction(
             />
           </button>
         </label>
+        <button
+          type="button"
+          class="albums-view__toolbar-btn"
+          :aria-label="t('albums.playlists.title')"
+          @click="playlistsModalOpen = true"
+        >
+          <i class="ti ti-playlist" aria-hidden="true" />
+          {{ t('albums.playlists.title') }}
+          <span
+            v-if="playlists.length > 0"
+            class="albums-view__toolbar-count"
+          >{{ playlists.length }}</span>
+        </button>
+        <button
+          type="button"
+          class="albums-view__toolbar-btn"
+          :aria-label="t('albums.custom.title')"
+          @click="customModalOpen = true"
+        >
+          <i class="ti ti-folder" aria-hidden="true" />
+          {{ t('albums.custom.title') }}
+          <span
+            v-if="customCollections.length > 0"
+            class="albums-view__toolbar-count"
+          >{{ customCollections.length }}</span>
+        </button>
       </div>
       <PopupRouteSelect module="media" compact />
     </header>
-
-    <!-- Toolbar compacta: Playlists e Minhas Coletâneas viram modais -->
-    <div class="albums-view__toolbar">
-      <button
-        type="button"
-        class="albums-view__toolbar-btn"
-        :aria-label="t('albums.playlists.title')"
-        @click="playlistsModalOpen = true"
-      >
-        <i class="ti ti-playlist" aria-hidden="true" />
-        {{ t('albums.playlists.title') }}
-        <span
-          v-if="playlists.length > 0"
-          class="albums-view__toolbar-count"
-        >{{ playlists.length }}</span>
-      </button>
-      <button
-        type="button"
-        class="albums-view__toolbar-btn"
-        :aria-label="t('albums.custom.title')"
-        @click="customModalOpen = true"
-      >
-        <i class="ti ti-folder" aria-hidden="true" />
-        {{ t('albums.custom.title') }}
-        <span
-          v-if="customCollections.length > 0"
-          class="albums-view__toolbar-count"
-        >{{ customCollections.length }}</span>
-      </button>
-    </div>
 
     <!-- Modal: Playlists -->
     <Teleport to="body">
@@ -595,6 +608,18 @@ async function runAction(
               <i class="ti ti-chevron-right" aria-hidden="true" />
             </button>
           </div>
+
+          <form class="albums-view__modal-form" @submit.prevent="onCreateCustomCollection">
+            <input
+              v-model="newCustomCollectionName"
+              required
+              :placeholder="t('albums.custom.newPlaceholder')"
+              :aria-label="t('albums.custom.newPlaceholder')"
+            >
+            <button type="submit">
+              <i class="ti ti-plus" aria-hidden="true" /> {{ t('albums.custom.create') }}
+            </button>
+          </form>
 
           <footer class="albums-view__modal-footer">
             <button
@@ -1070,12 +1095,6 @@ async function runAction(
 }
 
 /* --- Toolbar compacta (substitui os cards grandes de Playlists/Coletâneas) --- */
-.albums-view__toolbar {
-  display: flex;
-  gap: 0.6rem;
-  flex-wrap: wrap;
-}
-
 .albums-view__toolbar-btn {
   display: inline-flex;
   align-items: center;

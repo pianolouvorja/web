@@ -68,6 +68,8 @@ export default {
       open: 'Abrir coletânea {name}',
       trackCount: '{count} faixa(s)',
       empty: 'Nenhuma coletânea criada ainda. Importe um .slja no editor.',
+      newPlaceholder: 'Nome da nova coletânea...',
+      create: 'Criar',
     },
   },
 }

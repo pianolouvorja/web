@@ -62,11 +62,13 @@ export default {
       addedTracks: '{count} pista(s) añadida(s)'
     },
     custom: {
-      title: 'Mis Colecciones',
-      openEditor: 'Abrir editor',
-      open: 'Abrir colección {name}',
-      trackCount: '{count} pista(s)',
-      empty: 'Aún no hay colecciones. Importa un .slja en el editor.'
-    }
+          title: 'Mis Colecciones',
+          openEditor: 'Abrir editor',
+          open: 'Abrir colección {name}',
+          trackCount: '{count} pista(s)',
+          empty: 'Aún no hay colecciones. Importa un .slja en el editor.',
+          newPlaceholder: 'Nombre de la nueva colección...',
+          create: 'Crear',
+        },
   }
 }
