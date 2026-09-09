@@ -2,7 +2,7 @@ export type MediaUrlResolveResult =
   | { ok: true; url: string; source: 'local' | 'remote' }
   | { ok: false; reason: 'missing' }
 
-function resolveRemoteFileUrl(urlPath: string): string {
+export function resolveRemoteFileUrl(urlPath: string): string {
   const cleanPath = urlPath.startsWith('/') ? urlPath.slice(1) : urlPath
   const base = import.meta.env.VITE_URL_FILES ?? 'https://api.louvorja.com.br/file'
   // Base relativa (ex: /tunnel-file no dev via proxy): absolutizar contra a

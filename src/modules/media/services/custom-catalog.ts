@@ -4,6 +4,7 @@ import type {
 } from '../types/media'
 
 import { loadMediaTrack } from './media-catalog'
+import { resolveRemoteFileUrl } from './media-audio'
 
 /**
  * Catálogo de músicas customizadas (Minhas Coletâneas) via API /v1/custom
@@ -230,6 +231,7 @@ export type CustomMusicSummary = {
   duration: number | null
   hasAudio: boolean
   hasImage: boolean
+  audioUrl?: string | null
 }
 
 export async function listCustomMusics(
@@ -249,16 +251,85 @@ export async function listCustomMusics(
         image_url?: string | null
       }>
     }
-    return (json.data ?? []).map((row) => ({
+    const rows = (json.data ?? []).map((row) => ({
       id: row.id_music,
       name: row.name,
       duration: row.duration ?? null,
       hasAudio: Boolean(row.audio_url),
       hasImage: Boolean(row.image_url),
+      audioUrl: asNullableString(row.audio_url),
     }))
+    // API não tem duração (null no banco): ler metadata do MP3 no cliente
+    // (request range — só o header do arquivo). Não bloqueia a lista.
+    void enrichDurations(rows)
+    return rows
   } catch {
     return []
   }
+}
+
+/**
+ * Preenche duration (segundos) lendo metadata do áudio em background.
+ * Retorna true quando terminou (para o caller re-renderizar).
+ */
+export async function enrichDurations(
+  rows: Array<{ duration: number | null; hasAudio: boolean; audioUrl?: string | null }>,
+): Promise<boolean> {
+  const CONCURRENCY = 4
+  const TIMEOUT_MS = 8000
+  const pending = rows.filter((row) => row.duration == null && row.hasAudio)
+  if (pending.length === 0) return false
+  let cursor = 0
+
+  async function worker(): Promise<void> {
+    while (cursor < pending.length) {
+      const row = pending[cursor++]
+      const seconds = await probeAudioDuration(row.audioUrl, TIMEOUT_MS).catch(
+        () => null,
+      )
+      if (seconds != null) row.duration = seconds
+    }
+  }
+
+  await Promise.all(
+    Array.from({ length: Math.min(CONCURRENCY, pending.length) }, worker),
+  )
+  return true
+}
+
+/** Duração do arquivo de áudio via preload=metadata (request range). */
+export function probeAudioDuration(
+  audioUrl: string | null | undefined,
+  timeoutMs: number,
+): Promise<number | null> {
+  return new Promise((resolve) => {
+    const src = audioUrl ? resolveRemoteFileUrl(audioUrl) : null
+    if (!src) {
+      resolve(null)
+      return
+    }
+    const audio = new Audio()
+    audio.preload = 'metadata'
+    const done = (value: number | null) => {
+      clearTimeout(timer)
+      audio.removeAttribute('src')
+      audio.load()
+      resolve(value)
+    }
+    const timer = setTimeout(() => done(null), timeoutMs)
+    audio.addEventListener(
+      'loadedmetadata',
+      () =>
+        done(
+          Number.isFinite(audio.duration) && audio.duration > 0
+            ? audio.duration
+            : null,
+        ),
+      { once: true },
+    )
+    audio.addEventListener('error', () => done(null), { once: true })
+    audio.src = src
+  })
 }
 
 /** CRUD mínimo para o editor web. */

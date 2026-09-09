@@ -8,12 +8,13 @@ import {
   fromCustomCollectionId,
   fromCustomMusicId,
   isCustomCollectionId,
-  isCustomMusicId,
-  listCustomCollections,
-  listCustomMusics,
-  loadCustomMusicTrack,
-  toCustomMusicId,
-} from '@modules/media/services/custom-catalog'
+    isCustomMusicId,
+    enrichDurations,
+    listCustomCollections,
+    listCustomMusics,
+    loadCustomMusicTrack,
+    toCustomMusicId,
+  } from '@modules/media/services/custom-catalog'
 
 import {
   findCollectionById,
@@ -136,6 +137,18 @@ export const useAlbumsStore = defineStore('albums', () => {
           durationLabel: formatCustomDuration(music.duration),
           hasInstrumental: false,
         }))
+        // API não traz duração: probeAudioDuration lê metadata do MP3 em bg.
+        // Quando completar, re-atribui tracks p/ Vue re-renderizar com m:ss.
+        void enrichDurations(musics).then((enriched) => {
+          if (!enriched || tracks.value.length !== musics.length) return
+          tracks.value = musics.map((music, index) => ({
+            musicId: toCustomMusicId(music.id),
+            name: music.name,
+            track: index + 1,
+            durationLabel: formatCustomDuration(music.duration),
+            hasInstrumental: false,
+          }))
+        })
         if (tracks.value.length === 0) {
           lastErrorKey.value = 'albums.messages.tracksEmpty'
         }
