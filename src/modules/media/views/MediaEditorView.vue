@@ -76,12 +76,29 @@ function notify(message: string): void {
 const isErrorStatus = computed(() =>
   /falha|erro|indispon|não foi possível/i.test(statusMessage.value),
 )
+
+/** Progresso 0..1 da estrofe dentro do intervalo até a próxima (barra estilo /media). */
+function stanzaProgress(index: number): number {
+  if (index !== activeStanzaIndex.value || !isPlaying.value) return 0
+  const start = timeToMs(lyrics.value[index]!.time)
+  const next = lyrics.value[index + 1]
+  const end = next ? timeToMs(next.time) : start + 1
+  if (end <= start) return 0
+  return Math.min(1, Math.max(0, (currentTimeMs.value - start) / (end - start)))
+}
+
 const newCollectionName = ref('')
 const newMusicName = ref('')
 /** Assets de imagem upados no último import .slja (path → url) */
 const uploadedAssets = ref<Array<{ path: string; url: string; idFile: number }>>([])
 
 const hasSelection = computed(() => selectedMusicId.value != null)
+
+/* ---------- Aside de coletâneas colapsável ---------- */
+const asideCollapsed = ref(false)
+
+/* ---------- Painel "Letra" (estilo playlist da /media) ---------- */
+const lyricPaneOpen = ref(true)
 
 async function refreshCollections(): Promise<void> {
   loading.value = true
@@ -687,12 +704,6 @@ function onAudioTimeUpdate(): void {
   if (!el) return
   currentTimeMs.value = el.currentTime * 1000
   syncStanzaHighlight()
-  // Auto-scroll: mantém a estrofe ativa visível enquanto a letra avança
-  if (isPlaying.value && activeStanzaIndex.value >= 0) {
-    document
-      .querySelectorAll('.editor__stanza')
-      [activeStanzaIndex.value]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
-  }
 }
 
 /** Marca o timing da estrofe com o instante atual do áudio (sync manual) */
@@ -832,8 +843,24 @@ onMounted(async () => {
       </div>
     </v-snackbar>
 
-    <div class="editor__body">
-      <aside class="editor__aside">
+    <div class="editor__body" :class="{ 'editor__body--aside-collapsed': asideCollapsed }">
+      <button
+        type="button"
+        class="editor__aside-toggle"
+        :title="asideCollapsed ? 'Mostrar coletâneas' : 'Ocultar coletâneas'"
+        @click="asideCollapsed = !asideCollapsed"
+      >
+        <i
+          class="ti"
+          :class="asideCollapsed ? 'ti-chevron-right' : 'ti-chevron-left'"
+          aria-hidden="true"
+        />
+      </button>
+      <aside
+        class="editor__aside"
+        :class="{ 'editor__aside--collapsed': asideCollapsed }"
+        v-show="!asideCollapsed"
+      >
         <h2 class="editor__section-title">
           Coletâneas
         </h2>
@@ -1272,6 +1299,56 @@ onMounted(async () => {
           Selecione uma música à esquerda para editar as estrofes, timing e background.
         </p>
       </div>
+
+      <!-- Painel "Letra" (estilo playlist da /media): a letra PRONTA, é ela que anda -->
+      <aside
+        v-if="hasSelection && lyricPaneOpen"
+        class="editor__lyric-pane"
+      >
+        <div class="editor__lyric-pane-head">
+          <h2 class="editor__lyric-pane-title">Letra</h2>
+          <button
+            type="button"
+            class="editor__lyric-pane-toggle"
+            title="Ocultar letra"
+            @click="lyricPaneOpen = false"
+          >
+            <i
+              class="ti ti-chevron-right"
+              aria-hidden="true"
+            />
+          </button>
+        </div>
+        <ul class="editor__lyric-list">
+          <li
+            v-for="(stanza, index) in lyrics"
+            :key="`lp-${stanza.id ?? index}`"
+          >
+            <button
+              type="button"
+              class="editor__lyric-item"
+              :class="{ 'editor__lyric-item--active': index === activeStanzaIndex && isPlaying }"
+              :style="{ '--slide-progress': stanzaProgress(index) }"
+              @click="onSeekToStanza(index)"
+            >
+              <span class="editor__lyric-index">{{ index + 1 }}</span>
+              <span class="editor__lyric-text">{{ stanza.lyric }}</span>
+            </button>
+          </li>
+        </ul>
+      </aside>
+      <button
+        v-else-if="hasSelection"
+        type="button"
+        class="editor__lyric-pane-toggle editor__lyric-pane-toggle--floating"
+        title="Mostrar letra"
+        @click="lyricPaneOpen = true"
+      >
+        <i
+          class="ti ti-chevron-left"
+          aria-hidden="true"
+        />
+      </button>
     </div>
   </section>
 </template>
@@ -1346,6 +1423,128 @@ onMounted(async () => {
   min-width: 0;
 }
 
+/* Painel "Letra" — espelho da playlist da /media: é a LETRA que anda, estrofes fixas */
+.editor__lyric-pane {
+  width: 17rem;
+  flex-shrink: 0;
+  min-height: 0;
+  overflow-y: auto;
+  background: rgb(12 12 12 / 0.92);
+  border: 1px solid var(--ds-color-outline-strong);
+  border-radius: var(--ds-radius-lg, 16px 0 16px 0);
+  padding: 1rem 0.75rem;
+}
+
+.editor__lyric-pane-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.editor__lyric-pane-title {
+  margin: 0;
+  padding: 0 0.4rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 0.55);
+}
+
+.editor__lyric-pane-toggle {
+  width: 1.6rem;
+  height: 1.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: rgb(255 255 255 / 0.45);
+  cursor: pointer;
+
+  &:hover {
+    background: rgb(255 255 255 / 0.08);
+    color: #fff;
+  }
+}
+
+.editor__lyric-pane-toggle--floating {
+  align-self: flex-start;
+  width: 1.8rem;
+  height: 2.4rem;
+  border: 1px solid var(--ds-color-outline-strong);
+  border-radius: 10px 0 10px 0;
+  background: color-mix(in srgb, var(--ds-color-surface-card) 60%, transparent);
+}
+
+.editor__lyric-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.editor__lyric-item {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  border: none;
+  border-radius: 0.65rem 0 0.65rem 0;
+  padding: 0.55rem 0.5rem;
+  background: transparent;
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+
+  /* Barra de progresso da estrofe ativa — igual playlist da /media */
+  &::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    border-radius: inherit;
+    background: color-mix(
+      in srgb,
+      var(--ds-color-primary, #2196f3) 34%,
+      transparent
+    );
+    transform: scaleX(var(--slide-progress, 0));
+    transform-origin: left center;
+    transition: transform 180ms linear;
+    pointer-events: none;
+  }
+
+  &:hover {
+    background: rgb(255 255 255 / 0.06);
+  }
+
+  &--active {
+    background: rgb(255 255 255 / 0.055);
+  }
+}
+
+.editor__lyric-index {
+  flex-shrink: 0;
+  width: 1.5rem;
+  font-size: 0.75rem;
+  opacity: 0.65;
+  font-variant-numeric: tabular-nums;
+}
+
+.editor__lyric-text {
+  font-size: 0.82rem;
+  line-height: 1.35;
+  white-space: pre-line;
+  word-break: break-word;
+}
+
 .editor__file-input {
   display: none;
 }
@@ -1355,6 +1554,29 @@ onMounted(async () => {
   gap: var(--ds-spacing-4, 1rem);
   flex: 1;
   min-height: 0;
+}
+
+/* Toggle de colapso do aside (fina, lateral) */
+.editor__aside-toggle {
+  flex-shrink: 0;
+  align-self: flex-start;
+  width: 1.4rem;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--ds-color-outline-strong);
+  border-radius: 0 10px 10px 0;
+  background: color-mix(in srgb, var(--ds-color-surface-card) 60%, transparent);
+  color: var(--ds-color-on-surface-variant);
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 150ms ease;
+
+  &:hover {
+    opacity: 1;
+    color: var(--ds-color-primary);
+  }
 }
 
 .editor__aside {
