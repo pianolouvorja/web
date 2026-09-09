@@ -884,15 +884,31 @@ onMounted(async () => {
                 placeholder="Letra da estrofe…"
                 @dblclick="onSeekToStanza(index)"
               />
-              <label class="editor__bg-label">
-                Background (URL da imagem)
-                <input
-                  v-model="stanza.imageUrl"
-                  type="url"
-                  class="editor__input"
-                  placeholder="https://…/imagem.jpg"
+              <div class="editor__stanza-media">
+                <div
+                  class="editor__stanza-thumb"
+                  :style="
+                    stanza.imageUrl
+                      ? { backgroundImage: `url(${customFileUrl(stanza.imageUrl)})` }
+                      : undefined
+                  "
+                  aria-hidden="true"
                 >
-              </label>
+                  <i
+                    v-if="!stanza.imageUrl"
+                    class="ti ti-photo"
+                  />
+                </div>
+                <label class="editor__bg-label">
+                  Background (URL da imagem)
+                  <input
+                    v-model="stanza.imageUrl"
+                    type="url"
+                    class="editor__input"
+                    placeholder="https://…/imagem.jpg"
+                  >
+                </label>
+              </div>
             </li>
           </ul>
           <button
@@ -1187,6 +1203,39 @@ onMounted(async () => {
   gap: 0.35rem;
   font-size: 0.75rem;
   color: var(--ds-color-on-surface-variant);
+}
+
+/* Thumb do background ao lado da estrofe (editor) */
+.editor__stanza-media {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.editor__stanza-thumb {
+  flex: 0 0 96px;
+  height: 54px;
+  border-radius: var(--ds-radius-sm, 8px);
+  background-size: cover;
+  background-position: center;
+  background-color: color-mix(in srgb, var(--ds-color-surface) 60%, transparent);
+  border: 1px solid var(--ds-color-outline);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: var(--ds-color-on-surface-variant);
+}
+
+@media (max-width: 900px) {
+  .editor__stanza-media {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .editor__stanza-thumb {
+    flex: none;
+    height: 80px;
+  }
 }
 
 .editor__bg-label {
