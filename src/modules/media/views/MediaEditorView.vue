@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 import {
   createCustomCollection,
@@ -41,6 +41,7 @@ type EditorMusic = {
 }
 
 const router = useRouter()
+const route = useRoute()
 
 const collections = ref<CustomCollectionSummary[]>([])
 const selectedCollectionId = ref<number | null>(null)
@@ -536,8 +537,32 @@ function loadAudioForMusic(audioPath: string | null): void {
   isPreviewMode.value = false
 }
 
-onMounted(() => {
-  void refreshCollections()
+onMounted(async () => {
+  // Query params vindos da Central de Mídia (?collection=ID&new=1|import=1)
+  const collectionParam = route.query.collection
+  if (collectionParam) {
+    const id = Number(collectionParam)
+    if (!Number.isNaN(id)) {
+      selectedCollectionId.value = id
+      // Carrega as músicas da coletânea pré-selecionada
+      await onCollectionChange()
+    }
+  }
+  await refreshCollections()
+  // Se refreshCollections não trouxe a coletânea (id inválido), limpa
+  if (
+    selectedCollectionId.value != null &&
+    !collections.value.some((c) => c.id === selectedCollectionId.value)
+  ) {
+    selectedCollectionId.value = null
+    musics.value = []
+  }
+  if (route.query.new === '1') {
+    newMusicName.value = ''
+    document.querySelector<HTMLInputElement>('[data-testid="new-music-input"]')?.focus()
+  } else if (route.query.import === '1') {
+    onImportSlja()
+  }
 })
 </script>
 

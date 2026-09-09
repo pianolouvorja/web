@@ -10,7 +10,7 @@ import AlbumHymnalCard from '../components/AlbumHymnalCard.vue'
 import AlbumLyricDialog from '../components/AlbumLyricDialog.vue'
 import AlbumSearchHitRow from '../components/AlbumSearchHitRow.vue'
 import { useAlbums } from '../composables/useAlbums'
-import type { AlbumCategory } from '../types/albums'
+import type { AlbumCategory, AlbumCollection } from '../types/albums'
 
 const { t } = useI18n()
 
@@ -130,6 +130,7 @@ function addPlaylist() {
 import {
   createCustomCollection,
   listCustomCollections,
+  fromCustomCollectionId,
   type CustomCollectionSummary,
   toCustomCollectionId,
 } from '@modules/media/services/custom-catalog'
@@ -137,6 +138,19 @@ import {
 const customCollections = ref<CustomCollectionSummary[]>([])
 const isLoadingCustomCollections = ref(false)
 const customCollectionsLoaded = ref(false)
+
+/** Coletâneas custom no formato AlbumCollection (mesma estética dos álbuns). */
+const customCollectionCards = computed<AlbumCollection[]>(() =>
+  customCollections.value.map((c) => ({
+    id: toCustomCollectionId(c.id),
+    kind: 'album' as const,
+    name: c.name,
+    subtitle: c.description ?? '',
+    coverUrl: null,
+    trackCount: c.musicsCount,
+    catalogKey: `custom_collection_${c.id}`,
+  })),
+)
 
 // Modais compactos (Playlists / Minhas Coletâneas)
 const playlistsModalOpen = ref(false)
@@ -731,6 +745,35 @@ async function runAction(
       v-else
       class="albums-view__body"
     >
+      <!-- Minhas Coletâneas (custom, API /v1/custom): mesma estética dos álbuns -->
+      <section
+        v-if="customCollections.length > 0"
+        class="albums-view__category albums-view__category--custom"
+      >
+        <header class="albums-view__category-header">
+          <h2 class="albums-view__category-title">
+            {{ t('albums.custom.title') }}
+          </h2>
+          <p class="albums-view__category-subtitle">
+            {{ t('albums.custom.sectionSubtitle') }}
+          </p>
+        </header>
+        <GlassCard
+          class="albums-view__grid-wrap"
+          :padding="false"
+          elevated
+        >
+          <div class="albums-view__grid">
+            <AlbumCollectionCard
+              v-for="collection in customCollectionCards"
+              :key="String(collection.id)"
+              :collection="collection"
+              @open="openCustomCollection(fromCustomCollectionId(Number(collection.id)))"
+            />
+          </div>
+        </GlassCard>
+      </section>
+
       <section
         v-for="category in categories"
         :key="String(category.id)"
