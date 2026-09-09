@@ -536,13 +536,15 @@ async function onImportFile(event: Event): Promise<void> {
   }
 }
 
-/** ms -> HH:MM[:SS] para o input[type=time] */
+/** ms -> HH:MM:SS para o input[type=time] e DB.
+ * SEMPRE 3 partes: "00:17" seria lido como 17 MINUTOS pelo player
+ * (convenção MM:SS do .slja/DB), dessincronizando os slides. */
 function formatMsAsTime(ms: number): string {
   const totalSeconds = Math.floor(ms / 1000)
   const h = String(Math.floor(totalSeconds / 3600)).padStart(2, '0')
   const m = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0')
   const s = String(totalSeconds % 60).padStart(2, '0')
-  return s !== '00' ? `${h}:${m}:${s}` : `${h}:${m}`
+  return `${h}:${m}:${s}`
 }
 
 async function onExportSlja(): Promise<void> {
