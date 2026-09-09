@@ -142,9 +142,17 @@ function mergeHits(a: AlbumSearchHit, b: AlbumSearchHit): AlbumSearchHit {
   }
 }
 
-/** Carrega o índice global de músicas (`pt_musics`). */
+/** Idioma do catálogo de músicas conforme o locale do app (pt-BR→pt, es→es, en→pt fallback). */
+export function catalogMusicLang(): 'pt' | 'es' {
+  const locale = localStorage.getItem('language') ?? 'pt-BR'
+  return locale.startsWith('es') ? 'es' : 'pt'
+}
+
+/** Carrega o índice global de músicas ({lang}_musics) no idioma selecionado. */
 export async function loadAlbumMusicIndex(): Promise<AlbumSearchHit[]> {
-  const rows = await readOrFetchCatalog<CatalogMusicIndexRow[]>('pt_musics')
+  const rows = await readOrFetchCatalog<CatalogMusicIndexRow[]>(
+    `${catalogMusicLang()}_musics`,
+  )
   if (!Array.isArray(rows) || rows.length === 0) return []
 
   const byId = new Map<number, AlbumSearchHit>()
