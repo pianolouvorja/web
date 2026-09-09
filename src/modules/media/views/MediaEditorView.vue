@@ -52,6 +52,13 @@ const lyrics = ref<EditorLyric[]>([])
 const loading = ref(false)
 const saving = ref(false)
 const statusMessage = ref('')
+const snackbarOpen = ref(false)
+
+/** statusMessage + snackbar juntos (span inline e toast). */
+function notify(message: string): void {
+  statusMessage.value = message
+  snackbarOpen.value = true
+}
 const newCollectionName = ref('')
 const newMusicName = ref('')
 /** Assets de imagem upados no último import .slja (path → url) */
@@ -95,9 +102,9 @@ async function onCreateCollection(): Promise<void> {
       await refreshCollections()
       selectedCollectionId.value = result.id
       await onCollectionChange()
-      statusMessage.value = 'Coletânea criada'
+      notify('Coletânea criada')
     } else {
-      statusMessage.value = 'Falha ao criar coletânea (API indisponível?)'
+      notify('Falha ao criar coletânea (API indisponível?)')
     }
   } finally {
     saving.value = false
@@ -116,9 +123,9 @@ async function onCreateMusic(): Promise<void> {
       selectedMusicId.value = result.id
       musicName.value = name
       lyrics.value = []
-      statusMessage.value = 'Música criada'
+      notify('Música criada')
     } else {
-      statusMessage.value = 'Falha ao criar música'
+      notify('Falha ao criar música')
     }
   } finally {
     saving.value = false
@@ -135,9 +142,9 @@ async function onAddStanza(): Promise<void> {
     })
     if (result) {
       lyrics.value.push({ id: result.id, lyric: 'Nova estrofe', time: '00:00', imageUrl: '' })
-      statusMessage.value = 'Estrofe adicionada'
+      notify('Estrofe adicionada')
     } else {
-      statusMessage.value = 'Falha ao adicionar estrofe'
+      notify('Falha ao adicionar estrofe')
     }
   } finally {
     saving.value = false
@@ -153,7 +160,7 @@ async function onSaveStanza(index: number): Promise<void> {
       lyric: stanza.lyric,
       time: stanza.time,
     })
-    statusMessage.value = ok ? 'Estrofe salva' : 'Falha ao salvar estrofe'
+    notify(ok ? 'Estrofe salva' : 'Falha ao salvar estrofe')
   } finally {
     saving.value = false
   }
@@ -162,7 +169,7 @@ async function onSaveStanza(index: number): Promise<void> {
 async function onSelectMusic(id: number): Promise<void> {
   selectedMusicId.value = id
   loading.value = true
-  statusMessage.value = ''
+  notify('')
   try {
     const response = await fetch(`/v1/custom/musics/${id}`)
     if (response.ok) {
@@ -185,10 +192,10 @@ async function onSelectMusic(id: number): Promise<void> {
       }))
       loadAudioForMusic(data.audio_url ?? null)
     } else {
-      statusMessage.value = 'Falha ao carregar música'
+      notify('Falha ao carregar música')
     }
   } catch {
-    statusMessage.value = 'API indisponível'
+    notify('API indisponível')
   } finally {
     loading.value = false
   }
@@ -212,7 +219,7 @@ async function onImportFile(event: Event): Promise<void> {
   input.value = ''
   if (!file) return
   loading.value = true
-  statusMessage.value = ''
+  notify('')
   try {
     const buffer = await file.arrayBuffer()
     const archive = await parseSlja(buffer)
@@ -234,7 +241,7 @@ async function onImportFile(event: Event): Promise<void> {
       } else {
         const created = await createCustomCollection('Importações .slja')
         if (!created) {
-          statusMessage.value = 'Falha ao criar coletânea de importação'
+          notify('Falha ao criar coletânea de importação')
           return
         }
         collectionId = created.id
@@ -245,7 +252,7 @@ async function onImportFile(event: Event): Promise<void> {
 
     const createdMusic = await createCustomMusic(collectionId, { name })
     if (!createdMusic) {
-      statusMessage.value = 'Falha ao criar música a partir do .slja'
+      notify('Falha ao criar música a partir do .slja')
       return
     }
     selectedMusicId.value = createdMusic.id
@@ -263,9 +270,9 @@ async function onImportFile(event: Event): Promise<void> {
       )
       if (uploadedAudio) {
         await updateCustomMusic(createdMusic.id, { id_file_audio: uploadedAudio.idFile })
-        statusMessage.value = `Importado: ${file.name} (com áudio)`
+        notify(`Importado: ${file.name} (com áudio)`)
       } else {
-        statusMessage.value = `Importado: ${file.name} (áudio falhou no upload)`
+        notify(`Importado: ${file.name} (áudio falhou no upload)`)
       }
     }
     if (archive.assets?.length) {
@@ -309,7 +316,7 @@ async function onImportFile(event: Event): Promise<void> {
       }
     }
     if (!statusMessage.value) {
-      statusMessage.value = `Importado: ${slides.filter((s) => s.lyric.trim()).length} estrofes de ${file.name}`
+      notify(`Importado: ${slides.filter((s) => s.lyric.trim()).length} estrofes de ${file.name}`)
     }
 
     // Pós-import: reflete tudo na UI — sidebar da coletânea, áudio no player,
@@ -322,7 +329,7 @@ async function onImportFile(event: Event): Promise<void> {
     loadAudioForMusic(uploadedAudio?.url ?? null)
   } catch (error) {
     console.error('Falha ao importar .slja', error)
-    statusMessage.value = 'Arquivo .slja inválido'
+    notify('Arquivo .slja inválido')
   } finally {
     loading.value = false
   }
@@ -340,7 +347,7 @@ function formatMsAsTime(ms: number): string {
 async function onExportSlja(): Promise<void> {
   if (selectedMusicId.value == null || lyrics.value.length === 0) return
   saving.value = true
-  statusMessage.value = ''
+  notify('')
   try {
     const slides = lyrics.value.map((stanza, index) => ({
       lyric: stanza.lyric,
@@ -362,10 +369,10 @@ async function onExportSlja(): Promise<void> {
     anchor.download = `${musicName.value || 'apresentacao'}.slja`
     anchor.click()
     URL.revokeObjectURL(url)
-    statusMessage.value = 'Exportado com sucesso'
+    notify('Exportado com sucesso')
   } catch (error) {
     console.error('Falha ao exportar .slja', error)
-    statusMessage.value = 'Falha ao exportar .slja'
+    notify('Falha ao exportar .slja')
   } finally {
     saving.value = false
   }
@@ -395,9 +402,9 @@ async function onDeleteCollection(): Promise<void> {
       lyrics.value = []
       musicName.value = ''
       await refreshCollections()
-      statusMessage.value = `Coletânea "${current.name}" excluída`
+      notify(`Coletânea "${current.name}" excluída`)
     } else {
-      statusMessage.value = 'Falha ao excluir coletânea'
+      notify('Falha ao excluir coletânea')
     }
   } finally {
     saving.value = false
@@ -415,9 +422,9 @@ async function onDeleteMusic(): Promise<void> {
       lyrics.value = []
       musicName.value = ''
       await refreshMusics()
-      statusMessage.value = 'Música excluída'
+      notify('Música excluída')
     } else {
-      statusMessage.value = 'Falha ao excluir música'
+      notify('Falha ao excluir música')
     }
   } finally {
     saving.value = false
@@ -431,11 +438,11 @@ async function onDeleteStanza(index: number): Promise<void> {
   saving.value = true
   try {
     if (stanza.id != null && !(await deleteCustomLyric(stanza.id))) {
-      statusMessage.value = 'Falha ao excluir estrofe'
+      notify('Falha ao excluir estrofe')
       return
     }
     lyrics.value.splice(index, 1)
-    statusMessage.value = 'Estrofe excluída'
+    notify('Estrofe excluída')
   } finally {
     saving.value = false
   }
@@ -621,6 +628,14 @@ onMounted(async () => {
         role="status"
       >{{ statusMessage }}</span>
     </header>
+
+    <v-snackbar
+      v-model="snackbarOpen"
+      :timeout="3500"
+      location="bottom"
+    >
+      {{ statusMessage }}
+    </v-snackbar>
 
     <div class="editor__body">
       <aside class="editor__aside">
