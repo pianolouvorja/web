@@ -15,6 +15,7 @@ import CountdownPreview from '../components/CountdownPreview.vue'
 import CountdownProjectFab from '../components/CountdownProjectFab.vue'
 import CountdownSavedList from '../components/CountdownSavedList.vue'
 import { useCountdownFeature } from '../composables/useCountdown'
+import PopupRouteSelect from '../../settings/components/PopupRouteSelect.vue'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -102,6 +103,7 @@ const effectiveConfig = computed(() => {
           {{ t('countdown.title') }}
         </h1>
       </div>
+      <PopupRouteSelect module="countdown" compact />
     </header>
 
     <div class="countdown-view__content">

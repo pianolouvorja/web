@@ -133,6 +133,46 @@ describe('WebRemoteBridge', () => {
     )
   })
 
+  it('request inclui token da URL e resolve com ack estendido (palco.status)', async () => {
+    bridge = new WebRemoteBridge('ws://192.168.1.15:9000?t=TOKEN1', {
+      snapshot,
+      execute: vi.fn(),
+    })
+    bridge.start()
+    const ws = FakeWebSocket.instances.at(-1)!
+    ws.open()
+
+    const pending = bridge!.request('palco.status')
+    const sent = ws.sent
+      .map((frame) => JSON.parse(frame))
+      .find((m) => m.type === 'command' && m.action === 'palco.status')
+    expect(sent).toMatchObject({ token: 'TOKEN1' })
+
+    ws.receive({ v: 1, type: 'ack', id: sent.id, ok: true, data: { running: true, clients: 2 } })
+    await expect(pending).resolves.toEqual({
+      ok: true,
+      data: { running: true, clients: 2 },
+    })
+  })
+
+  it('request resolve { ok:false } no timeout sem ack', async () => {
+    vi.useFakeTimers()
+    try {
+      bridge = new WebRemoteBridge('ws://x?t=T', { snapshot, execute: vi.fn() })
+      bridge.start()
+      const ws = FakeWebSocket.instances.at(-1)!
+      ws.open()
+
+      const pending = bridge!.request('palco.status', {}, 50)
+      const resolved = vi.fn()
+      void pending.then(resolved)
+      await vi.advanceTimersByTimeAsync(60)
+      expect(resolved).toHaveBeenCalledWith({ ok: false })
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('stop encerra watchers e não reporta onClose', () => {
     const onClose = vi.fn()
     bridge = new WebRemoteBridge('ws://x?t=T', { snapshot, execute: vi.fn(), onClose })

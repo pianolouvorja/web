@@ -98,17 +98,21 @@ const countdownFormatOptions = COUNTDOWN_TIME_FORMAT_OPTIONS.map((value) => ({
 }))
 
 function patchClock(partial: Partial<NonNullable<StageSettings['clock']>>) {
+  draftPatch({ clock: { ...(draft.value ?? settings.value).clock, ...partial } as StageSettings['clock'] })
+  return
+}
+function _patchClockOld(partial: Partial<NonNullable<StageSettings['clock']>>) {
   const current = settings.value.clock ?? DEFAULT_CLOCK_MODULE_SETTINGS
   patch({ clock: { ...current, ...partial } })
 }
 
 function patchModuleTimeFormat(value: string) {
   if (activeScope.value === 'timer') {
-    const current = settings.value.timer ?? DEFAULT_TIMER_MODULE_SETTINGS
-    patch({ timer: { ...current, timeFormat: value as NonNullable<StageSettings['timer']>['timeFormat'] } })
+    const current = effectiveSettings.value.timer ?? DEFAULT_TIMER_MODULE_SETTINGS
+    draftPatch({ timer: { ...current, timeFormat: value as NonNullable<StageSettings['timer']>['timeFormat'] } })
   } else if (activeScope.value === 'countdown') {
-    const current = settings.value.countdown ?? DEFAULT_COUNTDOWN_MODULE_SETTINGS
-    patch({ countdown: { ...current, timeFormat: value as NonNullable<StageSettings['countdown']>['timeFormat'] } })
+    const current = effectiveSettings.value.countdown ?? DEFAULT_COUNTDOWN_MODULE_SETTINGS
+    draftPatch({ countdown: { ...current, timeFormat: value as NonNullable<StageSettings['countdown']>['timeFormat'] } })
   }
 }
 
@@ -123,7 +127,7 @@ const moduleTimeFormat = computed(() => {
 })
 
 const randomTransformOptions = [
-  { value: 'none' as const, label: t('settings.stage.transformNone') },
+  { value: 'none' as const, label: t('settings.stage.bibleTransformNone') },
   { value: 'uppercase' as const, label: 'AA' },
   { value: 'lowercase' as const, label: 'aa' },
 ]
@@ -135,6 +139,10 @@ const randomSpeedOptions = [
 ]
 
 function patchRandom(partial: Partial<NonNullable<StageSettings['random']>>) {
+  draftPatch({ random: { ...(draft.value ?? settings.value).random, ...partial } as StageSettings['random'] })
+  return
+}
+function _patchRandomOld(partial: Partial<NonNullable<StageSettings['random']>>) {
   const current = settings.value.random ?? DEFAULT_RANDOM_MODULE_SETTINGS
   patch({ random: { ...current, ...partial } })
 }
@@ -143,6 +151,12 @@ const bibleWeightOptions: { value: StageSettings['bibleFontWeight']; label: stri
   { value: 400, label: t('settings.stage.weightNormal') },
   { value: 500, label: t('settings.stage.weightLightPlus') },
   { value: 700, label: t('settings.stage.weightStrong') },
+]
+
+const bibleTransformOptions: { value: StageSettings['bibleTextTransform']; label: string }[] = [
+  { value: 'none', label: t('settings.stage.bibleTransformNone') },
+  { value: 'uppercase', label: t('settings.stage.bibleTransformUppercase') },
+  { value: 'capitalize', label: t('settings.stage.bibleTransformCapitalize') },
 ]
 
 const alignOptions = [
@@ -170,6 +184,31 @@ function onFileSelected(event: Event) {
 }
 
 const confirmReset = ref(false)
+
+// --- Aplicar (draft local) ---
+// Edita um DRAFT (preview reage em tempo real) e só persiste + notifica o
+// relay quando o operador clica em Aplicar — evita spam de WS no relay e
+// TV "piscando" durante o ajuste (UX Rafael 02/09).
+const draft = ref<StageSettings | null>(null)
+
+const effectiveSettings = computed(() => draft.value ?? settings.value)
+
+/** Patch no draft (ou direto no store para ações sem draft: reset/bg upload). */
+function draftPatch(partial: Partial<StageSettings>) {
+  draft.value = { ...(draft.value ?? settings.value), ...partial }
+}
+
+function applyDraft() {
+  if (!draft.value) return
+  patch(draft.value)
+  draft.value = null
+}
+
+function cancelDraft() {
+  draft.value = null
+}
+
+const hasDraft = computed(() => draft.value !== null)
 </script>
 
 <template>
@@ -207,7 +246,7 @@ const confirmReset = ref(false)
 
     <StagePreview
       class="stage-custom__preview"
-      :settings="settings"
+      :settings="effectiveSettings"
       :module="activeScope === 'global' ? 'hymns' : activeScope"
     />
 
@@ -219,18 +258,18 @@ const confirmReset = ref(false)
           :key="preset.color"
           type="button"
           class="stage-custom__swatch"
-          :class="{ 'stage-custom__swatch--active': settings.backgroundColor === preset.color }"
+          :class="{ 'stage-custom__swatch--active': effectiveSettings.backgroundColor === preset.color }"
           :style="{ '--swatch': preset.color }"
           :aria-label="preset.label"
-          @click="patch({ backgroundColor: preset.color })"
+          @click="draftPatch({ backgroundColor: preset.color })"
         />
         <label class="stage-custom__picker">
           <i class="ti ti-color-picker" aria-hidden="true" />
           <input
             type="color"
-            :value="settings.backgroundColor"
+            :value="effectiveSettings.backgroundColor"
             :aria-label="t('settings.stage.backgroundColor')"
-            @input="patch({ backgroundColor: ($event.target as HTMLInputElement).value })"
+            @input="draftPatch({ backgroundColor: ($event.target as HTMLInputElement).value })"
           >
         </label>
       </div>
@@ -241,11 +280,11 @@ const confirmReset = ref(false)
         {{ t('settings.stage.backgroundImage') }}
       </p>
       <div
-        v-if="settings.backgroundImage"
+        v-if="effectiveSettings.backgroundImage"
         class="stage-custom__bg-preview"
       >
         <img
-          :src="resolveBackgroundImage(settings.backgroundImage) ?? undefined"
+          :src="resolveBackgroundImage(effectiveSettings.backgroundImage) ?? undefined"
           alt=""
           class="stage-custom__bg-img"
         >
@@ -293,9 +332,9 @@ const confirmReset = ref(false)
           type="button"
           class="stage-custom__official-tile"
           :class="{ 'stage-custom__official-tile--active':
-            settings.backgroundImage === `${OFFICIAL_BG_PREFIX}${bgId}` }"
+            effectiveSettings.backgroundImage === `${OFFICIAL_BG_PREFIX}${bgId}` }"
           :aria-label="`${t('settings.stage.officialBackground')} ${bgId}`"
-          @click="setBackgroundImage(settings.backgroundImage === `${OFFICIAL_BG_PREFIX}${bgId}` ? null : `${OFFICIAL_BG_PREFIX}${bgId}`)"
+          @click="setBackgroundImage(effectiveSettings.backgroundImage === `${OFFICIAL_BG_PREFIX}${bgId}` ? null : `${OFFICIAL_BG_PREFIX}${bgId}`)"
         >
           <img
             :src="officialBgUrl(bgId)"
@@ -303,7 +342,7 @@ const confirmReset = ref(false)
             loading="lazy"
           >
           <i
-            v-if="settings.backgroundImage === `${OFFICIAL_BG_PREFIX}${bgId}`"
+            v-if="effectiveSettings.backgroundImage === `${OFFICIAL_BG_PREFIX}${bgId}`"
             class="ti ti-check stage-custom__official-check"
             aria-hidden="true"
           />
@@ -319,18 +358,18 @@ const confirmReset = ref(false)
           :key="preset.color"
           type="button"
           class="stage-custom__swatch"
-          :class="{ 'stage-custom__swatch--active': settings.textColor === preset.color }"
+          :class="{ 'stage-custom__swatch--active': effectiveSettings.textColor === preset.color }"
           :style="{ '--swatch': preset.color }"
           :aria-label="preset.label"
-          @click="patch({ textColor: preset.color })"
+          @click="draftPatch({ textColor: preset.color })"
         />
         <label class="stage-custom__picker">
           <i class="ti ti-color-picker" aria-hidden="true" />
           <input
             type="color"
-            :value="settings.textColor"
+            :value="effectiveSettings.textColor"
             :aria-label="t('settings.stage.textColor')"
-            @input="patch({ textColor: ($event.target as HTMLInputElement).value })"
+            @input="draftPatch({ textColor: ($event.target as HTMLInputElement).value })"
           >
         </label>
       </div>
@@ -339,16 +378,16 @@ const confirmReset = ref(false)
     <div class="stage-custom__section">
       <div class="stage-custom__row-head">
         <span>{{ t('settings.stage.fontSize') }}</span>
-        <span class="stage-custom__chip">{{ Math.round(settings.fontSize) }}px</span>
+        <span class="stage-custom__chip">{{ Math.round(effectiveSettings.fontSize) }}px</span>
       </div>
       <input
         type="range"
         min="60"
         max="160"
         step="2"
-        :value="settings.fontSize"
+        :value="effectiveSettings.fontSize"
         :aria-label="t('settings.stage.fontSize')"
-        @input="patch({ fontSize: Number(($event.target as HTMLInputElement).value) })"
+        @input="draftPatch({ fontSize: Number(($event.target as HTMLInputElement).value) })"
       >
     </div>
 
@@ -360,10 +399,10 @@ const confirmReset = ref(false)
           :key="opt.value"
           type="button"
           role="radio"
-          :aria-checked="settings.fontWeight === opt.value"
+          :aria-checked="effectiveSettings.fontWeight === opt.value"
           class="stage-custom__segment-btn"
-          :class="{ 'stage-custom__segment-btn--active': settings.fontWeight === opt.value }"
-          @click="patch({ fontWeight: opt.value })"
+          :class="{ 'stage-custom__segment-btn--active': effectiveSettings.fontWeight === opt.value }"
+          @click="draftPatch({ fontWeight: opt.value })"
         >
           {{ opt.label }}
         </button>
@@ -387,7 +426,7 @@ const confirmReset = ref(false)
             :class="{ 'stage-custom__swatch--active': settings.bibleTextColor === preset.color }"
             :style="{ '--swatch': preset.color }"
             :aria-label="preset.label"
-            @click="patch({ bibleTextColor: preset.color })"
+            @click="draftPatch({ bibleTextColor: preset.color })"
           />
           <label class="stage-custom__picker">
             <i class="ti ti-color-picker" aria-hidden="true" />
@@ -395,23 +434,23 @@ const confirmReset = ref(false)
               type="color"
               :value="settings.bibleTextColor"
               :aria-label="t('settings.stage.bibleTextColor')"
-              @input="patch({ bibleTextColor: ($event.target as HTMLInputElement).value })"
+              @input="draftPatch({ bibleTextColor: ($event.target as HTMLInputElement).value })"
             >
           </label>
         </div>
 
         <div class="stage-custom__row-head">
           <span>{{ t('settings.stage.bibleFontSize') }}</span>
-          <span class="stage-custom__chip">{{ Math.round(settings.bibleFontSize) }}px</span>
+          <span class="stage-custom__chip">{{ Math.round(effectiveSettings.bibleFontSize) }}px</span>
         </div>
         <input
           type="range"
           min="50"
           max="140"
           step="2"
-          :value="settings.bibleFontSize"
+          :value="effectiveSettings.bibleFontSize"
           :aria-label="t('settings.stage.bibleFontSize')"
-          @input="patch({ bibleFontSize: Number(($event.target as HTMLInputElement).value) })"
+          @input="draftPatch({ bibleFontSize: Number(($event.target as HTMLInputElement).value) })"
         >
 
         <p class="stage-custom__label stage-custom__label--sub">
@@ -423,10 +462,28 @@ const confirmReset = ref(false)
             :key="opt.value"
             type="button"
             role="radio"
-            :aria-checked="settings.bibleFontWeight === opt.value"
+            :aria-checked="effectiveSettings.bibleFontWeight === opt.value"
             class="stage-custom__segment-btn"
-            :class="{ 'stage-custom__segment-btn--active': settings.bibleFontWeight === opt.value }"
-            @click="patch({ bibleFontWeight: opt.value })"
+            :class="{ 'stage-custom__segment-btn--active': effectiveSettings.bibleFontWeight === opt.value }"
+            @click="draftPatch({ bibleFontWeight: opt.value })"
+          >
+            {{ opt.label }}
+          </button>
+        </div>
+
+        <p class="stage-custom__label stage-custom__label--sub">
+          {{ t('settings.stage.bibleTextTransform') }}
+        </p>
+        <div class="stage-custom__segment" role="radiogroup">
+          <button
+            v-for="opt in bibleTransformOptions"
+            :key="opt.value"
+            type="button"
+            role="radio"
+            :aria-checked="effectiveSettings.bibleTextTransform === opt.value"
+            class="stage-custom__segment-btn"
+            :class="{ 'stage-custom__segment-btn--active': effectiveSettings.bibleTextTransform === opt.value }"
+            @click="draftPatch({ bibleTextTransform: opt.value })"
           >
             {{ opt.label }}
           </button>
@@ -436,12 +493,12 @@ const confirmReset = ref(false)
           <button
             type="button"
             class="stage-custom__toggle-label"
-            @click="patch({ showBibleVersion: !settings.showBibleVersion })"
+            @click="draftPatch({ showBibleVersion: !effectiveSettings.showBibleVersion })"
           >
             {{ t('settings.stage.showBibleVersion') }}
           </button>
           <SettingsToggle
-            :model-value="settings.showBibleVersion"
+            :model-value="effectiveSettings.showBibleVersion"
             :label="t('settings.stage.showBibleVersion')"
             @update:model-value="patch({ showBibleVersion: $event })"
           />
@@ -456,18 +513,18 @@ const confirmReset = ref(false)
             :key="preset.color"
             type="button"
             class="stage-custom__swatch"
-            :class="{ 'stage-custom__swatch--active': settings.footerRefColor === preset.color }"
+            :class="{ 'stage-custom__swatch--active': effectiveSettings.footerRefColor === preset.color }"
             :style="{ '--swatch': preset.color }"
             :aria-label="preset.label"
-            @click="patch({ footerRefColor: preset.color })"
+            @click="draftPatch({ footerRefColor: preset.color })"
           />
           <label class="stage-custom__picker">
             <i class="ti ti-color-picker" aria-hidden="true" />
             <input
               type="color"
-              :value="settings.footerRefColor"
+              :value="effectiveSettings.footerRefColor"
               :aria-label="t('settings.stage.footerRefColor')"
-              @input="patch({ footerRefColor: ($event.target as HTMLInputElement).value })"
+              @input="draftPatch({ footerRefColor: ($event.target as HTMLInputElement).value })"
             >
           </label>
         </div>
@@ -746,10 +803,27 @@ const confirmReset = ref(false)
       </div>
     </div>
 
-    <!-- Redefinir -->
+    <!-- Aplicar / Cancelar (draft) + Redefinir -->
     <div class="stage-custom__footer">
+      <template v-if="hasDraft">
+        <button
+          type="button"
+          class="stage-custom__apply-btn stage-custom__apply-btn--cancel"
+          @click="cancelDraft"
+        >
+          {{ t('common.cancel') }}
+        </button>
+        <button
+          type="button"
+          class="stage-custom__apply-btn"
+          @click="applyDraft"
+        >
+          <i class="ti ti-check" aria-hidden="true" />
+          {{ t('common.apply') }}
+        </button>
+      </template>
       <button
-        v-if="!confirmReset"
+        v-else-if="!confirmReset"
         type="button"
         class="stage-custom__reset"
         @click="confirmReset = true"
@@ -1139,6 +1213,34 @@ const confirmReset = ref(false)
   &--confirm {
     border-color: var(--ds-color-error, #ffb4ab);
     color: var(--ds-color-error, #ffb4ab);
+  }
+}
+
+/* Aplicar (persistência explícita do draft) */
+.stage-custom__apply-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1.4rem;
+  border: 0;
+  border-radius: var(--ds-radius-md);
+  background: var(--ds-color-primary);
+  color: var(--ds-color-on-primary, #1a1208);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: auto;
+
+  &:hover {
+    filter: brightness(1.1);
+  }
+
+  &--cancel {
+    margin-left: 0;
+    background: transparent;
+    border: 1px solid var(--ds-color-outline);
+    color: var(--ds-color-on-surface-variant);
+    font-weight: 400;
   }
 }
 

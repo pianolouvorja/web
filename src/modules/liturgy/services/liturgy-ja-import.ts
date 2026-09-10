@@ -44,6 +44,7 @@ function typeFromPath(path: string): LiturgyItemType {
   const p = path.toLowerCase()
   if (!p) return 'other_files'
   if (/\.(mp4|mkv|avi|webm|mov)$/.test(p)) return 'video'
+  if (/\.(mp3|wav|ogg|m4a|flac|aac|wma)$/.test(p)) return 'audio'
   if (/\.(jpg|jpeg|png|gif|bmp|webp)$/.test(p)) return 'images'
   if (p.endsWith('.pdf')) return 'pdf'
   if (/\.(pptx|ppt)$/.test(p)) return 'presentation'

@@ -7,6 +7,12 @@ import {
   isPopupModuleOpen,
   openPopupModule,
 } from '@shared/services/popup-windows'
+import {
+  getPopupRoute,
+  isCloudDestinationRoute,
+  type PopupRoutableModule,
+} from '@shared/services/popup-routing'
+import { publishToStageRelay } from '@shared/services/palco-cloud-bridge'
 
 import {
   loadClockConfig,
@@ -38,6 +44,10 @@ export const useClockStore = defineStore('clock', () => {
     stopProjectionWatch()
     projectionWatchTimer = setInterval(() => {
       if (!isPopupModuleOpen('clock')) {
+        // WT-5/WT-6A: 'Só TV (nuvem)' e `palco:N` (receiver PWA) não têm popup — não é 'parado'
+        try {
+          if (isCloudDestinationRoute('clock')) return
+        } catch { /* routing indisponível */ }
         isProjecting.value = false
         stopProjectionWatch()
       }
@@ -105,6 +115,8 @@ export const useClockStore = defineStore('clock', () => {
     await exitPopupModule()
     isProjecting.value = false
     stopProjectionWatch()
+    // WT-5: TV é destino independente — parar manda idle pro relay
+    publishToStageRelay('clock', { time: '' })
   }
 
   async function stopProjectionWindows() {
@@ -121,8 +133,8 @@ export const useClockStore = defineStore('clock', () => {
   }
 
   async function toggleProjection() {
-    if (isProjecting.value && isPopupModuleOpen('clock')) {
-      // Legado: exit limpa o conteúdo e mantém as janelas abertas
+    // WT-5: rota 'Só TV' não tem popup — desligar pelo estado, não pelo popup
+    if (isProjecting.value) {
       await clearProjection()
       return
     }

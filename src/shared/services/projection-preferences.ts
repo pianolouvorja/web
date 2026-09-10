@@ -83,6 +83,15 @@ export function setTargetPopupSlots(slots: number[]): number[] {
   return next
 }
 
+/** Próximas popups tentam fullscreen ainda no gesto original de projetar. */
+export function getProjectionFullscreenMode(): boolean {
+  return getBooleanPreference(USER_PREFERENCE_KEYS.projectionFullscreenMode, true)
+}
+
+export function setProjectionFullscreenMode(enabled: boolean): void {
+  setUserPreference(USER_PREFERENCE_KEYS.projectionFullscreenMode, enabled)
+}
+
 export function toggleTargetPopupSlot(slot: number): number[] {
   const current = getTargetPopupSlots()
   const id = Number(slot)

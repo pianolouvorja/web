@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, useTemplateRef } from 'vue'
+import { computed, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue'
 
 import type { ClockConfig } from '../types/clock'
 import { useClockDisplay } from '../composables/useClock'
+import { publishToStageRelay } from '@shared/services/palco-cloud-bridge'
 
 const props = withDefaults(
   defineProps<{
@@ -27,6 +28,13 @@ const {
   formattedSeconds,
   ampm,
 } = useClockDisplay(() => props.config)
+
+// WT-5: espelha a hora no relay cloud em AMBOS os contextos — o preview do
+// operador (ClockView) é quem garante a TV receber MESMO sem popup aberto
+// (TV é destino independente, paridade app). best-effort, no-op sem sessão.
+watch(formattedTime, (time) => {
+  publishToStageRelay('clock', { time })
+}, { immediate: true })
 
 const digitalFontSize = computed(() => {
   const v = Math.min(sizeWidth.value, sizeHeight.value)

@@ -91,6 +91,11 @@ const fileButtonLabel = computed(() => {
       ? t('liturgy.fields.changeFilesButton')
       : t('liturgy.fields.selectFilesButton')
   }
+  if (type === 'audio') {
+    return hasFile
+      ? t('liturgy.fields.changeAudioButton')
+      : t('liturgy.fields.selectAudioButton')
+  }
   if (type === 'video') {
     return hasFile
       ? t('liturgy.fields.changeVideoButton')
@@ -280,6 +285,8 @@ function onUrlInput(event: Event) {
 
 function acceptForType(type: LiturgyItemType | null): string {
   switch (type) {
+    case 'audio':
+      return 'audio/*,.mp3,.wav,.ogg,.m4a,.flac,.aac'
     case 'video':
       return 'video/*,.mp4,.mkv,.avi,.mov,.wmv,.webm'
     case 'images':

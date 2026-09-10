@@ -3,6 +3,7 @@ export default {
     title: 'Central de Mídia',
     subtitle: 'Álbum & Coletâneas',
     collectionFallback: 'Coletânea',
+    playAll: 'Tocar tudo',
     back: 'Voltar para álbuns',
     searchPlaceholder: 'Digite o número ou nome do hino...',
     hubSearchPlaceholder: 'Procure aqui...',
@@ -47,6 +48,25 @@ export default {
       lyricMissing: 'Letra indisponível para esta faixa.',
       projectionFailed:
         'Não foi possível abrir a projeção nas telas configuradas.',
+    },
+    playlists: {
+      title: 'Playlists',
+      newPlaceholder: 'Nome da nova playlist...',
+      create: 'Criar',
+      empty: 'Nenhuma playlist criada ainda.',
+      export: 'Exportar',
+      import: 'Importar',
+      imported: 'Importado: {summary}',
+      nothingToImport: 'Nada novo para importar.',
+      invalidFile: 'Arquivo de playlists inválido.',
+      newLists: '{count} playlist(s) nova(s)',
+      addedTracks: '{count} faixa(s) adicionada(s)',
+    },
+    custom: {
+      title: 'Minhas Coletâneas',
+      openEditor: 'Abrir editor',
+      open: 'Abrir coletânea {name}',
+      trackCount: '{count} faixa(s)',
     },
   },
 }
