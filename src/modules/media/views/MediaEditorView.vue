@@ -1143,23 +1143,19 @@ onMounted(async () => {
                   :image-url="activeStanza.imageUrl ? customFileUrl(activeStanza.imageUrl) : null"
                   :is-cover="false"
                 />
-                <!-- Player embutido: aparece no hover, igual player da /media -->
-                <div
+                <!-- Player embutido: só o <audio> nativo, posicionado sobre a base do slide -->
+                <audio
                   v-if="audioSrc"
-                  class="editor__player"
-                >
-                  <span class="editor__player-time">{{ timeLabelOf(currentTimeMs) }}</span>
-                  <audio
-                    ref="audioEl"
-                    class="editor__audio"
-                    controls
-                    :src="audioSrc"
-                    preload="metadata"
-                    @play="onAudioPlay"
-                    @pause="onAudioPause"
-                    @timeupdate="onAudioTimeUpdate"
-                  />
-                </div>
+                  ref="audioEl"
+                  class="editor__audio"
+                  controls
+                  controlslist="nodownload noplaybackrate"
+                  :src="audioSrc"
+                  preload="metadata"
+                  @play="onAudioPlay"
+                  @pause="onAudioPause"
+                  @timeupdate="onAudioTimeUpdate"
+                />
               </div>
               <div
                 v-else
@@ -1878,12 +1874,6 @@ onMounted(async () => {
   gap: 0.5rem;
 }
 
-.editor__player-time {
-  font-variant-numeric: tabular-nums;
-  font-size: 0.8rem;
-  color: var(--ds-color-on-surface-variant);
-  font-family: monospace;
-}
 
 .editor__audio {
   /* flex-basis 0 colapsa <audio> (replaced element sem largura intrínseca
@@ -1992,49 +1982,23 @@ onMounted(async () => {
   }
 }
 
-/* Slide com player integrado: player sobrepõe a base, aparece no hover
-   ou enquanto toca (mesmo comportamento do player da /media) */
-.editor__preview--with-player {
-  position: relative;
-}
-
-.editor__preview--with-player > .editor__player {
+/* Slide com player integrado: o <audio> nativo sobrepõe a base, aparece
+   no hover ou enquanto toca (mesmo comportamento do player da /media) */
+.editor__preview--with-player > .editor__audio {
   position: absolute;
   left: 0.75rem;
   right: 0.75rem;
   bottom: 0.75rem;
   z-index: 2;
-  margin: 0;
+  width: calc(100% - 1.5rem);
   opacity: 0;
-  transform: translateY(6px);
-  transition: opacity 180ms ease, transform 180ms ease;
-  pointer-events: none;
+  transition: opacity 180ms ease;
 }
 
-.editor__preview--with-player:hover > .editor__player,
-.editor__preview--with-player:focus-within > .editor__player,
-.editor__preview--with-player.is-playing > .editor__player {
+.editor__preview--with-player:hover > .editor__audio,
+.editor__preview--with-player:focus-within > .editor__audio,
+.editor__preview--with-player.is-playing > .editor__audio {
   opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
-}
-
-/* Player-pill sob o slide: tempo à esquerda + áudio esticando (como /media) */
-.editor__player {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.5rem 0.875rem;
-  background: rgb(12 12 12 / 0.92);
-  border: 1px solid var(--ds-color-outline-strong);
-  border-radius: var(--ds-radius-full, 9999px);
-}
-
-.editor__player-time {
-  flex-shrink: 0;
-  font-variant-numeric: tabular-nums;
-  font-size: 0.8rem;
-  color: var(--ds-color-on-surface-variant);
 }
 
 /* MediaSlideStage preenche o container do preview (estética idêntica à /media) */
