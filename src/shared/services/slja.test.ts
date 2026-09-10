@@ -7,7 +7,7 @@ describe('slja (compatibilidade LouvorJA Delphi)', () => {
       title: 'Meu Hino',
       audio: { name: 'meu-hino.mp3', bytes: new Uint8Array([1, 2, 3]) },
       slides: [
-        { lyric: 'Meu Hino', type: 'CAPA', timeMs: 0, background: '#000000' },
+        { lyric: 'Meu Hino', type: 'CAPA', timeMs: 0, backgroundColor: '#000000' },
         {
           lyric: 'Primeira linha\nSegunda linha',
           auxiliaryLyric: 'Auxiliar',

@@ -28,7 +28,7 @@ import {
   updateCustomMusic,
   uploadCustomFile,
 } from '../services/custom-catalog'
-import type { CustomCollectionSummary } from '../services/custom-catalog'
+import type { CustomCollectionSummary, CustomMusicSummary } from '../services/custom-catalog'
 import { buildSlja, parseSlja } from '../../../shared/services/slja'
 
 /**
@@ -57,7 +57,7 @@ const route = useRoute()
 
 const collections = ref<CustomCollectionSummary[]>([])
 const selectedCollectionId = ref<number | null>(null)
-const musics = ref<Array<{ id: number; name: string }>>([])
+const musics = ref<CustomMusicSummary[]>([])
 const selectedMusicId = ref<number | null>(null)
 const musicName = ref('')
 const lyrics = ref<EditorLyric[]>([])
@@ -217,7 +217,7 @@ interface ReusableMusic {
 
 const reuseSearch = ref('')
 const reuseResults = ref<ReusableMusic[]>([])
-let allCustomMusicsCache: Array<ReusableMusic & { collectionId?: number }> | null = null
+let allCustomMusicsCache: Array<CustomMusicSummary & { collectionName?: string; collectionId?: number }> | null = null
 
 function onReuseSearchInput(): void {
   const query = reuseSearch.value.trim().toLowerCase()
@@ -229,7 +229,9 @@ function onReuseSearchInput(): void {
     if (allCustomMusicsCache == null) {
       allCustomMusicsCache = await listAllCustomMusics()
     }
-    reuseResults.value = allCustomMusicsCache
+    const cached = allCustomMusicsCache
+    if (!cached) return
+    reuseResults.value = cached
       .filter((m) => m.name.toLowerCase().includes(query))
       .slice(0, 8)
       .map((m) => ({
@@ -624,7 +626,9 @@ async function onDeleteMusic(): Promise<void> {
       selectedMusicId.value = null
       lyrics.value = []
       musicName.value = ''
-      await refreshMusics()
+      if (selectedCollectionId.value != null) {
+        musics.value = await listCustomMusics(selectedCollectionId.value)
+      }
       notify('Música excluída')
     } else {
       notify('Falha ao excluir música')
