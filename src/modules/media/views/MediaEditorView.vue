@@ -675,6 +675,22 @@ function syncStanzaHighlight(): void {
     activeStanzaIndexOverride.value !== null
       ? activeStanzaIndexOverride.value
       : computedActiveIndex.value
+  scrollLyricPaneToActive()
+}
+
+/** Rolagem do painel Letra acompanhando a estrofe ativa (como a playlist da /media). */
+function scrollLyricPaneToActive(): void {
+  const pane = document.querySelector('.editor__lyric-pane')
+  if (!pane) return
+  const item = pane.querySelector('.editor__lyric-item--active')
+  if (!item) return
+  const paneRect = pane.getBoundingClientRect()
+  const itemRect = item.getBoundingClientRect()
+  // só rola se o item saiu da área visível do painel
+  const margin = 48
+  if (itemRect.top < paneRect.top + margin || itemRect.bottom > paneRect.bottom - margin) {
+    item.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }
 }
 
 /** Override manual: marcar estrofe no momento do play (botão "Marcar aqui") */
