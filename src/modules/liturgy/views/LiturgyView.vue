@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import StagePaletteButton from '../../settings/components/StagePaletteButton.vue'
+import PopupRouteSelect from '../../settings/components/PopupRouteSelect.vue'
 import AlbumLyricDialog from '@modules/albums/components/AlbumLyricDialog.vue'
 
 import LiturgyCloneDialog from '../components/LiturgyCloneDialog.vue'
@@ -110,7 +111,9 @@ const liturgyAlertKey = computed(() => lastActionMessageKey.value || null)
 <template>
   <section class="liturgy-view">
     <header class="liturgy-view__header">
-      <div class="liturgy-view__brand">
+      <div class="liturgy-view__header-start">
+        <StagePaletteButton scope="liturgy" />
+        <div class="liturgy-view__brand">
         <i
           class="ti ti-clipboard-text liturgy-view__brand-icon"
           aria-hidden="true"
@@ -118,6 +121,7 @@ const liturgyAlertKey = computed(() => lastActionMessageKey.value || null)
         <h1 class="liturgy-view__title">
           {{ t('liturgy.title') }}
         </h1>
+        </div>
       </div>
 
       <div class="liturgy-view__meta">
@@ -130,8 +134,8 @@ const liturgyAlertKey = computed(() => lastActionMessageKey.value || null)
           </span>
         </div>
       </div>
+      <PopupRouteSelect module="liturgy-web" compact />
     </header>
-    <StagePaletteButton scope="liturgy" />
 
     <div
       v-if="liturgyAlertKey"
@@ -334,6 +338,7 @@ const liturgyAlertKey = computed(() => lastActionMessageKey.value || null)
 
 <style scoped lang="scss">
 .liturgy-view {
+  position: relative;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -739,5 +744,11 @@ const liturgyAlertKey = computed(() => lastActionMessageKey.value || null)
   .liturgy-view__clear {
     flex: 0 0 auto;
   }
+}
+
+.liturgy-view__header-start {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 </style>

@@ -2,8 +2,10 @@ import { computed, ref } from 'vue'
 
 import {
   getPopupCount,
+  getProjectionFullscreenMode,
   PROJECTION_DEFAULTS,
   setPopupCount,
+  setProjectionFullscreenMode,
 } from '@shared/services/projection-preferences'
 import {
   hasLivePopups,
@@ -12,9 +14,12 @@ import {
 
 const popupCount = ref(getPopupCount())
 
-/** Espelha o legado: só estado local, sem persistência. */
+/** Hardware acceleration segue stub legado; fullscreen é preferência funcional. */
 const hardwareAccel = ref(true)
-const fullscreenMode = ref(false)
+const fullscreenMode = computed({
+  get: getProjectionFullscreenMode,
+  set: setProjectionFullscreenMode,
+})
 
 const countMin = PROJECTION_DEFAULTS.popupCountMin
 const countMax = PROJECTION_DEFAULTS.popupCountMax

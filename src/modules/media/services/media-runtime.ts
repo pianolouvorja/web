@@ -1,5 +1,6 @@
 import type { MediaProjectionRuntime } from '../types/media'
 import { DEFAULT_MEDIA_PROJECTION } from '../types/media'
+import { publishToStageRelay } from '@shared/services/palco-cloud-bridge'
 
 export const MEDIA_RUNTIME_CHANNEL = 'louvorja-media-runtime'
 export const MEDIA_RUNTIME_STORAGE_KEY = 'louvorja-media-runtime-state'
@@ -66,6 +67,10 @@ export function publishMediaRuntime(state: MediaProjectionRuntime): void {
   } catch {
     // BroadcastChannel pode não existir em ambientes antigos
   }
+
+  // WT-5: espelha no relay cloud (no-op sem sessão ativa) — letra do hino
+  // vai como projection (texto+footer), sem áudio (mídia fica local).
+  publishToStageRelay('media', state)
 }
 
 export function clearMediaRuntime(): void {

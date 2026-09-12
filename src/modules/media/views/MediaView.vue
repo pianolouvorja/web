@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useDisplay } from 'vuetify'
 
 import StagePaletteButton from '../../settings/components/StagePaletteButton.vue'
@@ -9,10 +9,12 @@ import MediaCloseDialog from '../components/MediaCloseDialog.vue'
 import MediaPlayerPill from '../components/MediaPlayerPill.vue'
 import MediaSlideStage from '../components/MediaSlideStage.vue'
 import { useMediaPlayer } from '../composables/useMediaPlayer'
+import { revealItemInAside } from '../services/media-aside-scroll'
 import { stripHtmlBreaks } from '../services/media-slides'
 import type { MediaPlaybackMode } from '../types/media'
 
 const { t } = useI18n()
+const route = useRoute()
 const router = useRouter()
 const { smAndDown } = useDisplay()
 const stageRoot = ref<HTMLElement | null>(null)
@@ -61,7 +63,7 @@ const {
   syncProjectionFlag,
 } = useMediaPlayer()
 
-const playlistListEl = ref<HTMLUListElement | null>(null)
+const playlistAsideEl = ref<HTMLElement | null>(null)
 
 /** Slide/faixa em reprodução visível no painel lateral (auto-scroll). */
 const activeListIndex = computed(() =>
@@ -71,9 +73,9 @@ const activeListIndex = computed(() =>
 watch(activeListIndex, async (index) => {
   if (index < 0) return
   await nextTick()
-  const list = playlistListEl.value
-  const active = list?.querySelector('.media-window__playlist-item--active')
-  active?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  const aside = playlistAsideEl.value
+  const active = aside?.querySelector<HTMLElement>('.media-window__playlist-item--active')
+  if (aside && active) revealItemInAside(aside, active)
 })
 
 const stageLyric = computed(() => currentSlide.value?.lyric ?? '')
@@ -171,7 +173,12 @@ function leaveMediaRoute() {
 
 watch(hasSession, (active) => {
   if (!active) {
-    leaveMediaRoute()
+    // Fim natural da música (fila acabou) também zera a sessão: se o usuário
+    // já naveguou p/ outro lugar (ex: editor de letras), NÃO expulsa — só
+    // redireciona quem ainda está preso na rota /media sem player.
+    if (route.name === 'media') {
+      leaveMediaRoute()
+    }
   }
 })
 
@@ -238,7 +245,6 @@ function onStageClick() {
         />
       </button>
     </header>
-    <StagePaletteButton scope="hymns" />
 
     <header class="media-window__toolbar media-window__toolbar--end">
       <button
@@ -286,6 +292,9 @@ function onStageClick() {
         class="media-window__stage"
         @click="onStageClick"
       >
+        <div class="media-window__stage-palette">
+          <StagePaletteButton scope="hymns" />
+        </div>
         <MediaSlideStage
           :lyric="stageLyric"
           :title="stageTitle"
@@ -296,11 +305,12 @@ function onStageClick() {
 
       <aside
         v-if="playlistVisible"
+        ref="playlistAsideEl"
         class="media-window__playlist"
       >
         <template v-if="queue.length > 1">
           <h2 class="media-window__playlist-title">Fila de reprodução</h2>
-          <ul ref="playlistListEl" class="media-window__playlist-list">
+          <ul class="media-window__playlist-list">
             <li v-for="(item, index) in queue" :key="`${item.musicId}-${index}`">
               <button
                 type="button"
@@ -318,7 +328,7 @@ function onStageClick() {
         <h2 class="media-window__playlist-title">
           {{ t('media.playlist') }}
         </h2>
-        <ul ref="playlistListEl" class="media-window__playlist-list">
+        <ul class="media-window__playlist-list">
           <li
             v-for="item in playlist"
             :key="item.index"
@@ -454,9 +464,17 @@ function onStageClick() {
 }
 
 .media-window__stage {
+  position: relative;
   min-width: 0;
   min-height: 0;
   height: 100%;
+}
+
+.media-window__stage-palette {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 30;
 }
 
 .media-window__playlist {

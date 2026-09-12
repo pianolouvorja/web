@@ -76,7 +76,6 @@ const navAllCollapsed = computed(() => isMobile.value && booksCollapsed.value &&
     class="bible-view"
     :class="{ 'bible-view--has-selection': selectedBookId !== null && selectedChapter !== null }"
   >
-    <StagePaletteButton scope="bible" />
     <BibleToolbar
       :versions="versions"
       :selected-version-id="selectedVersionId"

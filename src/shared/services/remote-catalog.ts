@@ -1,5 +1,6 @@
 import { BROWSER_STORAGE_KEYS } from '@shared/constants/storage-keys'
 import { getBrowserItem, setBrowserItem } from '@shared/services/browser-storage'
+import { fetchWithApiFallback } from '@shared/services/api-fallback'
 
 function sessionCacheKey(filename: string): string {
   return `${BROWSER_STORAGE_KEYS.catalogSessionPrefix}${filename}`
@@ -53,7 +54,11 @@ export async function fetchRemoteCatalogJson<T = unknown>(
       await delay(delayMs)
       return fetchRemoteCatalogJson(file, retries - 1, delayMs * 1.5)
     }
-    throw error
+
+    // Primária esgotada → cascata: pianolouvorja → louvorja → workers.dev
+    const { data } = await fetchWithApiFallback<T>('database', file, { retries, delayMs })
+    setBrowserItem(sessionCacheKey(file), data, 'session')
+    return data
   }
 }
 

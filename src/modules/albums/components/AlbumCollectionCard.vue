@@ -3,7 +3,7 @@ import { useI18n } from 'vue-i18n'
 
 import type { AlbumCollection } from '../types/albums'
 
-const props = defineProps<{
+defineProps<{
   collection: AlbumCollection
 }>()
 
@@ -107,6 +107,49 @@ function onOpen() {
 .album-collection-card__fallback {
   font-size: 2.5rem;
   color: color-mix(in srgb, #fff 70%, transparent);
+}
+
+// Cover editável (coletâneas custom): câmera no canto + cursor pointer
+.album-collection-card__cover--editable {
+  cursor: pointer;
+
+  &:hover .album-collection-card__cover-edit {
+    opacity: 1;
+  }
+}
+
+.album-collection-card__cover-edit {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 60%);
+  color: #fff;
+  font-size: 1rem;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+
+  &--btn {
+    right: 2.75rem;
+    pointer-events: auto;
+    cursor: pointer;
+    border: none;
+
+    &:hover {
+      background: rgb(180 40 40 / 80%);
+    }
+  }
+}
+
+.album-collection-card__cover-input {
+  display: none;
 }
 
 .album-collection-card__hover {

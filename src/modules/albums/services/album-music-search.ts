@@ -142,9 +142,28 @@ function mergeHits(a: AlbumSearchHit, b: AlbumSearchHit): AlbumSearchHit {
   }
 }
 
-/** Carrega o índice global de músicas (`pt_musics`). */
+/** Idioma do catálogo de músicas conforme o locale do app (pt-BR→pt, es→es, en→pt fallback).
+ * O locale é persistido em localStorage['user_data'].language (user-preferences). */
+export function catalogMusicLang(): 'pt' | 'es' {
+  try {
+    const stored = localStorage.getItem('user_data')
+    if (stored) {
+      const prefs = JSON.parse(stored)
+      if (typeof prefs.language === 'string' && prefs.language.startsWith('es')) {
+        return 'es'
+      }
+    }
+  } catch {
+    // localStorage indisponível — fallback pt
+  }
+  return 'pt'
+}
+
+/** Carrega o índice global de músicas ({lang}_musics) no idioma selecionado. */
 export async function loadAlbumMusicIndex(): Promise<AlbumSearchHit[]> {
-  const rows = await readOrFetchCatalog<CatalogMusicIndexRow[]>('pt_musics')
+  const rows = await readOrFetchCatalog<CatalogMusicIndexRow[]>(
+    `${catalogMusicLang()}_musics`,
+  )
   if (!Array.isArray(rows) || rows.length === 0) return []
 
   const byId = new Map<number, AlbumSearchHit>()
@@ -181,23 +200,41 @@ function normalizeTrackNumber(entry: AlbumSearchHit, num: number): AlbumSearchHi
   return { ...entry, track: num, isHymnal: true }
 }
 
+/** Aceita 1, 001, H1, H 1, HA 1 e "hino 1". Nunca captura números no título. */
+export function parseHymnalNumber(query: string): number | null {
+  const match = query.trim().match(/^(?:h(?:a|ino)?\s*)?0*(\d{1,4})$/i)
+  if (!match?.[1]) return null
+  const number = Number(match[1])
+  return number > 0 ? number : null
+}
+
+function normalizeSearchText(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .trim()
+    .toLowerCase()
+}
+
 export function filterAlbumMusicIndex(
   index: AlbumSearchHit[],
   query: string,
 ): AlbumSearchHit[] {
-  const trimmed = query.trim().toLowerCase()
+  const trimmed = query.trim()
   if (!trimmed) return []
 
-  const isNum = /^\d+$/.test(trimmed)
-  const numQuery = isNum ? Number(trimmed) : null
+  const normalized = normalizeSearchText(trimmed)
+  const numQuery = parseHymnalNumber(trimmed)
+  const isNum = numQuery != null
 
   const matchesQuery = (entry: AlbumSearchHit) => {
-    const title = entry.name.toLowerCase()
-    const album = entry.albumNames.toLowerCase()
+    const title = normalizeSearchText(entry.name)
+    const album = normalizeSearchText(entry.albumNames)
     return (
-      title.includes(trimmed) ||
-      album.includes(trimmed) ||
-      (isNum && numQuery != null && hasHymnalNumber(entry, numQuery))
+      title.includes(normalized) ||
+      album.includes(normalized) ||
+      (numQuery != null && hasHymnalNumber(entry, numQuery))
     )
   }
 

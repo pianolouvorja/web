@@ -2,10 +2,24 @@ export type MediaUrlResolveResult =
   | { ok: true; url: string; source: 'local' | 'remote' }
   | { ok: false; reason: 'missing' }
 
-function resolveRemoteFileUrl(urlPath: string): string {
+export function resolveRemoteFileUrl(urlPath: string): string {
   const cleanPath = urlPath.startsWith('/') ? urlPath.slice(1) : urlPath
+  // Mídia CUSTOM (coletâneas do usuário) vive na API local — NUNCA no túnel
+  // do catálogo oficial. Em dev o Vite proxia /file/custom -> API local.
+  if (cleanPath.startsWith('custom/')) return `/file/${cleanPath}`
+  // Dev: proxy same-origin /tunnel-file (VITE_DEV_MEDIA_PROXY). Requisições de
+  // mídia contra URLs absolutas do túnel Cloudflare falham no browser
+  // (fetch 200 ok, mas Audio/Image disparam onerror); via proxy renderiza.
+  const proxyTarget = import.meta.env.VITE_DEV_MEDIA_PROXY
+  if (proxyTarget) return `/tunnel-file/${cleanPath}`
   const base = import.meta.env.VITE_URL_FILES ?? 'https://api.louvorja.com.br/file'
-  return `${base}/${cleanPath}`
+  // Base relativa (ex: /tunnel-file no dev via proxy): absolutizar contra a
+  // origem atual. O runtime publicado via relay é consumido por janelas em
+  // OUTRA origem (TV/receiver) — URL relativa quebraria o bg/audio lá.
+  const absoluteBase = base.startsWith('/')
+    ? `${window.location.origin}${base}`
+    : base
+  return `${absoluteBase}/${cleanPath}`
 }
 
 /** Resolve URL de áudio (streaming remoto na web). */
