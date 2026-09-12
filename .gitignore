@@ -57,3 +57,4 @@ AUDIT-RECOMMENDATIONS.md
 # Lock files (projeto usa npm, não pnpm)
 pnpm-lock.yaml
 pnpm-workspace.yaml
+.planning/

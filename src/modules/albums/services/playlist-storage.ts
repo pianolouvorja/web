@@ -36,6 +36,11 @@ export function listPlaylists(): Playlist[] {
   return read()
 }
 
+/** Substitui o catálogo inteiro (usado pelo import de playlists). */
+export function savePlaylists(playlists: Playlist[]): void {
+  save(playlists)
+}
+
 export function createPlaylist(name: string): Playlist {
   const timestamp = now()
   const playlist: Playlist = {

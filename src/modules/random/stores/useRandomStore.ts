@@ -6,6 +6,11 @@ import {
   isPopupModuleOpen,
   openPopupModule,
 } from '@shared/services/popup-windows'
+import {
+  getPopupRoute,
+  isCloudDestinationRoute,
+  type PopupRoutableModule,
+} from '@shared/services/popup-routing'
 
 import {
   buildNumberRange,
@@ -113,6 +118,10 @@ export const useRandomStore = defineStore('random', () => {
     stopProjectionWatch()
     projectionWatchTimer = setInterval(() => {
       if (!isPopupModuleOpen('random')) {
+        // WT-5/WT-6A: 'Só TV (nuvem)' e `palco:N` (receiver PWA) não têm popup — não é 'parado'
+        try {
+          if (isCloudDestinationRoute('random')) return
+        } catch { /* routing indisponível */ }
         isProjecting.value = false
         stopProjectionWatch()
       }
@@ -373,6 +382,8 @@ export const useRandomStore = defineStore('random', () => {
     await exitPopupModule()
     isProjecting.value = false
     stopProjectionWatch()
+    // WT-5: TV é destino independente — parar tem que mandar idle pro relay
+    publishRandomRuntime({ currentDisplay: '', isDrawing: false })
   }
 
   function refreshProjectionState() {
@@ -383,7 +394,9 @@ export const useRandomStore = defineStore('random', () => {
   }
 
   async function toggleProjection() {
-    if (isProjecting.value && isPopupModuleOpen('random')) {
+    // WT-5: rota 'Só TV' não tem popup — isPopupModuleOpen é sempre false e
+    // o toggle antigo nunca desligava (reprojetava em vez de parar).
+    if (isProjecting.value) {
       await clearProjection()
       return
     }

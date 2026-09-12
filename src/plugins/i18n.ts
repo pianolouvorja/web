@@ -47,7 +47,22 @@ const modulesEs = {
   ...liturgyEs, ...mediaEs, ...randomEs, ...settingsEs, ...timerEs,
 }
 
-const savedLocale = localStorage.getItem('language') ?? 'pt-BR'
+/** Locale persistido: Settings grava em localStorage['user_data'].language
+ * (user-preferences). Fallback pt-BR. */
+function loadSavedLocale(): string {
+  try {
+    const stored = localStorage.getItem('user_data')
+    if (stored) {
+      const prefs = JSON.parse(stored)
+      if (typeof prefs.language === 'string') return prefs.language
+    }
+  } catch {
+    // localStorage indisponível — fallback abaixo
+  }
+  return 'pt-BR'
+}
+
+const savedLocale = loadSavedLocale()
 
 export default createI18n({
   legacy: false,
