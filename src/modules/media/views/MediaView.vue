@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useDisplay } from 'vuetify'
 
 import StagePaletteButton from '../../settings/components/StagePaletteButton.vue'
@@ -14,6 +14,7 @@ import { stripHtmlBreaks } from '../services/media-slides'
 import type { MediaPlaybackMode } from '../types/media'
 
 const { t } = useI18n()
+const route = useRoute()
 const router = useRouter()
 const { smAndDown } = useDisplay()
 const stageRoot = ref<HTMLElement | null>(null)
@@ -172,7 +173,12 @@ function leaveMediaRoute() {
 
 watch(hasSession, (active) => {
   if (!active) {
-    leaveMediaRoute()
+    // Fim natural da música (fila acabou) também zera a sessão: se o usuário
+    // já naveguou p/ outro lugar (ex: editor de letras), NÃO expulsa — só
+    // redireciona quem ainda está preso na rota /media sem player.
+    if (route.name === 'media') {
+      leaveMediaRoute()
+    }
   }
 })
 
