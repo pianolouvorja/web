@@ -33,18 +33,24 @@ import settingsPtBR from '@modules/settings/locales/pt-BR'
 import timerEn from '@modules/timer/locales/en'
 import timerEs from '@modules/timer/locales/es'
 import timerPtBR from '@modules/timer/locales/pt-BR'
+import authEn from '@modules/auth/locales/en'
+import authEs from '@modules/auth/locales/es'
+import authPtBR from '@modules/auth/locales/pt-BR'
 
 const modulesPtBR = {
   ...albumsPtBR, ...biblePtBR, ...clockPtBR, ...countdownPtBR, ...homePtBR,
   ...liturgyPtBR, ...mediaPtBR, ...randomPtBR, ...settingsPtBR, ...timerPtBR,
+  ...authPtBR,
 }
 const modulesEn = {
   ...albumsEn, ...bibleEn, ...clockEn, ...countdownEn, ...homeEn,
   ...liturgyEn, ...mediaEn, ...randomEn, ...settingsEn, ...timerEn,
+  ...authEn,
 }
 const modulesEs = {
   ...albumsEs, ...bibleEs, ...clockEs, ...countdownEs, ...homeEs,
   ...liturgyEs, ...mediaEs, ...randomEs, ...settingsEs, ...timerEs,
+  ...authEs,
 }
 
 const savedLocale = localStorage.getItem('language') ?? 'pt-BR'
