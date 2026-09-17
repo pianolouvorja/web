@@ -41,13 +41,14 @@ export default {
     zoomOut: 'Zoom out'
   },
   nav: {
-    home: 'Home',
-    albums: 'Media Center',
-    liturgy: 'Liturgy',
-    bible: 'Bible',
-    utilities: 'Utilities',
-    settings: 'Settings'
-  },
+      home: 'Home',
+      albums: 'Media Center',
+      liturgy: 'Liturgy',
+      bible: 'Bible',
+      community: 'Community',
+      utilities: 'Utilities',
+      settings: 'Settings'
+    },
   eula: {
     title: 'Software License Agreement',
     intro: 'Before continuing, please read and accept the software license terms.',

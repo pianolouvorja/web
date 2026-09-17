@@ -11,6 +11,7 @@ import { mediaRoutes } from '@modules/media/routes'
 import { randomRoutes } from '@modules/random/routes'
 import { settingsRoutes } from '@modules/settings/routes'
 import { timerRoutes } from '@modules/timer/routes'
+import { communityRoutes } from '@modules/community/routes'
 import PopupHost from '@shared/views/PopupHost.vue'
 import { createMobileRouteGuard } from '@shared/composables/useMobileRouteGuard'
 
@@ -26,21 +27,22 @@ const router = createRouter({
       },
     },
     {
-      path: '/',
-      component: AppShell,
-      children: [
-        ...homeRoutes,
-        ...albumsRoutes,
-        ...liturgyRoutes,
-        ...mediaRoutes,
-        ...bibleRoutes,
-        ...utilitiesRoutes,
-        ...timerRoutes,
-        ...countdownRoutes,
-        ...randomRoutes,
-        ...settingsRoutes,
-      ],
-    },
+          path: '/',
+          component: AppShell,
+          children: [
+            ...homeRoutes,
+            ...albumsRoutes,
+            ...liturgyRoutes,
+            ...mediaRoutes,
+            ...bibleRoutes,
+            ...utilitiesRoutes,
+            ...timerRoutes,
+            ...countdownRoutes,
+            ...randomRoutes,
+            ...settingsRoutes,
+            ...communityRoutes,
+          ],
+        },
     {
       path: '/:pathMatch(.*)*',
       redirect: '/',

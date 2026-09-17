@@ -41,13 +41,14 @@ export default {
     zoomOut: 'Disminuir zoom'
   },
   nav: {
-    home: 'Inicio',
-    albums: 'Centro de Medios',
-    liturgy: 'Liturgia',
-    bible: 'Biblia',
-    utilities: 'Utilidades',
-    settings: 'Configuración'
-  },
+      home: 'Inicio',
+      albums: 'Centro de Medios',
+      liturgy: 'Liturgia',
+      bible: 'Biblia',
+      community: 'Comunidad',
+      utilities: 'Utilidades',
+      settings: 'Configuración'
+    },
   eula: {
     title: 'Licencia de Uso del Software',
     intro: 'Antes de continuar, lea y acepte los términos de la licencia de uso.',
