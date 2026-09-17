@@ -17,9 +17,10 @@ function communityBaseUrl(): string {
 export async function getNotifications(): Promise<AppNotification[]> {
   const session = getAuthSession();
   if (!session) return [];
+  const token = session.token;
   try {
     const res = await fetch(`${communityBaseUrl()}/notifications`, {
-      headers: { authorization: `Bearer ${session.token}` },
+      headers: { authorization: `Bearer ${token}` },
     });
     if (!res.ok) return [];
     return (await res.json()) as AppNotification[];

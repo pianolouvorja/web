@@ -16,9 +16,10 @@ function communityBaseUrl(): string {
 export async function getWeeklyTasks(): Promise<WeeklyTask[] | null> {
   const session = getAuthSession();
   if (!session) return null;
+  const token = session.token;
   try {
     const res = await fetch(`${communityBaseUrl()}/weekly-tasks`, {
-      headers: { authorization: `Bearer ${session.token}` },
+      headers: { authorization: `Bearer ${token}` },
     });
     if (!res.ok) return null;
     return (await res.json()) as WeeklyTask[];

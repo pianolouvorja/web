@@ -38,12 +38,13 @@ export async function saveCommunityCopy(
 ): Promise<number | null> {
   const session = getAuthSession();
   if (!session) return null;
+  const token = session.token;
   try {
     const res = await fetch(`${communityBaseUrl()}/collections/copy`, {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
-        authorization: `Bearer ${session.token}`,
+        authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({ sourceCollectionId: collection.id }),
     });
