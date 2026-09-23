@@ -19,7 +19,7 @@ const open = ref(false)
 </script>
 
 <template>
-  <Teleport to="body">
+  <div>
     <button
       type="button"
       class="stage-palette-fab"
@@ -38,15 +38,14 @@ const open = ref(false)
       :scope="props.scope"
       @close="open = false"
     />
-  </Teleport>
+  </div>
 </template>
 
 <style scoped lang="scss">
 .stage-palette-fab {
-  position: fixed;
-  top: calc(var(--app-titlebar-height, 0px) + var(--ds-header-height, 5rem) + 0.75rem);
-  right: 1.25rem;
-  z-index: 40;
+  /* Estático: o pai (fab-bar no MediaView ou container do módulo) decide
+   * o lugar. Nada de fixed — não sobrepõe letra nem aside. */
+  position: static;
   display: inline-flex;
   width: 2.5rem;
   height: 2.5rem;

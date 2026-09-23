@@ -8,6 +8,11 @@ import {
   openPopupModule,
 } from '@shared/services/popup-windows'
 import {
+  getPopupRoute,
+  isCloudDestinationRoute,
+  type PopupRoutableModule,
+} from '@shared/services/popup-routing'
+import {
   getUserPreference,
   setUserPreference,
 } from '@shared/services/user-preferences'
@@ -71,6 +76,10 @@ export const useBibleStore = defineStore('bible', () => {
     stopProjectionWatch()
     projectionWatchTimer = setInterval(() => {
       if (!isPopupModuleOpen('bible')) {
+        // WT-5/WT-6A: 'Só TV (nuvem)' e `palco:N` (receiver PWA) não têm popup — não é 'parado'
+        try {
+          if (isCloudDestinationRoute('bible')) return
+        } catch { /* routing indisponível */ }
         isProjecting.value = false
         stopProjectionWatch()
       }
@@ -198,6 +207,13 @@ export const useBibleStore = defineStore('bible', () => {
     }
 
     publishProjectionState(projection.value)
+    // Destino receiver/monitor cloud não tem popup. Projetar já publicou no
+    // relay; abrir popup aqui reintroduzia a janela indevida.
+    if (getPopupRoute('bible') === 'tv') {
+      isProjecting.value = true
+      startProjectionWatch()
+      return true
+    }
     const opened = await openPopupModule('bible')
     isProjecting.value = opened
     if (opened) startProjectionWatch()
@@ -213,7 +229,7 @@ export const useBibleStore = defineStore('bible', () => {
   }
 
   async function toggleProjection() {
-    if (isProjecting.value && isPopupModuleOpen('bible')) {
+    if (isProjecting.value) {
       await clearProjectionWindow()
       return false
     }

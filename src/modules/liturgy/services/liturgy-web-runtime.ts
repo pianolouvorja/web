@@ -4,10 +4,13 @@ export const LITURGY_YT_SYNC_CHANNEL = 'louvorja-liturgy-yt-sync'
 export const LITURGY_SITE_SYNC_CHANNEL = 'louvorja-liturgy-site-sync'
 export const LITURGY_PROJECTING_STORAGE_KEY = 'louvorja-liturgy-projecting-screens'
 
+import { publishToStageRelay } from '@shared/services/palco-cloud-bridge'
+
 export type LiturgyWebKind =
   | 'youtube'
   | 'vimeo'
   | 'site'
+  | 'audio'
   | 'video'
   | 'image'
   | 'pdf'
@@ -172,6 +175,7 @@ export function normalizeLiturgyWebRuntime(
     kindRaw === 'youtube' ||
     kindRaw === 'vimeo' ||
     kindRaw === 'site' ||
+    kindRaw === 'audio' ||
     kindRaw === 'video' ||
     kindRaw === 'image' ||
     kindRaw === 'pdf'
@@ -233,6 +237,10 @@ export function publishLiturgyWebRuntime(
   } catch {
     // BroadcastChannel indisponível
   }
+
+  // WT-5G: espelha no relay cloud (TVs/kiosk) — site/vídeo/imagem/pdf da
+  // liturgia agora chegam ao receiver; bridge converte p/ ReceiverMessage.
+  publishToStageRelay('liturgy-web', runtime)
 }
 
 export function patchLiturgyWebRuntime(

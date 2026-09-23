@@ -1,4 +1,5 @@
 import { readOrFetchCatalogJson } from '@shared/services/remote-catalog'
+import { CUSTOM_MUSIC_ID_OFFSET } from '@modules/media/services/custom-catalog'
 
 import type {
   AlbumCollection,
@@ -166,6 +167,8 @@ export async function loadAlbumLyric(
   musicId: number,
 ): Promise<AlbumLyricDocument | null> {
   if (!Number.isFinite(musicId) || musicId <= 0) return null
+  // Faixa custom (id >= 1M): letra vem da API custom, não do catálogo oficial
+  if (musicId >= CUSTOM_MUSIC_ID_OFFSET) return null
 
   const record = await readOrFetchCatalog<CatalogMusicRecord>(`music_${musicId}`)
   if (!record) return null

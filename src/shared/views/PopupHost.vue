@@ -80,7 +80,23 @@ function applyModule(value: unknown) {
   moduleId.value = typeof value === 'string' ? value : ''
 }
 
+/**
+ * Módulo desta popup. Se a URL trouxe ?module=, a popup é DEDICADA — não
+ * segue o módulo global (roteamento por tela: hinos numa, bíblia noutra).
+ * Sem query, comporta-se como popup espelho (segue o storage global).
+ */
+const dedicatedModule = (() => {
+  const fromQuery = route.query.module
+  return typeof fromQuery === 'string' && fromQuery.length > 0 ? fromQuery : null
+})()
+
 function refreshModule() {
+  // Popup dedicada (?module= na URL): módulo é imutável.
+  if (dedicatedModule) {
+    applyModule(dedicatedModule)
+    return
+  }
+
   // Storage é a fonte de verdade (inclui limpar com ''). Query só no boot.
   const stored = getBrowserItem<string>(BROWSER_STORAGE_KEYS.popupModule, null)
   if (typeof stored === 'string') {
@@ -98,6 +114,10 @@ function refreshModule() {
 }
 
 async function restoreLayout() {
+  // WT-5F: telas de projeção NÃO se restauram — abrem fullscreen via
+  // getOpenFeatures e qualquer restore aqui encolheria de volta pra janela
+  // normal. Restore só para a janela de controle da liturgia.
+  if (!isControlPopup.value) return
   const entry = resolveBoundsForSlot(slotId.value)
   if (!entry) return
   await requestWindowManagementPermission()
@@ -161,7 +181,7 @@ function handleMessage(event: MessageEvent) {
     return
   }
 
-  if ('param' in data && data.param === 'popup_module') {
+  if ('param' in data && data.param === 'popup_module' && !dedicatedModule) {
     applyModule(data.value)
   }
 }
@@ -176,7 +196,7 @@ function onChannelMessage(
     closeThisScreenIfNeeded()
     return
   }
-  if ('param' in data && data.param === 'popup_module') {
+  if ('param' in data && data.param === 'popup_module' && !dedicatedModule) {
     applyModule(data.value)
   }
 }
@@ -186,6 +206,22 @@ function onStorage(event: StorageEvent) {
   refreshModule()
 }
 
+// WT-5K: fullscreen no primeiro gesto. Chromium só aceita requestFullscreen
+// dentro de clique/tecla NESTA janela — popup web pura nunca entra fullscreen
+// sozinha (WT-5F). Um clique em qualquer lugar da projeção resolve; fica
+// fullscreen até fechar a aba (Esc sai). Sempre tenta: se o usuário sair do
+// fullscreen com Esc, o próximo clique volta.
+function requestFullscreenOnGesture(): void {
+  if (isControlPopup.value) return
+  if (document.fullscreenElement) return
+  const root = document.documentElement
+  try {
+    void root.requestFullscreen().catch(() => { /* sem permissão de gesto */ })
+  } catch {
+    // API ausente
+  }
+}
+
 onMounted(() => {
   refreshModule()
 
@@ -193,6 +229,10 @@ onMounted(() => {
   window.addEventListener('resize', reportBounds)
   window.addEventListener('storage', onStorage)
   window.addEventListener('beforeunload', reportBounds)
+  window.addEventListener('click', requestFullscreenOnGesture)
+  window.addEventListener('keydown', (event) => {
+    if (event.key === 'f' || event.key === 'F') requestFullscreenOnGesture()
+  })
 
   void restoreLayout()
   reportBounds()
@@ -215,6 +255,7 @@ onMounted(() => {
       // ignore
     }
   }
+
 })
 
 onUnmounted(() => {
