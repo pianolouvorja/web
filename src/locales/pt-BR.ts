@@ -7,6 +7,7 @@ export default {
   common: {
     comingSoon: 'Em breve',
     cancel: 'Cancelar',
+    apply: 'Aplicar',
   },
   nav: {
     home: 'Início',

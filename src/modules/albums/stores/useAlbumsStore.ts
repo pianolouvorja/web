@@ -5,9 +5,21 @@ import { openMusicPlayer } from '@modules/media/services/open-music-player'
 import type { MediaPlaybackMode } from '@modules/media/types/media'
 
 import {
+  fromCustomCollectionId,
+  fromCustomMusicId,
+  isCustomCollectionId,
+  isCustomMusicId,
+  listCustomCollections,
+  listCustomMusics,
+  loadCustomMusicTrack,
+  toCustomMusicId,
+} from '@modules/media/services/custom-catalog'
+
+import {
   findCollectionById,
   loadAlbumCategories,
 } from '../services/album-catalog'
+import { formatCatalogDuration } from '../services/album-tracks'
 import {
   filterAlbumMusicIndex,
   loadAlbumMusicIndex,
@@ -97,6 +109,39 @@ export const useAlbumsStore = defineStore('albums', () => {
     tracks.value = []
 
     try {
+      // Minhas Coletâneas (custom): rota albums/2xxxxxx (offset 2M), sem catálogo oficial
+      if (isCustomCollectionId(collectionId)) {
+        const customId = fromCustomCollectionId(collectionId)
+        const summaries = await listCustomCollections()
+        const summary = summaries.find((item) => item.id === customId)
+        if (!summary) {
+          activeCollection.value = null
+          lastErrorKey.value = 'albums.messages.collectionMissing'
+          return false
+        }
+        activeCollection.value = {
+          id: collectionId,
+          kind: 'album',
+          name: summary.name,
+          subtitle: summary.description ?? '',
+          coverUrl: null,
+          trackCount: summary.musicsCount,
+          catalogKey: `custom_collection_${customId}`,
+        }
+        const musics = await listCustomMusics(customId)
+        tracks.value = musics.map((music, index) => ({
+          musicId: toCustomMusicId(music.id),
+          name: music.name,
+          track: index + 1,
+          durationLabel: formatCustomDuration(music.duration),
+          hasInstrumental: false,
+        }))
+        if (tracks.value.length === 0) {
+          lastErrorKey.value = 'albums.messages.tracksEmpty'
+        }
+        return true
+      }
+
       if (categories.value.length === 0) {
         await hydrateCatalog()
       }
@@ -131,6 +176,34 @@ export const useAlbumsStore = defineStore('albums', () => {
     searchQuery.value = ''
   }
 
+  /** Duração custom (segundos inteiros da API custom) em m:ss; null → '—'. */
+  function formatCustomDuration(duration: number | null): string {
+    return formatCatalogDuration(duration)
+  }
+
+  /** Documento de letra de música custom (Minhas Coletâneas). */
+  async function loadCustomLyricDocument(
+    customMusicId: number,
+  ): Promise<AlbumLyricDocument | null> {
+    const track = await loadCustomMusicTrack(customMusicId)
+    if (!track) return null
+    const lines = track.lyrics
+      .filter((slide) => slide.showSlide && slide.lyric.trim().length > 0)
+      .map((slide) => ({
+        order: slide.order,
+        text: slide.lyric
+          .replace(/<br\s*\/?>/gi, '\n')
+          .replace(/<[a-zA-Z][^>]*>/g, '')
+          .trim(),
+      }))
+      .filter((line) => line.text.length > 0)
+    return {
+      musicId: track.id,
+      title: track.name,
+      lines,
+    }
+  }
+
   function clearError() {
     lastErrorKey.value = null
   }
@@ -144,8 +217,11 @@ export const useAlbumsStore = defineStore('albums', () => {
     mode: MediaPlaybackMode,
     options?: { project?: boolean },
   ) {
-    const albumId =
-      activeCollection.value?.kind === 'album'
+    // Música custom (Minhas Coletâneas): sem albumId do catálogo oficial;
+    // o playback resolve pela API custom via resolveMediaTrack.
+    const albumId = isCustomMusicId(musicId)
+      ? null
+      : activeCollection.value?.kind === 'album'
         ? Number(activeCollection.value.id)
         : null
 
@@ -170,7 +246,9 @@ export const useAlbumsStore = defineStore('albums', () => {
     lyricDoc.value = null
     lyricOpen.value = true
     try {
-      lyricDoc.value = await loadAlbumLyric(musicId)
+      lyricDoc.value = isCustomMusicId(musicId)
+        ? await loadCustomLyricDocument(fromCustomMusicId(musicId))
+        : await loadAlbumLyric(musicId)
       if (!lyricDoc.value) {
         lastActionMessageKey.value = 'albums.messages.lyricMissing'
         lyricOpen.value = false

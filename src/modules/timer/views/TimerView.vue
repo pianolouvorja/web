@@ -14,6 +14,7 @@ import TimerPreview from '../components/TimerPreview.vue'
 import TimerProjectFab from '../components/TimerProjectFab.vue'
 import TimerSavedList from '../components/TimerSavedList.vue'
 import { useTimerFeature } from '../composables/useTimer'
+import PopupRouteSelect from '../../settings/components/PopupRouteSelect.vue'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -99,6 +100,7 @@ const effectiveConfig = computed(() => {
           {{ t('timer.title') }}
         </h1>
       </div>
+      <PopupRouteSelect module="timer" compact />
     </header>
 
     <div class="timer-view__content">

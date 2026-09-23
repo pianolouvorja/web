@@ -25,6 +25,25 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       allowedHosts: true,
+      // Proxy same-origin p/ mídia do túnel em dev: browsers bloqueiam
+      // subresources cross-origin com CORP same-origin (Cloudflare injeta
+      // cross-origin-resource-policy). Via proxy local o fetch é same-origin.
+      proxy: {
+        ...(env.VITE_DEV_MEDIA_PROXY
+          ? {
+              '/tunnel-file': {
+                target: env.VITE_DEV_MEDIA_PROXY,
+                changeOrigin: true,
+                rewrite: (p) => p.replace(/^\/tunnel-file/, '/file'),
+              },
+            }
+          : {}),
+        // API custom (Minhas Coletâneas) em dev: same-origin via proxy local
+        '/v1/custom': {
+          target: env.VITE_DEV_CUSTOM_API ?? 'http://localhost:3100',
+          changeOrigin: true,
+        },
+      },
     },
     plugins: [
       vue(),

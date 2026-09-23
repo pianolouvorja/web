@@ -13,6 +13,7 @@ import ClockConfigDialog from '../components/ClockConfigDialog.vue'
 import ClockPreview from '../components/ClockPreview.vue'
 import ClockProjectFab from '../components/ClockProjectFab.vue'
 import { useClockFeature } from '../composables/useClock'
+import PopupRouteSelect from '../../settings/components/PopupRouteSelect.vue'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -92,6 +93,7 @@ const effectiveConfig = computed(() => {
           {{ t('clock.title') }}
         </h1>
       </div>
+      <PopupRouteSelect module="clock" compact />
     </header>
 
     <div class="clock-view__stage">

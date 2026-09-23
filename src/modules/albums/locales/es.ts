@@ -3,6 +3,7 @@ export default {
     title: 'Centro de Medios',
     subtitle: 'Álbumes y Colecciones',
     collectionFallback: 'Colección',
+    playAll: 'Reproducir todo',
     back: 'Volver a álbumes',
     searchPlaceholder: 'Escriba el número o nombre del himno...',
     hubSearchPlaceholder: 'Busque aquí...',
@@ -59,6 +60,12 @@ export default {
       invalidFile: 'Archivo de playlists inválido.',
       newLists: '{count} playlist(s) nueva(s)',
       addedTracks: '{count} pista(s) añadida(s)'
+    },
+    custom: {
+      title: 'Mis Colecciones',
+      openEditor: 'Abrir editor',
+      open: 'Abrir colección {name}',
+      trackCount: '{count} pista(s)'
     }
   }
 }

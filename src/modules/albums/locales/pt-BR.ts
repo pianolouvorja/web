@@ -3,6 +3,7 @@ export default {
     title: 'Central de Mídia',
     subtitle: 'Álbum & Coletâneas',
     collectionFallback: 'Coletânea',
+    playAll: 'Tocar tudo',
     back: 'Voltar para álbuns',
     searchPlaceholder: 'Digite o número ou nome do hino...',
     hubSearchPlaceholder: 'Procure aqui...',
@@ -60,6 +61,12 @@ export default {
       invalidFile: 'Arquivo de playlists inválido.',
       newLists: '{count} playlist(s) nova(s)',
       addedTracks: '{count} faixa(s) adicionada(s)',
+    },
+    custom: {
+      title: 'Minhas Coletâneas',
+      openEditor: 'Abrir editor',
+      open: 'Abrir coletânea {name}',
+      trackCount: '{count} faixa(s)',
     },
   },
 }

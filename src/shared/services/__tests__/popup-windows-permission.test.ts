@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   permission: vi.fn<() => Promise<void>>(),
   scheduleRestore: vi.fn(),
   getPopupCount: vi.fn(() => 1),
+  getProjectionFullscreenMode: vi.fn(() => true),
   getTargetPopupSlots: vi.fn(() => [1]),
   getBrowserItem: vi.fn(() => ''),
   setBrowserItem: vi.fn(),
@@ -26,7 +27,17 @@ vi.mock('@shared/services/popup-layout', () => ({
 
 vi.mock('@shared/services/projection-preferences', () => ({
   getPopupCount: mocks.getPopupCount,
+  getProjectionFullscreenMode: mocks.getProjectionFullscreenMode,
   getTargetPopupSlots: mocks.getTargetPopupSlots,
+}))
+
+const routingMocks = vi.hoisted(() => ({
+  getPopupRoute: vi.fn(() => 'mirror'),
+}))
+
+vi.mock('../popup-routing', () => ({
+  POPUP_ROUTABLE_MODULES: ['bible', 'media', 'liturgy-web', 'random', 'clock', 'timer', 'countdown'],
+  getPopupRoute: routingMocks.getPopupRoute,
 }))
 
 vi.mock('@shared/services/browser-storage', () => ({
@@ -50,6 +61,7 @@ describe('openPopupModule > Window Management', () => {
     mocks.permission.mockReset().mockResolvedValue()
     mocks.scheduleRestore.mockReset()
     mocks.getPopupCount.mockReturnValue(1)
+    mocks.getProjectionFullscreenMode.mockReturnValue(true)
     mocks.getTargetPopupSlots.mockReturnValue([1])
     vi.stubGlobal('BroadcastChannel', class {
       postMessage() {}
@@ -58,7 +70,7 @@ describe('openPopupModule > Window Management', () => {
   })
 
   it('solicita Window Management antes de abrir a popup para preservar o gesto do operador', async () => {
-    const popup = { closed: false, name: 'PopupWindow1', focus: vi.fn(), postMessage: vi.fn() } as unknown as Window
+    const popup = { closed: false, close: vi.fn(), name: 'PopupWindow1', focus: vi.fn(), postMessage: vi.fn() } as unknown as Window
     const open = vi.spyOn(window, 'open').mockReturnValue(popup)
 
     await openPopupModule('media')
@@ -71,4 +83,43 @@ describe('openPopupModule > Window Management', () => {
 
     open.mockRestore()
   })
+
+  it('não tenta fullscreen quando a preferência está desligada', async () => {
+    mocks.getProjectionFullscreenMode.mockReturnValue(false)
+    const requestFullscreen = vi.fn()
+    const popup = {
+      closed: false,
+      close: vi.fn(),
+      name: 'PopupWindow1',
+      focus: vi.fn(),
+      postMessage: vi.fn(),
+      document: { documentElement: { requestFullscreen } },
+    } as unknown as Window
+    const open = vi.spyOn(window, 'open').mockReturnValue(popup)
+
+    await openPopupModule('media')
+
+    expect(requestFullscreen).not.toHaveBeenCalled()
+    open.mockRestore()
+  })
+
+  it('rota individual do módulo abre popup dedicada no slot designado', async () => {
+    routingMocks.getPopupRoute.mockReturnValue('2')
+    mocks.getPopupCount.mockReturnValue(2)
+
+    const popup = { closed: false, close: vi.fn(), name: 'PopupWindow2', focus: vi.fn(), postMessage: vi.fn() } as unknown as Window
+    const open = vi.spyOn(window, 'open').mockImplementation((url) => {
+      expect(String(url)).toContain('module=media')
+      expect(String(url)).toContain('slot=2')
+      return popup
+    })
+
+    await openPopupModule('media')
+
+    expect(open).toHaveBeenCalledOnce()
+
+    open.mockRestore()
+    routingMocks.getPopupRoute.mockReturnValue('mirror')
+  })
+
 })

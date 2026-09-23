@@ -1,5 +1,3 @@
-import hymnalCover from '@assets/library/hymnal.jpeg'
-import hymnal1996Cover from '@assets/library/hymnal_1996.jpeg'
 import { readOrFetchCatalogJson } from '@shared/services/remote-catalog'
 
 import type { AlbumCategory, AlbumCollection } from '../types/albums'
@@ -30,6 +28,12 @@ function resolveRemoteCoverUrl(urlPath: string): string {
   return `${base}/${cleanPath}`
 }
 
+/** Covers oficiais dos hinários servidos pela API (/covers/hinario_*.jpeg). */
+const HYMNAL_COVER_PATHS: Record<string, string> = {
+  hymnal: 'covers/hinario_novo.jpeg',
+  hymnal_1996: 'covers/hinario_1996.jpeg',
+}
+
 async function readOrFetchCatalog<T>(filename: string): Promise<T | null> {
   return readOrFetchCatalogJson<T>(filename)
 }
@@ -49,7 +53,7 @@ async function buildHymnalCollections(): Promise<AlbumCollection[]> {
       kind: 'hymnal',
       name: 'Hinário Adventista',
       subtitle: '',
-      coverUrl: hymnalCover,
+      coverUrl: resolveRemoteCoverUrl(HYMNAL_COVER_PATHS.hymnal),
       trackCount: hymnal.length,
       catalogKey: 'pt_hymnal',
     })
@@ -62,7 +66,7 @@ async function buildHymnalCollections(): Promise<AlbumCollection[]> {
       kind: 'hymnal',
       name: 'Hinário Adventista - Edição 1996',
       subtitle: '',
-      coverUrl: hymnal1996Cover,
+      coverUrl: resolveRemoteCoverUrl(HYMNAL_COVER_PATHS.hymnal_1996),
       trackCount: hymnal1996.length,
       catalogKey: 'pt_hymnal_1996',
     })

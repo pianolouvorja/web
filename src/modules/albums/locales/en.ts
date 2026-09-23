@@ -3,6 +3,7 @@ export default {
     title: 'Media Center',
     subtitle: 'Albums & Collections',
     collectionFallback: 'Collection',
+    playAll: 'Play all',
     back: 'Back to albums',
     searchPlaceholder: 'Type the hymn number or name...',
     hubSearchPlaceholder: 'Search here...',
@@ -59,6 +60,12 @@ export default {
       invalidFile: 'Invalid playlists file.',
       newLists: '{count} new playlist(s)',
       addedTracks: '{count} track(s) added'
+    },
+    custom: {
+      title: 'My Collections',
+      openEditor: 'Open editor',
+      open: 'Open collection {name}',
+      trackCount: '{count} track(s)'
     }
   }
 }
