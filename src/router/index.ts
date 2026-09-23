@@ -8,9 +8,12 @@ import { homeRoutes } from '@modules/home/routes'
 import { albumsRoutes } from '@modules/albums/routes'
 import { liturgyRoutes } from '@modules/liturgy/routes'
 import { mediaRoutes } from '@modules/media/routes'
+import { useMediaStore } from '@modules/media/stores/useMediaStore'
+import { createMediaSessionGuard } from '@modules/media/services/media-session-guard'
 import { randomRoutes } from '@modules/random/routes'
 import { settingsRoutes } from '@modules/settings/routes'
 import { timerRoutes } from '@modules/timer/routes'
+import { communityRoutes } from '@modules/community/routes'
 import PopupHost from '@shared/views/PopupHost.vue'
 import { createMobileRouteGuard } from '@shared/composables/useMobileRouteGuard'
 
@@ -26,21 +29,22 @@ const router = createRouter({
       },
     },
     {
-      path: '/',
-      component: AppShell,
-      children: [
-        ...homeRoutes,
-        ...albumsRoutes,
-        ...liturgyRoutes,
-        ...mediaRoutes,
-        ...bibleRoutes,
-        ...utilitiesRoutes,
-        ...timerRoutes,
-        ...countdownRoutes,
-        ...randomRoutes,
-        ...settingsRoutes,
-      ],
-    },
+          path: '/',
+          component: AppShell,
+          children: [
+            ...homeRoutes,
+            ...albumsRoutes,
+            ...liturgyRoutes,
+            ...mediaRoutes,
+            ...bibleRoutes,
+            ...utilitiesRoutes,
+            ...timerRoutes,
+            ...countdownRoutes,
+            ...randomRoutes,
+            ...settingsRoutes,
+            ...communityRoutes,
+          ],
+        },
     {
       path: '/:pathMatch(.*)*',
       redirect: '/',
@@ -50,5 +54,12 @@ const router = createRouter({
 
 // Guard para rotas desktop-only no mobile
 router.beforeEach(createMobileRouteGuard())
+
+// Guard /media: sem sessão de mídia → /albums (URL direta, F5, link externo).
+// Store resolvido lazy: pinia é instalado antes do router navegar (main.ts).
+router.beforeEach((to) => {
+  if (to.name !== 'media') return true
+  return createMediaSessionGuard(() => useMediaStore().hasSession)(to)
+})
 
 export default router

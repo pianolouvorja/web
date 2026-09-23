@@ -1,4 +1,5 @@
 import { readOrFetchCatalogJson } from '@shared/services/remote-catalog'
+import { catalogMusicLang } from '@modules/albums/services/album-music-search'
 
 import type {
   LiturgyBibleBookOption,
@@ -192,7 +193,9 @@ function mapMusicIndexRow(row: CatalogMusicIndexRow): LiturgyMusicOption | null 
 }
 
 async function loadFromMusicIndex(): Promise<LiturgyMusicOption[] | null> {
-  const rows = await readOrFetchCatalog<CatalogMusicIndexRow[]>('pt_musics')
+  const rows = await readOrFetchCatalog<CatalogMusicIndexRow[]>(
+    `${catalogMusicLang()}_musics`,
+  )
   if (!rows || !Array.isArray(rows) || rows.length === 0) return null
 
   const byId = new Map<number, LiturgyMusicOption>()

@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { GlassCard } from '@design-system/index'
 
 import type { AlbumCollection } from '../types/albums'
+
+import hymnalCover from '@assets/library/hymnal.jpeg'
+import hymnal1996Cover from '@assets/library/hymnal_1996.jpeg'
 
 const props = defineProps<{
   collection: AlbumCollection
@@ -37,6 +40,29 @@ const subtitle = computed(() => {
 const coverIcon = computed(() =>
   props.collection.id === 'hymnal_1996' ? 'ti-history' : 'ti-book-2',
 )
+
+// Cover remoto (API) → fallback asset local empacotado → ícone.
+const remoteCoverFailed = ref(false)
+const localCoverFailed = ref(false)
+
+const localCover = computed(() =>
+  props.collection.id === 'hymnal_1996' ? hymnal1996Cover : hymnalCover,
+)
+
+const showImage = computed(() =>
+  props.collection.coverUrl != null && (!remoteCoverFailed.value || !localCoverFailed.value),
+)
+const shownCover = computed(() =>
+  remoteCoverFailed.value ? localCover.value : props.collection.coverUrl,
+)
+
+function onCoverError() {
+  if (!remoteCoverFailed.value) {
+    remoteCoverFailed.value = true
+  } else {
+    localCoverFailed.value = true
+  }
+}
 </script>
 
 <template>
@@ -51,7 +77,16 @@ const coverIcon = computed(() =>
       @click="emit('open')"
     >
       <div class="album-hymnal-card__cover">
+        <img
+          v-if="showImage"
+          class="album-hymnal-card__cover-img"
+          :src="shownCover ?? undefined"
+          :alt="displayName"
+          loading="lazy"
+          @error="onCoverError"
+        >
         <i
+          v-else
           class="ti album-hymnal-card__fallback-icon"
           :class="coverIcon"
           aria-hidden="true"
@@ -119,6 +154,12 @@ const coverIcon = computed(() =>
   border: 1px solid color-mix(in srgb, var(--ds-color-on-surface) 10%, transparent);
   background: var(--ds-color-surface-container-high, #2a2a2a);
   box-shadow: 0 12px 24px rgb(0 0 0 / 35%);
+}
+
+.album-hymnal-card__cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .album-hymnal-card__fallback-icon {

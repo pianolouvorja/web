@@ -5,6 +5,8 @@ import { useI18n } from 'vue-i18n'
 import { GlassCard } from '@design-system/index'
 
 import BibleVersionSelect from './BibleVersionSelect.vue'
+import StagePaletteButton from '../../settings/components/StagePaletteButton.vue'
+import PopupRouteSelect from '../../settings/components/PopupRouteSelect.vue'
 import type { BibleVersion } from '../types/bible'
 
 const props = defineProps<{
@@ -64,6 +66,8 @@ const browseIcon = computed(() =>
     </div>
 
     <div class="bible-toolbar__actions">
+      <StagePaletteButton scope="bible" />
+      <PopupRouteSelect module="bible" compact />
       <div class="bible-toolbar__search">
         <i
           class="ti ti-search bible-toolbar__search-icon"

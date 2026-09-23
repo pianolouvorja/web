@@ -2,6 +2,7 @@ import {
   DEFAULT_RANDOM_RUNTIME,
   type RandomRuntimeState,
 } from '../types/random'
+import { publishToStageRelay } from '@shared/services/palco-cloud-bridge'
 
 export const RANDOM_RUNTIME_CHANNEL = 'louvorja-random-runtime'
 export const RANDOM_RUNTIME_STORAGE_KEY = 'louvorja-random-runtime-state'
@@ -51,4 +52,7 @@ export function publishRandomRuntime(state: RandomRuntimeState): void {
   } catch {
     // BroadcastChannel pode não existir em ambientes antigos
   }
+
+  // WT-5: espelha no relay cloud (no-op sem sessão ativa)
+  publishToStageRelay('random', state)
 }

@@ -13,6 +13,7 @@ import { syncPopupWindows } from '@shared/services/popup-windows'
 
 import LiturgyWebControlBar from '../components/LiturgyWebControlBar.vue'
 import { toggleLiturgyScreensFromControl } from '../services/liturgy-web-projection'
+import { useLiturgyVideoAutoclose } from '../composables/useLiturgyVideoAutoclose'
 import {
   captureCurrentSurface,
   startSiteMirrorBroadcaster,
@@ -57,7 +58,7 @@ const mirrorActive = ref(false)
 const mirrorStream = ref<MediaStream | null>(null)
 const screenReloadToken = ref(0)
 
-const videoEl = ref<HTMLVideoElement | null>(null)
+const videoEl = ref<HTMLVideoElement | HTMLAudioElement | null>(null)
 const ytHostEl = ref<HTMLElement | null>(null)
 const siteFrameEl = ref<HTMLIFrameElement | null>(null)
 const stageEl = ref<HTMLElement | null>(null)
@@ -87,13 +88,24 @@ const isControl = computed(() => {
   return window.name === 'LiturgyWebControl'
 })
 
+// Autoclose de mídia com fim natural (vídeo local/YouTube) — paridade app RF-03.
+useLiturgyVideoAutoclose({ runtime, isControl })
+const runtimeAutoclose = computed(
+  () =>
+    (runtime.value as LiturgyWebProjectionRuntime & {
+      __autoclose?: { onLocalVideoEnded: () => void; handleYtStateChange: (state: number) => void }
+    }).__autoclose,
+)
+
 const showContent = computed(
   () => runtime.value.active && Boolean(runtime.value.url),
 )
 
 const showTransport = computed(
   () =>
-    runtime.value.kind === 'youtube' || runtime.value.kind === 'video',
+    runtime.value.kind === 'youtube' ||
+    runtime.value.kind === 'video' ||
+    runtime.value.kind === 'audio',
 )
 
 const showSiteNav = computed(
@@ -142,6 +154,7 @@ const frameSrc = computed(() => {
   const url = runtime.value.url
   if (
     runtime.value.kind === 'video' ||
+    runtime.value.kind === 'audio' ||
     runtime.value.kind === 'image' ||
     runtime.value.kind === 'youtube' ||
     runtime.value.kind === 'site'
@@ -541,6 +554,9 @@ async function mountYtPlayer() {
         const paused = event.data === window.YT!.PlayerState.PAUSED
         if (playing) isPlaying.value = true
         if (paused) isPlaying.value = false
+        if (event.data === window.YT!.PlayerState.ENDED) {
+          runtimeAutoclose.value?.handleYtStateChange(0)
+        }
         if (isControl.value) publishSyncFromLocal()
       },
     },
@@ -565,7 +581,7 @@ function readLocalPlayback(): LiturgyYtSyncPayload {
     }
   }
 
-  if (runtime.value.kind === 'video' && videoEl.value) {
+  if ((runtime.value.kind === 'video' || runtime.value.kind === 'audio') && videoEl.value) {
     return {
       videoId,
       currentTime: videoEl.value.currentTime || 0,
@@ -632,7 +648,7 @@ function applyRemoteSync(payload: LiturgyYtSyncPayload) {
       }
     }
 
-    if (runtime.value.kind === 'video' && videoEl.value) {
+    if ((runtime.value.kind === 'video' || runtime.value.kind === 'audio') && videoEl.value) {
       const el = videoEl.value
       el.muted = true
       el.volume = 0
@@ -685,7 +701,7 @@ function togglePlay() {
     else ytPlayer.playVideo()
     return
   }
-  if (runtime.value.kind === 'video' && videoEl.value) {
+  if ((runtime.value.kind === 'video' || runtime.value.kind === 'audio') && videoEl.value) {
     if (videoEl.value.paused) void videoEl.value.play()
     else videoEl.value.pause()
   }
@@ -722,7 +738,7 @@ function applyLocalAudio() {
       // ignore
     }
   }
-  if (runtime.value.kind === 'video' && videoEl.value) {
+  if ((runtime.value.kind === 'video' || runtime.value.kind === 'audio') && videoEl.value) {
     videoEl.value.muted = muted.value
     videoEl.value.volume = muted.value ? 0 : volume.value
   }
@@ -734,7 +750,7 @@ function seekTo(seconds: number) {
   if (runtime.value.kind === 'youtube' && ytPlayer) {
     ytPlayer.seekTo(t, true)
   }
-  if (runtime.value.kind === 'video' && videoEl.value) {
+  if ((runtime.value.kind === 'video' || runtime.value.kind === 'audio') && videoEl.value) {
     videoEl.value.currentTime = t
   }
   publishSyncFromLocal()
@@ -952,7 +968,27 @@ onUnmounted(() => {
         @timeupdate="onVideoTimeUpdate"
         @play="onVideoPlay"
         @pause="onVideoPause"
+        @ended="runtimeAutoclose?.onLocalVideoEnded()"
       />
+      <!-- WT-6: áudio local — now-playing central + elemento de mídia oculto. -->
+      <template v-else-if="showContent && runtime.kind === 'audio'">
+        <div class="liturgy-web-projection__audio">
+          <span class="liturgy-web-projection__audio-icon">♪</span>
+          <span class="liturgy-web-projection__audio-title">{{ runtime.title || 'Áudio' }}</span>
+        </div>
+        <audio
+          :key="runtime.url"
+          ref="videoEl"
+          :src="runtime.url"
+          :muted="!isControl || muted"
+          autoplay
+          @loadedmetadata="onVideoMeta"
+          @timeupdate="onVideoTimeUpdate"
+          @play="onVideoPlay"
+          @pause="onVideoPause"
+          @ended="runtimeAutoclose?.onLocalVideoEnded()"
+        />
+      </template>
       <div
         v-else-if="showContent && runtime.kind === 'youtube'"
         ref="ytHostEl"
@@ -1073,6 +1109,33 @@ onUnmounted(() => {
 .liturgy-web-projection__mirror {
   object-fit: contain;
   background: #000;
+}
+
+/* WT-6: now-playing do áudio local (paridade do receiver MP3). */
+.liturgy-web-projection__audio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2.5vh;
+  width: 100%;
+  height: 100%;
+  color: #fff;
+  background: #000;
+}
+
+.liturgy-web-projection__audio-icon {
+  font-size: 12vh;
+  line-height: 1;
+  opacity: 0.85;
+}
+
+.liturgy-web-projection__audio-title {
+  max-width: 90vw;
+  font-size: 5vh;
+  font-weight: 600;
+  text-align: center;
+  overflow-wrap: break-word;
 }
 
 .liturgy-web-projection__frame.is-screen {

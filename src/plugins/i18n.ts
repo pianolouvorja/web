@@ -33,21 +33,48 @@ import settingsPtBR from '@modules/settings/locales/pt-BR'
 import timerEn from '@modules/timer/locales/en'
 import timerEs from '@modules/timer/locales/es'
 import timerPtBR from '@modules/timer/locales/pt-BR'
+import authEn from '@modules/auth/locales/en'
+import authEs from '@modules/auth/locales/es'
+import authPtBR from '@modules/auth/locales/pt-BR'
+import communityEn from '@modules/community/locales/en'
+import communityEs from '@modules/community/locales/es'
+import communityPtBR from '@modules/community/locales/pt-BR'
 
 const modulesPtBR = {
   ...albumsPtBR, ...biblePtBR, ...clockPtBR, ...countdownPtBR, ...homePtBR,
   ...liturgyPtBR, ...mediaPtBR, ...randomPtBR, ...settingsPtBR, ...timerPtBR,
+  ...authPtBR,
+  ...communityPtBR,
 }
 const modulesEn = {
   ...albumsEn, ...bibleEn, ...clockEn, ...countdownEn, ...homeEn,
   ...liturgyEn, ...mediaEn, ...randomEn, ...settingsEn, ...timerEn,
+  ...authEn,
+  ...communityEn,
 }
 const modulesEs = {
   ...albumsEs, ...bibleEs, ...clockEs, ...countdownEs, ...homeEs,
   ...liturgyEs, ...mediaEs, ...randomEs, ...settingsEs, ...timerEs,
+  ...authEs,
+  ...communityEs,
 }
 
-const savedLocale = localStorage.getItem('language') ?? 'pt-BR'
+/** Locale persistido: Settings grava em localStorage['user_data'].language
+ * (user-preferences). Fallback pt-BR. */
+function loadSavedLocale(): string {
+  try {
+    const stored = localStorage.getItem('user_data')
+    if (stored) {
+      const prefs = JSON.parse(stored)
+      if (typeof prefs.language === 'string') return prefs.language
+    }
+  } catch {
+    // localStorage indisponível — fallback abaixo
+  }
+  return 'pt-BR'
+}
+
+const savedLocale = loadSavedLocale()
 
 export default createI18n({
   legacy: false,

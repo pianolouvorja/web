@@ -3,6 +3,7 @@ export default {
     title: 'Media Center',
     subtitle: 'Albums & Collections',
     collectionFallback: 'Collection',
+    playAll: 'Play all',
     back: 'Back to albums',
     searchPlaceholder: 'Type the hymn number or name...',
     hubSearchPlaceholder: 'Search here...',
@@ -46,6 +47,25 @@ export default {
       edition1996Name: 'Adventist Hymnal - 1996 Edition',
       officialSubtitle: '{count} hymns with sheet music and lyrics',
       edition1996Subtitle: 'Historic - {count} traditional hymns'
+    },
+    playlists: {
+      title: 'Playlists',
+      newPlaceholder: 'New playlist name...',
+      create: 'Create',
+      empty: 'No playlists created yet.',
+      export: 'Export',
+      import: 'Import',
+      imported: 'Imported: {summary}',
+      nothingToImport: 'Nothing new to import.',
+      invalidFile: 'Invalid playlists file.',
+      newLists: '{count} new playlist(s)',
+      addedTracks: '{count} track(s) added'
+    },
+    custom: {
+      title: 'My Collections',
+      openEditor: 'Open editor',
+      open: 'Open collection {name}',
+      trackCount: '{count} track(s)'
     }
   }
 }

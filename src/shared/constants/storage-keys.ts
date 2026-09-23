@@ -19,6 +19,8 @@ export const USER_PREFERENCE_KEYS = {
   popupCount: 'popup_count',
   /** Slots de popup selecionados para receber projeção (1..popupCount). */
   targetPopupSlots: 'projection.targetPopupSlots',
+  /** Próximas popups tentam fullscreen durante o gesto de projetar. */
+  projectionFullscreenMode: 'projection.fullscreenMode',
   /** Preferências de projeção (letra + popups); alinhado ao Electron. */
   projectionSettings: 'projection.settings',
   /** Personalização do Palco por módulo (formato StageSettings do APK). */
