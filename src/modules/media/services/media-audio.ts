@@ -3,6 +3,8 @@ export type MediaUrlResolveResult =
   | { ok: false; reason: 'missing' }
 
 export function resolveRemoteFileUrl(urlPath: string): string {
+  // API oficial (14/09/2026): URLs absolutas (host Mayco ou R2) usadas na íntegra.
+  if (/^https?:\/\//i.test(urlPath)) return urlPath
   const cleanPath = urlPath.startsWith('/') ? urlPath.slice(1) : urlPath
   // Mídia CUSTOM (coletâneas do usuário) vive na API local — NUNCA no túnel
   // do catálogo oficial. Em dev o Vite proxia /file/custom -> API local.

@@ -24,6 +24,8 @@ type CatalogHymnalEntry = {
 }
 
 function resolveRemoteCoverUrl(urlPath: string): string {
+  // API oficial (14/09/2026): URLs absolutas (host Mayco ou R2) usadas na íntegra.
+  if (/^https?:\/\//i.test(urlPath)) return urlPath
   const cleanPath = urlPath.startsWith('/') ? urlPath.slice(1) : urlPath
   // Dev: proxy same-origin /tunnel-file (VITE_DEV_MEDIA_PROXY) — Image() contra
   // URLs absolutas do túnel Cloudflare falha silenciosamente (fetch 200 ok,
