@@ -345,6 +345,10 @@ export async function openPopupModule(
   // Define o módulo antes de abrir, para a popup ler no boot (URL + storage).
   setActiveModule(moduleId)
 
+  // Inicia a solicitação ainda no gesto do operador. NÃO await: window.open
+  // também exige esse gesto e a Promise resolve depois para restaurar o monitor.
+  const windowManagementPermission = requestWindowManagementPermission()
+
   // Critical: window.open precisa ocorrer ainda no gesto do usuário.
   // NÃO await antes de ensurePopups — browsers bloqueiam popup após await.
   const popups = ensurePopups(moduleId, options?.slots)
@@ -363,8 +367,8 @@ export async function openPopupModule(
 
   scheduleSync(popups)
 
-  // Permissão / multi-monitor: best-effort depois da abertura.
-  void requestWindowManagementPermission().then(() => {
+  // Após o consentimento, reaplica layout na tela salva.
+  void windowManagementPermission.then(() => {
     popups.forEach((popup) => {
       if (!popup || popup.closed) return
       const slot = popup.__popupSlot

@@ -238,7 +238,6 @@ function onStageClick() {
         />
       </button>
     </header>
-    <StagePaletteButton scope="hymns" />
 
     <header class="media-window__toolbar media-window__toolbar--end">
       <button
@@ -286,6 +285,9 @@ function onStageClick() {
         class="media-window__stage"
         @click="onStageClick"
       >
+        <div class="media-window__stage-palette">
+          <StagePaletteButton scope="hymns" />
+        </div>
         <MediaSlideStage
           :lyric="stageLyric"
           :title="stageTitle"
@@ -454,9 +456,17 @@ function onStageClick() {
 }
 
 .media-window__stage {
+  position: relative;
   min-width: 0;
   min-height: 0;
   height: 100%;
+}
+
+.media-window__stage-palette {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 30;
 }
 
 .media-window__playlist {

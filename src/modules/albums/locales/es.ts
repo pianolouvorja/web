@@ -46,6 +46,19 @@ export default {
       edition1996Name: 'Himnario Adventista - Edición 1996',
       officialSubtitle: '{count} himnos con partituras y letras',
       edition1996Subtitle: 'Histórico - {count} himnos tradicionales'
+    },
+    playlists: {
+      title: 'Playlists',
+      newPlaceholder: 'Nombre de la nueva playlist...',
+      create: 'Crear',
+      empty: 'Aún no hay playlists creadas.',
+      export: 'Exportar',
+      import: 'Importar',
+      imported: 'Importado: {summary}',
+      nothingToImport: 'Nada nuevo para importar.',
+      invalidFile: 'Archivo de playlists inválido.',
+      newLists: '{count} playlist(s) nueva(s)',
+      addedTracks: '{count} pista(s) añadida(s)'
     }
   }
 }

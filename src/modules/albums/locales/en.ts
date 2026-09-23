@@ -46,6 +46,19 @@ export default {
       edition1996Name: 'Adventist Hymnal - 1996 Edition',
       officialSubtitle: '{count} hymns with sheet music and lyrics',
       edition1996Subtitle: 'Historic - {count} traditional hymns'
+    },
+    playlists: {
+      title: 'Playlists',
+      newPlaceholder: 'New playlist name...',
+      create: 'Create',
+      empty: 'No playlists created yet.',
+      export: 'Export',
+      import: 'Import',
+      imported: 'Imported: {summary}',
+      nothingToImport: 'Nothing new to import.',
+      invalidFile: 'Invalid playlists file.',
+      newLists: '{count} new playlist(s)',
+      addedTracks: '{count} track(s) added'
     }
   }
 }
