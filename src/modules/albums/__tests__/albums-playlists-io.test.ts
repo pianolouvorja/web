@@ -82,7 +82,10 @@ function makeFile(text: string): File {
 }
 
 async function mountView() {
+  // attachTo: os modais (Playlists/Coletâneas) renderizam via Teleport no body —
+  // sem attach ao documento o wrapper não os enxerga.
   const wrapper = mount(AlbumsView, {
+    attachTo: document.body,
     global: { plugins: [i18n, createPinia()] },
   })
   await flushPromises()
@@ -104,6 +107,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.unstubAllGlobals()
+  document.body.innerHTML = ''
 })
 
 describe('AlbumsView — export/import de playlists', () => {
@@ -118,20 +122,27 @@ describe('AlbumsView — export/import de playlists', () => {
       },
     ])
     serializePlaylistsMock.mockReturnValue({ version: 1, kind: 'playlists', playlists: [] })
-    const wrapper = await mountView()
+    await mountView()
 
-    const exportBtn = wrapper.find('[data-testid="playlists-export"]')
-    expect(exportBtn.exists()).toBe(true)
-    await exportBtn.trigger('click')
+    // Abre o modal de Playlists (conteúdo vive em Teleport no body)
+    document.querySelector<HTMLButtonElement>('.albums-view__toolbar-btn')?.click()
+    await flushPromises()
+
+    const exportBtn = document.querySelector<HTMLButtonElement>('[data-testid="playlists-export"]')
+    expect(exportBtn).toBeTruthy()
+    exportBtn?.click()
 
     expect(serializePlaylistsMock).toHaveBeenCalledOnce()
     expect(URL.createObjectURL).toHaveBeenCalledWith(expect.any(Blob))
   })
 
   it('export desabilitado sem playlists', async () => {
-    const wrapper = await mountView()
-    const exportBtn = wrapper.find('[data-testid="playlists-export"]')
-    expect(exportBtn.attributes('disabled')).toBeDefined()
+    await mountView()
+    document.querySelector<HTMLButtonElement>('.albums-view__toolbar-btn')?.click()
+    await flushPromises()
+    const exportBtn = document.querySelector<HTMLButtonElement>('[data-testid="playlists-export"]')
+    expect(exportBtn).toBeTruthy()
+    expect(exportBtn?.hasAttribute('disabled')).toBe(true)
   })
 
   it('import válido faz merge e mostra toast com resumo', async () => {
@@ -158,30 +169,34 @@ describe('AlbumsView — export/import de playlists', () => {
       discardedItems: 0,
     })
 
-    const wrapper = await mountView()
-    const input = wrapper.find('input[type="file"]')
-    expect(input.exists()).toBe(true)
+    await mountView()
+    document.querySelector<HTMLButtonElement>('.albums-view__toolbar-btn')?.click()
+    await flushPromises()
+    const input = document.querySelector<HTMLInputElement>('input[type="file"]')
+    expect(input).toBeTruthy()
 
-    Object.defineProperty(input.element, 'files', { value: [makeFile('{}')] })
-    await input.trigger('change')
+    Object.defineProperty(input, 'files', { value: [makeFile('{}')] })
+    input?.dispatchEvent(new Event('change'))
     await flushPromises()
 
     expect(parsePlaylistsImportMock).toHaveBeenCalledOnce()
     const current = listPlaylists()
     expect(current).toHaveLength(1)
     expect(current[0]?.items).toHaveLength(2)
-    expect(wrapper.text()).toContain('Importado')
-    expect(wrapper.text()).toContain('1 faixa(s) adicionada(s)')
+    expect(document.body.textContent).toContain('Importado')
+    expect(document.body.textContent).toContain('1 faixa(s) adicionada(s)')
   })
 
   it('import inválido mostra toast de erro', async () => {
     parsePlaylistsImportMock.mockReturnValue({ ok: false, playlists: [], discardedItems: 0 })
-    const wrapper = await mountView()
-    const input = wrapper.find('input[type="file"]')
-    Object.defineProperty(input.element, 'files', { value: [makeFile('x')] })
-    await input.trigger('change')
+    await mountView()
+    document.querySelector<HTMLButtonElement>('.albums-view__toolbar-btn')?.click()
+    await flushPromises()
+    const input = document.querySelector<HTMLInputElement>('input[type="file"]')
+    Object.defineProperty(input, 'files', { value: [makeFile('x')] })
+    input?.dispatchEvent(new Event('change'))
     await flushPromises()
 
-    expect(wrapper.text()).toContain('Arquivo de playlists inválido')
+    expect(document.body.textContent).toContain('Arquivo de playlists inválido')
   })
 })

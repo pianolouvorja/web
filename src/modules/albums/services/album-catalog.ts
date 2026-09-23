@@ -1,4 +1,5 @@
 import { readOrFetchCatalogJson } from '@shared/services/remote-catalog'
+import { catalogMusicLang } from './album-music-search'
 
 import type { AlbumCategory, AlbumCollection } from '../types/albums'
 
@@ -24,6 +25,11 @@ type CatalogHymnalEntry = {
 
 function resolveRemoteCoverUrl(urlPath: string): string {
   const cleanPath = urlPath.startsWith('/') ? urlPath.slice(1) : urlPath
+  // Dev: proxy same-origin /tunnel-file (VITE_DEV_MEDIA_PROXY) — Image() contra
+  // URLs absolutas do túnel Cloudflare falha silenciosamente (fetch 200 ok,
+  // img onerror); proxy local renderiza. Prod: URL absoluta da API.
+  const proxyTarget = import.meta.env.VITE_DEV_MEDIA_PROXY
+  if (proxyTarget) return `/tunnel-file/${cleanPath}`
   const base = import.meta.env.VITE_URL_FILES ?? 'https://api.louvorja.com.br/file'
   return `${base}/${cleanPath}`
 }
@@ -45,8 +51,9 @@ async function resolveCoverUrl(urlImage: string | null | undefined): Promise<str
 
 async function buildHymnalCollections(): Promise<AlbumCollection[]> {
   const collections: AlbumCollection[] = []
+  const lang = catalogMusicLang()
 
-  const hymnal = await readOrFetchCatalog<CatalogHymnalEntry[]>('pt_hymnal')
+  const hymnal = await readOrFetchCatalog<CatalogHymnalEntry[]>(`${lang}_hymnal`)
   if (Array.isArray(hymnal) && hymnal.length > 0) {
     collections.push({
       id: 'hymnal',
@@ -55,11 +62,11 @@ async function buildHymnalCollections(): Promise<AlbumCollection[]> {
       subtitle: '',
       coverUrl: resolveRemoteCoverUrl(HYMNAL_COVER_PATHS.hymnal),
       trackCount: hymnal.length,
-      catalogKey: 'pt_hymnal',
+      catalogKey: `${lang}_hymnal`,
     })
   }
 
-  const hymnal1996 = await readOrFetchCatalog<CatalogHymnalEntry[]>('pt_hymnal_1996')
+  const hymnal1996 = await readOrFetchCatalog<CatalogHymnalEntry[]>(`${lang}_hymnal_1996`)
   if (Array.isArray(hymnal1996) && hymnal1996.length > 0) {
     collections.push({
       id: 'hymnal_1996',
@@ -68,7 +75,7 @@ async function buildHymnalCollections(): Promise<AlbumCollection[]> {
       subtitle: '',
       coverUrl: resolveRemoteCoverUrl(HYMNAL_COVER_PATHS.hymnal_1996),
       trackCount: hymnal1996.length,
-      catalogKey: 'pt_hymnal_1996',
+      catalogKey: `${lang}_hymnal_1996`,
     })
   }
 
@@ -88,7 +95,9 @@ export async function loadAlbumCategories(): Promise<AlbumCategory[]> {
     })
   }
 
-  const categories = await readOrFetchCatalog<CatalogCategory[]>('pt_categories')
+  const categories = await readOrFetchCatalog<CatalogCategory[]>(
+    `${catalogMusicLang()}_categories`,
+  )
   if (!Array.isArray(categories)) return result
 
   for (const category of categories) {

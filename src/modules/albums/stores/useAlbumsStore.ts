@@ -8,17 +8,19 @@ import {
   fromCustomCollectionId,
   fromCustomMusicId,
   isCustomCollectionId,
-  isCustomMusicId,
-  listCustomCollections,
-  listCustomMusics,
-  loadCustomMusicTrack,
-  toCustomMusicId,
-} from '@modules/media/services/custom-catalog'
+    isCustomMusicId,
+    enrichDurations,
+    listCustomCollections,
+    listCustomMusics,
+    loadCustomMusicTrack,
+    toCustomMusicId,
+  } from '@modules/media/services/custom-catalog'
 
 import {
   findCollectionById,
   loadAlbumCategories,
 } from '../services/album-catalog'
+import { customFileUrl } from '@modules/media/services/custom-catalog'
 import { formatCatalogDuration } from '../services/album-tracks'
 import {
   filterAlbumMusicIndex,
@@ -124,18 +126,40 @@ export const useAlbumsStore = defineStore('albums', () => {
           kind: 'album',
           name: summary.name,
           subtitle: summary.description ?? '',
-          coverUrl: null,
+          coverUrl: summary.coverUrl
+            ? customFileUrl(summary.coverUrl)
+            : null,
           trackCount: summary.musicsCount,
           catalogKey: `custom_collection_${customId}`,
         }
         const musics = await listCustomMusics(customId)
+        // Faixa-link de hino oficial: musicId = id oficial (sem offset) —
+        // resolveMediaTrack despacha pro catálogo JSON; capa/duração vêm de lá.
         tracks.value = musics.map((music, index) => ({
-          musicId: toCustomMusicId(music.id),
-          name: music.name,
+          musicId:
+            music.officialMusicId != null
+              ? music.officialMusicId
+              : toCustomMusicId(music.id),
+          name: music.name ?? `Hino oficial #${music.officialMusicId ?? music.id}`,
           track: index + 1,
           durationLabel: formatCustomDuration(music.duration),
           hasInstrumental: false,
         }))
+        // API não traz duração: probeAudioDuration lê metadata do MP3 em bg.
+        // Quando completar, re-atribui tracks p/ Vue re-renderizar com m:ss.
+        void enrichDurations(musics).then((enriched) => {
+          if (!enriched || tracks.value.length !== musics.length) return
+          tracks.value = musics.map((music, index) => ({
+            musicId:
+              music.officialMusicId != null
+                ? music.officialMusicId
+                : toCustomMusicId(music.id),
+            name: music.name ?? `Hino oficial #${music.officialMusicId ?? music.id}`,
+            track: index + 1,
+            durationLabel: formatCustomDuration(music.duration),
+            hasInstrumental: false,
+          }))
+        })
         if (tracks.value.length === 0) {
           lastErrorKey.value = 'albums.messages.tracksEmpty'
         }

@@ -4,6 +4,7 @@ import type {
 } from '../types/media'
 
 import { loadMediaTrack } from './media-catalog'
+import { resolveRemoteFileUrl } from './media-audio'
 
 /**
  * Catálogo de músicas customizadas (Minhas Coletâneas) via API /v1/custom
@@ -73,6 +74,7 @@ type CustomMusicRow = {
   image_url?: string | null
   image_position?: string | number | null
   duration?: number | null
+  official_music_id?: number | null
   lyrics?: CustomLyricRow[]
 }
 
@@ -125,6 +127,33 @@ function customBaseUrl(): string {
 }
 
 /**
+ * Formata duração da API para m:ss.
+ * API pode retornar: null, segundos (number), "mm:ss" ou "hh:mm:ss".
+ */
+function formatDurationLabel(value: unknown): string {
+  const raw = asNullableString(value)
+  if (raw) {
+    // Já vem formatado ("3:45" / "00:03:45") — só limpar horas vazias
+    const parts = raw.split(':').map((p) => p.padStart(2, '0'))
+    if (parts.length === 3 && parts[0] === '00') return parts.slice(1).join(':')
+    if (parts.length >= 2) return raw
+    const secs = Number(raw)
+    if (Number.isFinite(secs) && secs > 0) return formatSeconds(secs)
+    return '0:00'
+  }
+  if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
+    return formatSeconds(value)
+  }
+  return '0:00'
+}
+
+function formatSeconds(total: number): string {
+  const m = Math.floor(total / 60)
+  const s = Math.floor(total % 60)
+  return `${m}:${String(s).padStart(2, '0')}`
+}
+
+/**
  * Carrega uma música customizada pela API e mapeia para MediaTrackRecord.
  * Retorna null se a API não responder ou a música não existir.
  */
@@ -139,17 +168,36 @@ export async function loadCustomMusicTrack(
     const row = (await response.json()) as CustomMusicRow
     if (!row || !row.name) return null
 
+    // Link p/ hino oficial: delega ao catálogo oficial (letra, áudio, capa,
+    // instrumental — tudo de lá). Mantém o id custom p/ fila/estado do player.
+    const officialId =
+      typeof row.official_music_id === 'number' && row.official_music_id > 0
+        ? row.official_music_id
+        : null
+    if (officialId != null) {
+      const official = await loadMediaTrack(officialId)
+      if (official) return { ...official, id: row.id_music ?? musicId }
+      return null
+    }
+
+    const lyrics = mapCustomLyrics(row.lyrics ?? [])
+    // Capa: image_url da música; fallback = bg do primeiro slide que tiver imagem
+    const coverUrl =
+      asNullableString(row.image_url) ??
+      lyrics.find((slide) => slide.imageUrl)?.imageUrl ??
+      null
+
     return {
       id: row.id_music ?? musicId,
       name: row.name,
-      durationLabel: row.duration ? `${row.duration}s` : '0:00',
+      durationLabel: formatDurationLabel(row.duration),
       audioUrl: asNullableString(row.audio_url),
       instrumentalUrl: asNullableString(row.instrumental_url),
-      coverUrl: asNullableString(row.image_url),
+      coverUrl,
       coverPosition: row.image_position != null ? String(row.image_position) : null,
       albums: [],
       categories: ['Minhas Coletâneas'],
-      lyrics: mapCustomLyrics(row.lyrics ?? []),
+      lyrics,
     } satisfies MediaTrackRecord
   } catch {
     return null
@@ -161,7 +209,39 @@ export type CustomCollectionSummary = {
   id: number
   name: string
   description: string | null
+  coverUrl?: string | null
   musicsCount: number
+}
+
+/** Atualiza campos de uma coletânea custom (nome, descrição, cover). */
+export async function updateCustomCollection(
+  collectionId: number,
+  patch: { name?: string; description?: string | null; cover_url?: string | null },
+): Promise<CustomCollectionSummary | null> {
+  try {
+    const response = await fetch(`${customBaseUrl()}/collections/${collectionId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(patch),
+    })
+    if (!response.ok) return null
+    const row = (await response.json()) as {
+      id_collection: number
+      name: string
+      description: string | null
+      cover_url?: string | null
+      musics_count?: number
+    }
+    return {
+      id: row.id_collection,
+      name: row.name,
+      description: row.description ?? null,
+      coverUrl: row.cover_url ?? null,
+      musicsCount: row.musics_count ?? 0,
+    }
+  } catch {
+    return null
+  }
 }
 
 export async function listCustomCollections(): Promise<
@@ -175,6 +255,7 @@ export async function listCustomCollections(): Promise<
         id_collection: number
         name: string
         description: string | null
+        cover_url?: string | null
         musics_count?: number
       }>
     }
@@ -182,6 +263,7 @@ export async function listCustomCollections(): Promise<
       id: row.id_collection,
       name: row.name,
       description: row.description ?? null,
+      coverUrl: row.cover_url ?? null,
       musicsCount: row.musics_count ?? 0,
     }))
   } catch {
@@ -196,6 +278,62 @@ export type CustomMusicSummary = {
   duration: number | null
   hasAudio: boolean
   hasImage: boolean
+  audioUrl?: string | null
+  /** Link p/ hino oficial da API (null = música própria). */
+  officialMusicId?: number | null
+}
+
+/** Copia uma música custom existente (outra coletânea) pra coletânea aberta. */
+export async function copyCustomMusic(
+  collectionId: number,
+  musicId: number,
+): Promise<{ id: number } | null> {
+  try {
+    const response = await fetch(
+      `${customBaseUrl()}/collections/${collectionId}/musics/${musicId}/copy`,
+      { method: 'POST' },
+    )
+    if (!response.ok) return null
+    const json = (await response.json()) as { id_music: number }
+    return { id: json.id_music }
+  } catch {
+    return null
+  }
+}
+
+/** Todas as músicas custom (qualquer coletânea) — p/ reutilizar no editor. */
+export async function listAllCustomMusics(): Promise<
+  Array<CustomMusicSummary & { collectionName?: string; collectionId?: number }>
+> {
+  try {
+    const response = await fetch(`${customBaseUrl()}/musics`)
+    if (!response.ok) return []
+    const json = (await response.json()) as {
+      data?: Array<{
+        id_music: number
+        name: string | null
+        official_music_id?: number | null
+        duration?: number | string | null
+        audio_url?: string | null
+        image_url?: string | null
+        id_collection?: number
+        collection_name?: string
+      }>
+    }
+    return (json.data ?? []).map((row) => ({
+      id: row.id_music,
+      name: row.name ?? '',
+      duration: typeof row.duration === 'string' ? null : row.duration ?? null,
+      hasAudio: Boolean(row.audio_url),
+      hasImage: Boolean(row.image_url),
+      audioUrl: row.audio_url ?? null,
+      officialMusicId: row.official_music_id ?? null,
+      collectionId: row.id_collection,
+      collectionName: row.collection_name,
+    }))
+  } catch {
+    return []
+  }
 }
 
 export async function listCustomMusics(
@@ -213,18 +351,99 @@ export async function listCustomMusics(
         duration: number | null
         audio_url?: string | null
         image_url?: string | null
+        official_music_id?: number | null
       }>
     }
-    return (json.data ?? []).map((row) => ({
+    const rows = (json.data ?? []).map((row) => ({
       id: row.id_music,
       name: row.name,
       duration: row.duration ?? null,
-      hasAudio: Boolean(row.audio_url),
+      hasAudio: Boolean(row.audio_url) || Boolean(row.official_music_id),
       hasImage: Boolean(row.image_url),
+      audioUrl: asNullableString(row.audio_url),
+      officialMusicId:
+        typeof row.official_music_id === 'number' && row.official_music_id > 0
+          ? row.official_music_id
+          : null,
     }))
+    // API não tem duração (null no banco): ler metadata do MP3 no cliente
+    // (request range — só o header do arquivo). Não bloqueia a lista.
+    void enrichDurations(rows)
+    return rows
   } catch {
     return []
   }
+}
+
+/**
+ * Preenche duration (segundos) lendo metadata do áudio em background.
+ * Retorna true quando terminou (para o caller re-renderizar).
+ */
+export async function enrichDurations(
+  rows: Array<{ duration: number | null; hasAudio: boolean; audioUrl?: string | null }>,
+): Promise<boolean> {
+  const CONCURRENCY = 4
+  const TIMEOUT_MS = 8000
+  const pending = rows.filter((row) => row.duration == null && row.hasAudio)
+  if (pending.length === 0) return false
+  let cursor = 0
+
+  async function worker(): Promise<void> {
+    while (cursor < pending.length) {
+      const row = pending[cursor++]
+      const seconds = await probeAudioDuration(row.audioUrl, TIMEOUT_MS).catch(
+        () => null,
+      )
+      if (seconds != null) row.duration = seconds
+    }
+  }
+
+  await Promise.all(
+    Array.from({ length: Math.min(CONCURRENCY, pending.length) }, worker),
+  )
+  return true
+}
+
+/** Duração do arquivo de áudio via preload=metadata (request range). */
+export function probeAudioDuration(
+  audioUrl: string | null | undefined,
+  timeoutMs: number,
+): Promise<number | null> {
+  return new Promise((resolve) => {
+    // URLs custom (/custom/...) vêm da própria API custom (customFileUrl:
+    // respeita VITE_PALCO_API_URL/proxy local). Demais paths do catálogo
+    // usam a base de files remota (resolveRemoteFileUrl).
+    const src = audioUrl
+      ? audioUrl.startsWith('/custom/')
+        ? customFileUrl(audioUrl)
+        : resolveRemoteFileUrl(audioUrl)
+      : null
+    if (!src) {
+      resolve(null)
+      return
+    }
+    const audio = new Audio()
+    audio.preload = 'metadata'
+    const done = (value: number | null) => {
+      clearTimeout(timer)
+      audio.removeAttribute('src')
+      audio.load()
+      resolve(value)
+    }
+    const timer = setTimeout(() => done(null), timeoutMs)
+    audio.addEventListener(
+      'loadedmetadata',
+      () =>
+        done(
+          Number.isFinite(audio.duration) && audio.duration > 0
+            ? audio.duration
+            : null,
+        ),
+      { once: true },
+    )
+    audio.addEventListener('error', () => done(null), { once: true })
+    audio.src = src
+  })
 }
 
 /** CRUD mínimo para o editor web. */
@@ -248,7 +467,7 @@ export async function createCustomCollection(
 
 export async function createCustomMusic(
   collectionId: number,
-  input: { name: string; lyric?: string; auxiliary_lyric?: string },
+  input: { name?: string; lyric?: string; auxiliary_lyric?: string },
 ): Promise<{ id: number } | null> {
   try {
     const response = await fetch(
@@ -267,9 +486,44 @@ export async function createCustomMusic(
   }
 }
 
+/**
+ * Adiciona um hino OFICIAL da API (tabela musics) a uma coletânea custom.
+ * Cria apenas um link (official_music_id) — playback/letra resolvem pelo
+ * catálogo oficial via resolveMediaTrack. Retorna o id custom criado.
+ */
+export async function addOfficialMusicToCollection(
+  collectionId: number,
+  officialMusicId: number,
+  name?: string,
+): Promise<{ id: number } | null> {
+  try {
+    const response = await fetch(
+      `${customBaseUrl()}/collections/${collectionId}/musics`,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        // name opcional: o catálogo oficial (json_db remoto) é a fonte do nome —
+        // o SQLite local pode não ter o hino.
+        body: JSON.stringify({ official_music_id: officialMusicId, name }),
+      },
+    )
+    if (!response.ok) return null
+    const json = (await response.json()) as { id_music: number }
+    return { id: json.id_music }
+  } catch {
+    return null
+  }
+}
+
 export async function updateCustomMusic(
   musicId: number,
-  input: { name?: string; lyric?: string; auxiliary_lyric?: string },
+  input: {
+    name?: string
+    lyric?: string
+    auxiliary_lyric?: string
+    id_file_audio?: number | null
+    id_file_image?: number | null
+  },
 ): Promise<boolean> {
   try {
     const response = await fetch(`${customBaseUrl()}/musics/${musicId}`, {
@@ -283,9 +537,52 @@ export async function updateCustomMusic(
   }
 }
 
+/** URL absoluta para um path de arquivo servido pela API (/file/...) */
+export function customFileUrl(urlPath: string): string {
+  const base = import.meta.env.VITE_PALCO_API_URL
+  if (base) return `${base.replace(/\/$/, '')}/file${urlPath}`
+  return `/file${urlPath}`
+}
+
+/**
+ * Upload de mídia extraída de .slja (áudio/imagens).
+ * Retorna id_file + url relativa (/custom/...) ou null em falha.
+ */
+export async function uploadCustomFile(
+  bytes: Uint8Array,
+  filename: string,
+  kind: 'audio' | 'imagens',
+): Promise<{ idFile: number; url: string } | null> {
+  try {
+    const formData = new FormData()
+    formData.append('file', new Blob([bytes as BlobPart]), filename)
+    formData.append('kind', kind)
+    const response = await fetch(`${customBaseUrl()}/files`, {
+      method: 'POST',
+      body: formData,
+    })
+    if (!response.ok) return null
+    const data = (await response.json()) as { id_file: number; url: string }
+    return { idFile: data.id_file, url: data.url }
+  } catch {
+    return null
+  }
+}
+
 export async function deleteCustomMusic(musicId: number): Promise<boolean> {
   try {
     const response = await fetch(`${customBaseUrl()}/musics/${musicId}`, {
+      method: 'DELETE',
+    })
+    return response.ok
+  } catch {
+    return false
+  }
+}
+
+export async function deleteCustomCollection(collectionId: number): Promise<boolean> {
+  try {
+    const response = await fetch(`${customBaseUrl()}/collections/${collectionId}`, {
       method: 'DELETE',
     })
     return response.ok
@@ -301,6 +598,7 @@ export async function createCustomLyric(
     aux_lyric?: string
     time?: string
     order?: number
+    id_file_image?: number
   },
 ): Promise<{ id: number } | null> {
   try {

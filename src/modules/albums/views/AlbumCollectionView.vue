@@ -16,11 +16,16 @@ import {
   listPlaylists,
   type PlaylistItem,
 } from '../services/playlist-storage'
+import {
+  addOfficialMusicToCollection,
+  listCustomCollections,
+} from '@modules/media/services/custom-catalog'
 import type { AlbumTrack } from '../types/albums'
 
 const playlistItem = ref<PlaylistItem | null>(null)
 const playlists = ref(listPlaylists())
 const playlistFeedback = ref('')
+const customCollectionsForAdd = ref<Array<{ id: number; name: string; musicsCount: number }>>([])
 
 let feedbackTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -38,6 +43,31 @@ function openPlaylistPicker(track: AlbumTrack) {
     musicId: track.musicId,
     albumId: Number(activeCollection.value?.id) || null,
     title: track.name,
+  }
+  // Hinos de coletânea oficial podem ir p/ Minhas Coletâneas (link).
+  void listCustomCollections().then((collections) => {
+    customCollectionsForAdd.value = collections.map((c) => ({
+      id: c.id,
+      name: c.name,
+      musicsCount: c.musicsCount,
+    }))
+  })
+}
+
+/** Adiciona hino oficial a uma coletânea custom (POST official_music_id). */
+async function addToCustomCollection(collectionId: number) {
+  const item = playlistItem.value
+  if (!item) return
+  // Faixa custom (≥1M): guarda o id real (sem offset) no link.
+  const officialId = item.musicId >= 1_000_000 ? null : item.musicId
+  if (officialId == null) return
+  const created = await addOfficialMusicToCollection(collectionId, officialId)
+  playlistItem.value = null
+  const target = customCollectionsForAdd.value.find((c) => c.id === collectionId)
+  if (created) {
+    showPlaylistFeedback(`“${item.title}” adicionada a “${target?.name ?? 'coletânea'}”`)
+  } else {
+    showPlaylistFeedback(`Não foi possível adicionar a “${target?.name ?? 'coletânea'}”`)
   }
 }
 
@@ -294,6 +324,25 @@ async function runAction(
               <small class="playlist-picker__count">{{ playlist.items.length }}</small>
               <i class="ti ti-plus playlist-picker__add" aria-hidden="true" />
             </button>
+
+            <div
+              v-if="customCollectionsForAdd.length > 0"
+              class="playlist-picker__section"
+            >
+              <small class="playlist-picker__section-title">Minhas Coletâneas</small>
+              <button
+                v-for="collection in customCollectionsForAdd"
+                :key="`custom-${collection.id}`"
+                type="button"
+                class="playlist-picker__option"
+                @click="addToCustomCollection(collection.id)"
+              >
+                <i class="ti ti-disc" aria-hidden="true" />
+                <span class="playlist-picker__name">{{ collection.name }}</span>
+                <small class="playlist-picker__count">{{ collection.musicsCount }}</small>
+                <i class="ti ti-plus playlist-picker__add" aria-hidden="true" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -537,6 +586,24 @@ async function runAction(
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+}
+
+.playlist-picker__section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.playlist-picker__section-title {
+  padding: 0 0.4rem 0.15rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.55;
 }
 
 .playlist-picker__option {

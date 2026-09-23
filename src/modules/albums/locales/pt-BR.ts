@@ -64,9 +64,15 @@ export default {
     },
     custom: {
       title: 'Minhas Coletâneas',
+      sectionSubtitle: 'Suas coletâneas personalizadas — edite no editor de letras',
+      changeCover: 'Alterar capa da coletânea',
+      removeCover: 'Remover capa da coletânea',
       openEditor: 'Abrir editor',
       open: 'Abrir coletânea {name}',
       trackCount: '{count} faixa(s)',
+      empty: 'Nenhuma coletânea criada ainda. Importe um .slja no editor.',
+      newPlaceholder: 'Nome da nova coletânea...',
+      create: 'Criar',
     },
   },
 }
