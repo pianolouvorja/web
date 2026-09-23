@@ -10,13 +10,14 @@ export default {
     apply: 'Aplicar',
   },
   nav: {
-    home: 'Início',
-    albums: 'Central de Mídia',
-    liturgy: 'Liturgia',
-    bible: 'Bíblia',
-    utilities: 'Utilitários',
-    settings: 'Configurações'
-  },
+      home: 'Início',
+      albums: 'Central de Mídia',
+      liturgy: 'Liturgia',
+      bible: 'Bíblia',
+      community: 'Comunidade',
+      utilities: 'Utilitários',
+      settings: 'Configurações'
+    },
   popupCount: {
     label: 'Telas',
     tooltip: 'Selecionar telas de projeção'

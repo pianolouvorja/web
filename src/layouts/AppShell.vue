@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
@@ -23,6 +23,8 @@ import { useOperatorEscapeToCloseAllProjections } from '@shared/composables/useO
 import logoUrl from '@assets/brand/logo-louvor-ja.svg'
 import CodenameLogo from '@assets/brand/CodenameLogo.vue'
 import { APP_VERSION } from '@shared/constants/app'
+import AuthAccountDialog from '@modules/auth/components/AuthAccountDialog.vue'
+import { useAuth } from '@modules/auth/composables/useAuth'
 
 const route = useRoute()
 const router = useRouter()
@@ -83,8 +85,13 @@ const LITURGY_PROJECTABLE = new Set([
   'presentation',
 ])
 
-/** Login Google — reativar quando o fluxo de autenticação existir */
-const showAccountButton = false
+/** Auth: dialog control + notifier. */
+const authDialogOpen = ref(false)
+const { session, isLoggedIn, userName, login, logout } = useAuth()
+
+function showAuthDialog(): void {
+  authDialogOpen.value = true
+}
 
 const hasBibleContent = computed(
   () =>
@@ -311,12 +318,30 @@ function viewKey(viewRoute: typeof route) {
           </button>
         </div>
         <div class="app-shell__codename-block">
-          <CodenameLogo
-            class="app-shell__codename"
-          />
-          <span class="app-shell__version" aria-hidden="true">{{ APP_VERSION }}</span>
-        </div>
-      </div>
+                  <CodenameLogo
+                    class="app-shell__codename"
+                  />
+                  <span class="app-shell__version" aria-hidden="true">{{ APP_VERSION }}</span>
+                </div>
+                <!-- Botão de conta (desktop only) -->
+                <div v-if="!smAndDown" class="app-shell__account-block">
+                  <button
+                    type="button"
+                    class="app-shell__account-btn"
+                    @click="showAuthDialog"
+                    :aria-label="isLoggedIn ? t('auth.logout') : t('auth.title')"
+                  >
+                    <i
+                      class="ti"
+                      :class="isLoggedIn ? 'ti-user-check' : 'ti-user'"
+                      aria-hidden="true"
+                    />
+                    <span v-if="isLoggedIn" class="app-shell__account-name">
+                      {{ userName }}
+                    </span>
+                  </button>
+                </div>
+              </div>
     </header>
 
     <main class="app-shell__main">
@@ -333,12 +358,14 @@ function viewKey(viewRoute: typeof route) {
     <MediaChrome />
 
     <DockFooter
-      :items="navItems"
-      :active-key="activeKey"
-      @select="onNavigate"
-    />
-  </GradientBackground>
-</template>
+          :items="navItems"
+          :active-key="activeKey"
+          @select="onNavigate"
+        />
+        <!-- Auth dialog -->
+        <AuthAccountDialog v-model="authDialogOpen" />
+      </GradientBackground>
+    </template>
 
 <style scoped lang="scss">
 .app-shell {
@@ -610,5 +637,48 @@ function viewKey(viewRoute: typeof route) {
   .app-shell__version {
     font-size: 11px;
   }
+}
+
+/* Auth account button */
+.app-shell__account-block {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.app-shell__account-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--ds-color-outline);
+  border-radius: 9999px;
+  background: var(--ds-color-surface-container);
+  color: var(--ds-color-on-surface);
+  cursor: pointer;
+  transition: background-color 160ms ease, border-color 160ms ease;
+
+  .ti {
+    font-size: 1.25rem;
+    line-height: 1;
+  }
+
+  &:hover {
+    background: var(--ds-color-surface-container-high);
+    border-color: var(--ds-color-outline-variant);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.app-shell__account-name {
+  font-size: 0.85rem;
+  font-weight: 500;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>
