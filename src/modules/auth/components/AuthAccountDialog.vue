@@ -22,7 +22,7 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
 }>()
 
-const { session, isLoggedIn, userName, userEmail, login, register, logout, forgotPassword, resetPassword } = useAuth()
+const { session, isLoggedIn, userName, userEmail, login, register, loginGoogle, logout, forgotPassword, resetPassword } = useAuth()
 
 const formOpen = ref(true)
 const mode = ref<'login' | 'register' | 'forgot' | 'reset'>('login')
@@ -71,6 +71,20 @@ async function onSubmit(): Promise<void> {
     if (ok) {
       formOpen.value = false
       password.value = ''
+      emit('update:modelValue', false)
+    }
+  } finally {
+    busy.value = false
+  }
+}
+
+async function onGoogleLogin(): Promise<void> {
+  if (busy.value) return
+  busy.value = true
+  try {
+    const ok = await loginGoogle()
+    if (ok) {
+      formOpen.value = false
       emit('update:modelValue', false)
     }
   } finally {
@@ -151,6 +165,16 @@ function close(): void {
               type="submit"
             >
               {{ t('auth.login') }}
+            </v-btn>
+            <v-btn
+              :disabled="busy"
+              block
+              variant="outlined"
+              class="mt-2"
+              @click="onGoogleLogin"
+            >
+              <v-icon start>mdi-google</v-icon>
+              Entrar com Google
             </v-btn>
             <div class="d-flex justify-space-between mt-2">
               <v-btn variant="text" size="small" @click="mode = 'register'">
