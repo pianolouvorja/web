@@ -13,6 +13,7 @@ import {
 } from '../types/lyric-customization'
 
 import SettingsToggle from './SettingsToggle.vue'
+import { VSlider } from 'vuetify/components'
 
 const { t } = useI18n()
 const {

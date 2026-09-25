@@ -8,6 +8,12 @@ import {
   requestPasswordReset,
   type AuthSession,
 } from '../services/auth-client'
+import {
+  firebaseLogin,
+  firebaseLoginGoogle,
+  firebaseLogout,
+  firebaseRegister,
+} from '../services/firebase-client'
 
 /** Estado reativo da sessão de autenticação. */
 export const authSession = ref<AuthSession | null>(getAuthSession())
@@ -30,6 +36,7 @@ interface UseAuthReturn {
   userEmail: ComputedRef<string>
   login: (email: string, password: string) => Promise<boolean>
   register: (email: string, password: string, displayName: string) => Promise<boolean>
+  loginGoogle: () => Promise<boolean>
   logout: () => Promise<void>
   forgotPassword: (email: string) => Promise<boolean>
   resetPassword: (token: string, password: string) => Promise<boolean>
@@ -65,8 +72,54 @@ export function useAuth(): UseAuthReturn {
 
   async function doLogout(): Promise<void> {
     await logout()
+    await firebaseLogout()
     session.value = null
     notify('Sessão encerrada')
+  }
+
+  /** RF-002: login Google (redirect Firebase — página recarrega). */
+    async function doLoginGoogle(): Promise<boolean> {
+      await firebaseLoginGoogle()
+      // A execução não chega aqui — signInWithRedirect navega pra Google.
+      // Se chegar, houve erro (ex.: redirect bloqueado).
+      notify('Não foi possível entrar com o Google', true)
+      return false
+    }
+
+  /**
+   * RF-003: login unificado — tenta Firebase primeiro (identidade única
+   * web/APK); cai no auth legacy da API se Firebase não estiver configurado.
+   */
+  async function doUnifiedLogin(
+    email: string,
+    password: string,
+  ): Promise<boolean> {
+    const fb = await firebaseLogin(email.trim(), password)
+    if (fb) {
+      session.value = fb
+      notify(`Bem-vindo, ${fb.user.displayName}!`)
+      return true
+    }
+    return doLogin(email, password)
+  }
+
+  /** RF-003: registro unificado (Firebase primeiro, fallback legacy). */
+  async function doUnifiedRegister(
+    email: string,
+    password: string,
+    displayName: string,
+  ): Promise<boolean> {
+    const fb = await firebaseRegister(
+      email.trim(),
+      password,
+      displayName.trim(),
+    )
+    if (fb) {
+      session.value = fb
+      notify(`Bem-vindo, ${fb.user.displayName}!`)
+      return true
+    }
+    return doRegister(email, password, displayName)
   }
 
   async function doForgotPassword(email: string): Promise<boolean> {
@@ -95,8 +148,9 @@ export function useAuth(): UseAuthReturn {
     isLoggedIn,
     userName,
     userEmail,
-    login: doLogin,
-    register: doRegister,
+    login: doUnifiedLogin,
+    register: doUnifiedRegister,
+    loginGoogle: doLoginGoogle,
     logout: doLogout,
     forgotPassword: doForgotPassword,
     resetPassword: doResetPassword,

@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { RouterView, useRoute } from 'vue-router'
 
 import EulaDialog from '@shared/components/EulaDialog.vue'
 import { useEula } from '@shared/composables/useEula'
+import { handleRedirectResult } from '@modules/auth/services/firebase-client'
 
 const { isAccepted } = useEula()
 
@@ -19,6 +20,15 @@ const isPopupWindow = computed(
 const route = useRoute()
 const showEula = computed(() => !isAccepted.value && !isPopupWindow.value)
 const showApp = computed(() => isAccepted.value || isPopupWindow.value)
+
+onMounted(async () => {
+  const result = await handleRedirectResult()
+  if (result) {
+    // Atualiza o estado reativo (localStorage sozinho não dispara reatividade)
+    const { authSession } = await import('@modules/auth/composables/useAuth')
+    authSession.value = result
+  }
+})
 </script>
 
 <template>
