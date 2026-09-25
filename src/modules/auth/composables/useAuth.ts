@@ -77,11 +77,14 @@ export function useAuth(): UseAuthReturn {
     notify('Sessão encerrada')
   }
 
-  /** RF-002: login Google (redirect Firebase — página recarrega). */
+  /** RF-002: login Google (popup — retorna sessão direto). */
     async function doLoginGoogle(): Promise<boolean> {
-      await firebaseLoginGoogle()
-      // A execução não chega aqui — signInWithRedirect navega pra Google.
-      // Se chegar, houve erro (ex.: redirect bloqueado).
+      const result = await firebaseLoginGoogle()
+      if (result) {
+        session.value = result
+        notify(`Bem-vindo, ${result.user.displayName}!`)
+        return true
+      }
       notify('Não foi possível entrar com o Google', true)
       return false
     }

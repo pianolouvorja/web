@@ -15,6 +15,7 @@ import {
   getAuth,
   getRedirectResult,
   signInWithEmailAndPassword,
+  signInWithPopup,
   signInWithRedirect,
   signOut,
   updateProfile,
@@ -62,30 +63,34 @@ async function persistSession(credential: UserCredential): Promise<AuthSession |
   // (POST /v1/custom/auth/firebase-session — middleware firebaseAuth valida
   // via Admin SDK e faz upsert em custom_users).
   try {
-    const base = import.meta.env.VITE_PALCO_API_URL
-    const url = base
-      ? `${base.replace(/\/$/, '')}/v1/custom/auth/firebase-session`
-      : '/v1/custom/auth/firebase-session'
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { authorization: `Bearer ${idToken}` },
-    })
-    if (response.ok) {
-      const json = (await response.json()) as AuthSession
-      if (json?.token && json?.user?.id_user) {
-        saveSession(json)
-        return getAuthSession()
+      // Same-origin: o Vite faz proxy de /v1/custom → API local (ver vite.config).
+      // Usar VITE_PALCO_API_URL (túnel cross-origin) quebraria no CORS em dev.
+      const url = '/v1/custom/auth/firebase-session'
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { authorization: `Bearer ${idToken}` },
+      })
+      console.debug('[auth] persistSession: API response status:', response.status)
+      const respText = await response.text()
+      console.debug('[auth] persistSession: API response body:', respText)
+      if (response.ok) {
+        const json = JSON.parse(respText) as AuthSession
+        if (json?.token && json?.user?.id_user) {
+          saveSession(json)
+          return getAuthSession()
+        }
       }
+    } catch (e) {
+      // API indisponível → cai no fallback local abaixo
+      console.warn('[auth] persistSession: API falhou, fallback placeholder:', e)
     }
-  } catch {
-    // API indisponível → cai no fallback local abaixo
-  }
-  // Fallback local (API offline): sessão placeholder sem id_user —
-  // getAuthSession() vai rejeitar, mas não corrompe o storage.
-  const session = toSession(credential)
-  session.token = idToken
-  saveSession(session)
-  return getAuthSession()
+    // Fallback local (API offline): sessão placeholder sem id_user —
+    // getAuthSession() vai rejeitar, mas não corrompe o storage.
+    const session = toSession(credential)
+    session.token = idToken
+    saveSession(session)
+    console.warn('[auth] persistSession: FALLBACK placeholder salvo (id_user=0)')
+    return getAuthSession()
 }
 
 /** Login email/senha via Firebase. Retorna a sessão ou null. */
@@ -126,15 +131,20 @@ export async function firebaseRegister(
   }
 }
 
-/** Login com Google (redirect — imune a COOP/popup blockers). */
+/** Login com Google (popup — imune a COOP e problemas de authDomain/cookies 3rd-party).
+ * Retorna a sessão direto (não recarrega a página). */
 export async function firebaseLoginGoogle(): Promise<AuthSession | null> {
   try {
     const provider = new GoogleAuthProvider()
-    await signInWithRedirect(getFirebaseAuth(), provider)
-    // A execução continua após o redirect (página recarrega);
-    // o caller deve checar getRedirectResult() no mount.
-    return null
-  } catch {
+    const result = await signInWithPopup(getFirebaseAuth(), provider)
+    // Popup fechou com sucesso — processa a credencial direto.
+    return await persistSession(result)
+  } catch (e) {
+    console.error('[auth] firebaseLoginGoogle ERRO:', e)
+    // Se popup bloqueado pelo browser, avisa o caller pra tentar redirect como fallback
+    if (e && typeof e === 'object' && 'code' in e && (e as any).code === 'auth/popup-blocked') {
+      console.warn('[auth] Popup bloqueado — caller deve tentar redirect')
+    }
     return null
   }
 }
@@ -142,10 +152,16 @@ export async function firebaseLoginGoogle(): Promise<AuthSession | null> {
 /** Processa o resultado do redirect (chamar no mount da app). */
 export async function handleRedirectResult(): Promise<AuthSession | null> {
   try {
+    console.debug('[auth] handleRedirectResult: chamando getRedirectResult')
     const result = await getRedirectResult(getFirebaseAuth())
-    if (result) return await persistSession(result)
+    if (result) {
+      console.debug('[auth] handleRedirectResult: got result, chamando persistSession')
+      return await persistSession(result)
+    }
+    console.debug('[auth] handleRedirectResult: result null (sem redirect pendente)')
     return null
-  } catch {
+  } catch (e) {
+    console.error('[auth] handleRedirectResult ERRO:', e)
     return null
   }
 }

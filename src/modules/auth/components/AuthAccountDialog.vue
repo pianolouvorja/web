@@ -167,7 +167,7 @@ function close(): void {
             <v-btn
               :disabled="!isValid || busy"
               block
-              color="primary"
+              class="auth-submit-btn"
               type="submit"
             >
               {{ t('auth.login') }}
@@ -220,7 +220,7 @@ function close(): void {
             <v-btn
               :disabled="!isValid || busy"
               block
-              color="primary"
+              class="auth-submit-btn"
               type="submit"
             >
               {{ t('auth.register') }}
@@ -305,5 +305,22 @@ function close(): void {
 .auth-dialog-card {
   background: var(--ds-color-surface-container-high) !important;
   color: var(--ds-color-on-surface) !important;
+}
+
+/* Botão de submit usa a cor primária do design-system (não a do tema Vuetify). */
+.auth-submit-btn {
+  background: var(--ds-color-primary) !important;
+  color: var(--ds-color-on-primary) !important;
+  font-weight: 600;
+  transition: filter 0.15s ease, box-shadow 0.15s ease;
+}
+
+.auth-submit-btn:hover:not(:disabled) {
+  filter: brightness(1.15);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.25);
+}
+
+.auth-submit-btn:active:not(:disabled) {
+  filter: brightness(0.95);
 }
 </style>
