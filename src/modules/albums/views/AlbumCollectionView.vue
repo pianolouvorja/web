@@ -21,6 +21,7 @@ import {
   listCustomCollections,
 } from '@modules/media/services/custom-catalog'
 import type { AlbumTrack } from '../types/albums'
+import { VBtn, VCard, VDialog } from 'vuetify/components'
 
 const playlistItem = ref<PlaylistItem | null>(null)
 const playlists = ref(listPlaylists())
