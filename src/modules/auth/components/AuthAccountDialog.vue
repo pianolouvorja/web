@@ -25,14 +25,11 @@ const emit = defineEmits<{
 
 const { session, isLoggedIn, userName, userEmail, login, register, loginGoogle, logout, forgotPassword, resetPassword } = useAuth()
 
-// Estado interno do dialog sincronizado com o controle do pai (AppShell):
-// sem isso, clicar no botão de conta não abre o dialog (bug reportado 24/09).
-const formOpen = ref(props.modelValue)
-watch(() => props.modelValue, (v) => {
-  formOpen.value = v
-})
-watch(formOpen, (v) => {
-  if (v !== props.modelValue) emit('update:modelValue', v)
+// Abertura controlada pelo pai (AppShell) via v-model — sem estado interno
+// para evitar divergência (bug 24/09: dialog nascia aberto/ignorava o pai).
+const formOpen = computed({
+  get: () => props.modelValue,
+  set: (v: boolean) => emit('update:modelValue', v),
 })
 const mode = ref<'login' | 'register' | 'forgot' | 'reset'>('login')
 const email = ref('')
