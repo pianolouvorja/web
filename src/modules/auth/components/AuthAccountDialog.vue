@@ -5,7 +5,7 @@
  * Inclui fluxo "esqueci minha senha": pede token via /auth/forgot-password
  * (o token chega pelo suporte quando sem SMTP) e troca a senha em /auth/reset-password.
  */
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuth } from '../composables/useAuth'
 import { VBtn, VCard, VDialog, VIcon, VTextField } from 'vuetify/components'
@@ -25,7 +25,15 @@ const emit = defineEmits<{
 
 const { session, isLoggedIn, userName, userEmail, login, register, loginGoogle, logout, forgotPassword, resetPassword } = useAuth()
 
-const formOpen = ref(true)
+// Estado interno do dialog sincronizado com o controle do pai (AppShell):
+// sem isso, clicar no botão de conta não abre o dialog (bug reportado 24/09).
+const formOpen = ref(props.modelValue)
+watch(() => props.modelValue, (v) => {
+  formOpen.value = v
+})
+watch(formOpen, (v) => {
+  if (v !== props.modelValue) emit('update:modelValue', v)
+})
 const mode = ref<'login' | 'register' | 'forgot' | 'reset'>('login')
 const email = ref('')
 const password = ref('')
