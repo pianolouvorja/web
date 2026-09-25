@@ -13,8 +13,9 @@ import {
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
   getAuth,
+  getRedirectResult,
   signInWithEmailAndPassword,
-  signInWithPopup,
+  signInWithRedirect,
   signOut,
   updateProfile,
   type Auth,
@@ -56,8 +57,33 @@ function toSession(credential: UserCredential): AuthSession {
 }
 
 async function persistSession(credential: UserCredential): Promise<AuthSession | null> {
+  const idToken = await credential.user.getIdToken()
+  // Bridge: troca o Firebase ID token por sessão com id_user real
+  // (POST /v1/custom/auth/firebase-session — middleware firebaseAuth valida
+  // via Admin SDK e faz upsert em custom_users).
+  try {
+    const base = import.meta.env.VITE_PALCO_API_URL
+    const url = base
+      ? `${base.replace(/\/$/, '')}/v1/custom/auth/firebase-session`
+      : '/v1/custom/auth/firebase-session'
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { authorization: `Bearer ${idToken}` },
+    })
+    if (response.ok) {
+      const json = (await response.json()) as AuthSession
+      if (json?.token && json?.user?.id_user) {
+        saveSession(json)
+        return getAuthSession()
+      }
+    }
+  } catch {
+    // API indisponível → cai no fallback local abaixo
+  }
+  // Fallback local (API offline): sessão placeholder sem id_user —
+  // getAuthSession() vai rejeitar, mas não corrompe o storage.
   const session = toSession(credential)
-  session.token = await credential.user.getIdToken()
+  session.token = idToken
   saveSession(session)
   return getAuthSession()
 }
@@ -100,12 +126,25 @@ export async function firebaseRegister(
   }
 }
 
-/** Login com Google (popup). */
+/** Login com Google (redirect — imune a COOP/popup blockers). */
 export async function firebaseLoginGoogle(): Promise<AuthSession | null> {
   try {
     const provider = new GoogleAuthProvider()
-    const credential = await signInWithPopup(getFirebaseAuth(), provider)
-    return await persistSession(credential)
+    await signInWithRedirect(getFirebaseAuth(), provider)
+    // A execução continua após o redirect (página recarrega);
+    // o caller deve checar getRedirectResult() no mount.
+    return null
+  } catch {
+    return null
+  }
+}
+
+/** Processa o resultado do redirect (chamar no mount da app). */
+export async function handleRedirectResult(): Promise<AuthSession | null> {
+  try {
+    const result = await getRedirectResult(getFirebaseAuth())
+    if (result) return await persistSession(result)
+    return null
   } catch {
     return null
   }

@@ -122,7 +122,7 @@ function close(): void {
 
 <template>
   <v-dialog v-model="formOpen" :max-width="420" persistent>
-    <v-card class="pa-4" elevation="8">
+    <v-card class="pa-4 auth-dialog-card" elevation="8">
       <div class="d-flex align-center justify-space-between mb-4">
         <v-btn variant="text" size="small" @click="close">
           <i class="ti ti-x" aria-hidden="true"></i>
@@ -299,3 +299,11 @@ function close(): void {
     </v-card>
   </v-dialog>
 </template>
+
+<style scoped>
+/* Card segue o tema do design-system dinamicamente (claro/escuro). */
+.auth-dialog-card {
+  background: var(--ds-color-surface-container-high) !important;
+  color: var(--ds-color-on-surface) !important;
+}
+</style>

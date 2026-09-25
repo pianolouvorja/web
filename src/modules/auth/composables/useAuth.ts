@@ -77,17 +77,14 @@ export function useAuth(): UseAuthReturn {
     notify('Sessão encerrada')
   }
 
-  /** RF-002: login Google (popup Firebase). */
-  async function doLoginGoogle(): Promise<boolean> {
-    const result = await firebaseLoginGoogle()
-    if (result) {
-      session.value = result
-      notify(`Bem-vindo, ${result.user.displayName}!`)
-      return true
+  /** RF-002: login Google (redirect Firebase — página recarrega). */
+    async function doLoginGoogle(): Promise<boolean> {
+      await firebaseLoginGoogle()
+      // A execução não chega aqui — signInWithRedirect navega pra Google.
+      // Se chegar, houve erro (ex.: redirect bloqueado).
+      notify('Não foi possível entrar com o Google', true)
+      return false
     }
-    notify('Não foi possível entrar com o Google', true)
-    return false
-  }
 
   /**
    * RF-003: login unificado — tenta Firebase primeiro (identidade única
