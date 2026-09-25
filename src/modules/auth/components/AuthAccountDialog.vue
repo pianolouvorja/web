@@ -5,9 +5,10 @@
  * Inclui fluxo "esqueci minha senha": pede token via /auth/forgot-password
  * (o token chega pelo suporte quando sem SMTP) e troca a senha em /auth/reset-password.
  */
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuth } from '../composables/useAuth'
+import { VBtn, VCard, VDialog, VIcon, VTextField } from 'vuetify/components'
 
 const { t } = useI18n()
 
@@ -22,9 +23,14 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
 }>()
 
-const { session, isLoggedIn, userName, userEmail, login, register, logout, forgotPassword, resetPassword } = useAuth()
+const { session, isLoggedIn, userName, userEmail, login, register, loginGoogle, logout, forgotPassword, resetPassword } = useAuth()
 
-const formOpen = ref(true)
+// Abertura controlada pelo pai (AppShell) via v-model — sem estado interno
+// para evitar divergência (bug 24/09: dialog nascia aberto/ignorava o pai).
+const formOpen = computed({
+  get: () => props.modelValue,
+  set: (v: boolean) => emit('update:modelValue', v),
+})
 const mode = ref<'login' | 'register' | 'forgot' | 'reset'>('login')
 const email = ref('')
 const password = ref('')
@@ -78,6 +84,20 @@ async function onSubmit(): Promise<void> {
   }
 }
 
+async function onGoogleLogin(): Promise<void> {
+  if (busy.value) return
+  busy.value = true
+  try {
+    const ok = await loginGoogle()
+    if (ok) {
+      formOpen.value = false
+      emit('update:modelValue', false)
+    }
+  } finally {
+    busy.value = false
+  }
+}
+
 async function onLogout(): Promise<void> {
   await logout()
   formOpen.value = false
@@ -102,10 +122,10 @@ function close(): void {
 
 <template>
   <v-dialog v-model="formOpen" :max-width="420" persistent>
-    <v-card class="pa-4" elevation="8">
+    <v-card class="pa-4 auth-dialog-card" elevation="8">
       <div class="d-flex align-center justify-space-between mb-4">
         <v-btn variant="text" size="small" @click="close">
-          <v-icon>mdi-close</v-icon>
+          <i class="ti ti-x" aria-hidden="true"></i>
         </v-btn>
         <div class="text-h6 font-weight-medium">{{ t('auth.title') }}</div>
         <div style="width: 32px" />
@@ -151,6 +171,16 @@ function close(): void {
               type="submit"
             >
               {{ t('auth.login') }}
+            </v-btn>
+            <v-btn
+              :disabled="busy"
+              block
+              variant="outlined"
+              class="mt-2"
+              @click="onGoogleLogin"
+            >
+              <i class="ti ti-brand-google" aria-hidden="true"></i>
+              Entrar com Google
             </v-btn>
             <div class="d-flex justify-space-between mt-2">
               <v-btn variant="text" size="small" @click="mode = 'register'">
@@ -269,3 +299,11 @@ function close(): void {
     </v-card>
   </v-dialog>
 </template>
+
+<style scoped>
+/* Card segue o tema do design-system dinamicamente (claro/escuro). */
+.auth-dialog-card {
+  background: var(--ds-color-surface-container-high) !important;
+  color: var(--ds-color-on-surface) !important;
+}
+</style>

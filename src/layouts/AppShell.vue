@@ -328,6 +328,7 @@ function viewKey(viewRoute: typeof route) {
                   <button
                     type="button"
                     class="app-shell__account-btn"
+                    :class="{ 'is-authenticated': isLoggedIn }"
                     @click="showAuthDialog"
                     :aria-label="isLoggedIn ? t('auth.logout') : t('auth.title')"
                   >
@@ -670,6 +671,20 @@ function viewKey(viewRoute: typeof route) {
 
   &:active {
     transform: scale(0.98);
+  }
+
+  /* Logado: destaque visual claro (borda + ícone na cor primária) */
+  &.is-authenticated {
+    border-color: var(--ds-color-primary);
+    color: var(--ds-color-primary);
+
+    .app-shell__account-name {
+      color: var(--ds-color-on-surface);
+    }
+
+    &:hover {
+      background: color-mix(in srgb, var(--ds-color-primary) 12%, transparent);
+    }
   }
 }
 
