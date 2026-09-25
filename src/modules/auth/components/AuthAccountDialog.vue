@@ -8,6 +8,7 @@
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuth } from '../composables/useAuth'
+import { VBtn, VCard, VDialog, VIcon, VTextField } from 'vuetify/components'
 
 const { t } = useI18n()
 
@@ -119,7 +120,7 @@ function close(): void {
     <v-card class="pa-4" elevation="8">
       <div class="d-flex align-center justify-space-between mb-4">
         <v-btn variant="text" size="small" @click="close">
-          <v-icon>mdi-close</v-icon>
+          <i class="ti ti-x" aria-hidden="true"></i>
         </v-btn>
         <div class="text-h6 font-weight-medium">{{ t('auth.title') }}</div>
         <div style="width: 32px" />
@@ -173,7 +174,7 @@ function close(): void {
               class="mt-2"
               @click="onGoogleLogin"
             >
-              <v-icon start>mdi-google</v-icon>
+              <i class="ti ti-brand-google" aria-hidden="true"></i>
               Entrar com Google
             </v-btn>
             <div class="d-flex justify-space-between mt-2">
